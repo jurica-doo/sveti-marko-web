@@ -186,6 +186,26 @@ async function main() {
 
   // `lib/seo.ts` already points every page at /og.png as its fallback.
   await write("public/og.png", await socialCard(1200, 630));
+
+  /*
+   * The mark for the navbar, trimmed and kept as bare alpha — no colour at all.
+   * `.brand-mark` in globals.css uses it as a CSS mask and fills it with
+   * `currentColor`, so it takes the header's own text colour: stone over the
+   * hero photograph, ink once the bar turns solid. A coloured file would need
+   * two variants and a swap, and would still be wrong during the cross-fade
+   * between the two states.
+   */
+  await write(
+    "public/icons/logo-mark.png",
+    await sharp(SOURCE)
+      .trim({ threshold: 10 })
+      .resize(256, 256, {
+        fit: "inside",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .png()
+      .toBuffer(),
+  );
 }
 
 await main();

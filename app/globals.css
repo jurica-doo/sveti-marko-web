@@ -398,6 +398,30 @@ h4,
   color: var(--color-brass-300);
 }
 
+/*
+ * The church mark beside the wordmark in the header.
+ *
+ * Drawn as a CSS mask filled with `currentColor` rather than as an <img>. The
+ * header is transparent over the hero photograph and solid stone everywhere
+ * else, so a coloured file would need two variants and a swap — and would still
+ * be the wrong colour during the cross-fade between the two states. Masking
+ * makes the mark inherit whatever colour the wordmark next to it is using, at
+ * every point of that transition, for free.
+ *
+ * The source is pure alpha line art, which is exactly what a mask wants.
+ */
+.brand-mark {
+  background-color: currentColor;
+  -webkit-mask-image: url("/icons/logo-mark.png");
+  mask-image: url("/icons/logo-mark.png");
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
 /* Rich text coming out of Payload's Lexical editor. */
 .prose-parish {
   font-size: 1.0625rem;

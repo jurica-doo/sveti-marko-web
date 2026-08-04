@@ -79,21 +79,37 @@ export function Navbar({ settings }: { settings: SettingsType }) {
           <SmartLink
             href={ROUTES.home}
             onClick={() => setOpen(false)}
-            className="group flex items-baseline gap-3 leading-none"
+            className="group flex items-center gap-3 leading-none sm:gap-4"
           >
+            {/*
+              `.brand-mark` fills the church outline with `currentColor`, so
+              setting the same colour as the wordmark keeps the two in step
+              through the header's transparent-to-solid change instead of
+              needing a second image.
+            */}
             <span
-              className={`font-display text-[1.35rem] transition-colors sm:text-[1.5rem] ${
+              aria-hidden="true"
+              className={`brand-mark indicator h-8 w-10 shrink-0 transition-colors group-hover:scale-110 sm:h-9 sm:w-11 ${
                 solid ? "text-ink-900" : "text-stone-50"
               }`}
-            >
-              {settings.shortName || settings.siteName}
-            </span>
-            <span
-              className={`hidden text-[0.62rem] font-semibold uppercase tracking-[0.2em] transition-colors sm:inline ${
-                solid ? "text-brass-600" : "text-brass-300"
-              }`}
-            >
-              Neslanovac
+            />
+
+            {/* The two labels keep their own baseline; the mark has none. */}
+            <span className="flex items-baseline gap-3">
+              <span
+                className={`font-display text-[1.35rem] transition-colors sm:text-[1.5rem] ${
+                  solid ? "text-ink-900" : "text-stone-50"
+                }`}
+              >
+                {settings.shortName || settings.siteName}
+              </span>
+              <span
+                className={`hidden text-[0.62rem] font-semibold uppercase tracking-[0.2em] transition-colors sm:inline ${
+                  solid ? "text-brass-600" : "text-brass-300"
+                }`}
+              >
+                Neslanovac
+              </span>
             </span>
           </SmartLink>
 
