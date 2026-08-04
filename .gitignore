@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# build-generated artifacts
+/.generated/
+
 # production
 /build
 
