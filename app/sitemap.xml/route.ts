@@ -1,14 +1,10 @@
-import {
-  generateUrlSetXml,
-  resolveAbsoluteUrl,
-  type SitemapUrlEntry,
-} from "@/utils/sitemap";
+import { generateUrlSetXml, type SitemapUrlEntry } from "@/utils/sitemap";
+import { getNews } from "@/lib/api";
+import { absoluteUrl, ROUTES } from "@/lib/routes";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr";
 
 export async function GET() {
   try {
@@ -27,18 +23,26 @@ export async function GET() {
 
   const nowIso = new Date().toISOString();
 
-  // Static routes. Add dynamic (CMS-driven) entries alongside these as the
-  // content collections land — see scripts/generate-sitemaps.mjs.
+  // `absoluteUrl()` runs every path through the trailing-slash normaliser, so
+  // the sitemap advertises exactly the URLs the site serves — no 308s.
   const base: SitemapUrlEntry[] = [
-    {
-      loc: resolveAbsoluteUrl("/", SITE_URL),
-      lastmod: nowIso,
-      changefreq: "weekly",
-      priority: 1,
-    },
+    { loc: absoluteUrl(ROUTES.home), lastmod: nowIso, changefreq: "weekly", priority: 1 },
+    { loc: absoluteUrl(ROUTES.news), lastmod: nowIso, changefreq: "weekly", priority: 0.8 },
+    { loc: absoluteUrl(ROUTES.about), lastmod: nowIso, changefreq: "monthly", priority: 0.7 },
+    { loc: absoluteUrl(ROUTES.contact), lastmod: nowIso, changefreq: "monthly", priority: 0.7 },
   ];
 
-  const xml = generateUrlSetXml(base);
+  const news = await getNews({ limit: 500 }).catch(() => []);
+  const newsEntries: SitemapUrlEntry[] = news
+    .filter((item) => Boolean(item.slug))
+    .map((item) => ({
+      loc: absoluteUrl(ROUTES.newsDetail(item.slug as string)),
+      lastmod: item.updatedAt || item.publishedAt,
+      changefreq: "monthly" as const,
+      priority: 0.6,
+    }));
+
+  const xml = generateUrlSetXml([...base, ...newsEntries]);
 
   return new Response(xml, {
     status: 200,

@@ -1,4 +1,16 @@
-import { MediaImageType, MediaVideoType, PaginatedDocs } from "./types";
+import {
+  AboutPageType,
+  ContactPageType,
+  HomePageType,
+  MediaImageType,
+  MediaVideoType,
+  NewsPageType,
+  NewsType,
+  PaginatedDocs,
+  ScheduleType,
+  SettingsType,
+  UsefulLinkType,
+} from "./types";
 
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL || "http://localhost:3001";
 
@@ -114,5 +126,63 @@ export async function getAllVideos(): Promise<MediaVideoType[]> {
   });
 }
 
-// Content getters (globals + collections) go below, one exported function each,
-// e.g. `export async function getHomePage(): Promise<Home> { ... }`.
+/* --------------------------------------------------------------- globals */
+
+export async function getSettings(): Promise<SettingsType> {
+  return getGlobal<SettingsType>("settings", { depth: 1 });
+}
+
+export async function getSchedule(): Promise<ScheduleType> {
+  return getGlobal<ScheduleType>("schedule", { depth: 0 });
+}
+
+export async function getHomePage(): Promise<HomePageType> {
+  return getGlobal<HomePageType>("home-page", { depth: 1 });
+}
+
+export async function getNewsPage(): Promise<NewsPageType> {
+  return getGlobal<NewsPageType>("news-page", { depth: 1 });
+}
+
+export async function getAboutPage(): Promise<AboutPageType> {
+  return getGlobal<AboutPageType>("about-page", { depth: 1 });
+}
+
+export async function getContactPage(): Promise<ContactPageType> {
+  return getGlobal<ContactPageType>("contact-page", { depth: 1 });
+}
+
+/* ----------------------------------------------------------- collections */
+
+/**
+ * Published news, newest first. `featured` is sorted ahead of the rest so the
+ * home page teaser can reuse the same ordering as the archive.
+ */
+export async function getNews({
+  limit = 100,
+  featuredFirst = false,
+}: { limit?: number; featuredFirst?: boolean } = {}): Promise<NewsType[]> {
+  const sort = featuredFirst ? "-featured,-publishedAt" : "-publishedAt";
+  const data = await cmsFetch<PaginatedDocs<NewsType>>(
+    `/api/news?limit=${limit}&depth=2&sort=${encodeURIComponent(sort)}&where[_status][equals]=published`,
+    { label: "news" },
+  );
+  return data.docs ?? [];
+}
+
+export async function getNewsBySlug(slug: string): Promise<NewsType | null> {
+  const data = await cmsFetch<PaginatedDocs<NewsType>>(
+    `/api/news?where[slug][equals]=${encodeURIComponent(
+      slug,
+    )}&where[_status][equals]=published&depth=2&limit=1`,
+    { label: "news by slug" },
+  );
+  return data.docs?.[0] ?? null;
+}
+
+export async function getUsefulLinks(): Promise<UsefulLinkType[]> {
+  return getCollection<UsefulLinkType>("useful-links", {
+    depth: 0,
+    limit: 100,
+  });
+}

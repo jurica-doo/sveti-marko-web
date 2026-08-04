@@ -39,8 +39,19 @@ function isPrivateImageHost(hostname: string): boolean {
 const cmsPattern = getCmsRemotePattern();
 const cmsHostname = cmsPattern.hostname;
 
+/**
+ * Hosts allowed to hit `next dev` from outside the machine — needed to open the
+ * site on a phone over the LAN. Dev only; production ignores this.
+ * Override per machine with `DEV_ORIGINS=192.168.1.50,10.0.0.7`.
+ */
+const devOrigins = (process.env.DEV_ORIGINS || "192.168.1.145")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
   trailingSlash: true,
+  allowedDevOrigins: devOrigins,
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,

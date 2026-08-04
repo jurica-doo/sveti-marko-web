@@ -1,26 +1,526 @@
 @import "tailwindcss";
 
+/*
+ * Župa sv. Marka — Neslanovac, Split.
+ * Palette is drawn from the building itself: Brač limestone (stone), the
+ * Adriatic seen from the hill (sea), and the brass fittings inside (brass).
+ */
+@theme {
+  --color-stone-50: #faf9f6;
+  --color-stone-100: #f2f0ea;
+  --color-stone-200: #e3dfd4;
+  --color-stone-300: #cec8b9;
+
+  --color-ink-900: #101d26;
+  --color-ink-800: #162934;
+  --color-ink-700: #1d3542;
+  --color-ink-500: #465a67;
+  --color-ink-400: #6a7883;
+
+  --color-sea-800: #12475a;
+  --color-sea-700: #175a70;
+  --color-sea-600: #1d6f89;
+
+  --color-brass-600: #8f6c2c;
+  --color-brass-500: #a8813c;
+  --color-brass-300: #c9a55f;
+  --color-brass-100: #ebdcbb;
+
+  --font-display: var(--font-marcellus), "Times New Roman", serif;
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --breakpoint-xs: 26rem;
+
+  /*
+   * Motion system — see the duration tokens under `:root` below. Setting the
+   * two Tailwind defaults here is what makes a bare `transition` /
+   * `transition-colors` pick up the site curve and the hover duration, so no
+   * component has to spell either of them out.
+   */
+  --ease-parish: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-parish-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --default-transition-duration: var(--duration-hover);
+  --default-transition-timing-function: var(--ease-parish);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --shell-max: 78rem;
+  --shell-pad: 1.25rem;
+
+  /*
+   * The single source of truth for every animation on the site: one easing
+   * curve (above) and five durations that nothing is allowed to restate as a
+   * magic number.
+   *
+   *   press  — pointer-down feedback; must read as immediate
+   *   hover  — colour, border and opacity changes; the Tailwind default above
+   *   move   — anything that travels: hover lifts and nudges, the header
+   *            switching state, the mobile menu, the lightbox
+   *   reveal — scroll-triggered reveals
+   *   zoom   — the slow image push inside cards and the gallery
+   *
+   * Colour and movement are split deliberately. A colour change is readable
+   * the instant it begins, so it can be quick; a box that physically moves has
+   * to be tracked by the eye, and the same 320ms makes it read as a jump.
+   *
+   * These live in `:root` rather than `@theme` on purpose: Tailwind has no
+   * `--duration-*` theme namespace (its `duration-*` utility takes a bare
+   * number), so tokens declared there would be dropped as unused and would not
+   * generate utilities either. The `@utility` rules below expose them by name
+   * instead, and `lib/motion.ts` mirrors the same numbers for Framer Motion —
+   * change a value here and both halves of the site move together.
+   */
+  --duration-press: 120ms;
+  --duration-hover: 320ms;
+  --duration-move: 500ms;
+  --duration-reveal: 700ms;
+  --duration-zoom: 900ms;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/*
+ * Named counterparts to Tailwind's numeric `duration-*`. Both custom properties
+ * are set because `transition-*` reads `--tw-duration` while a plain
+ * `transition-duration` is what any non-Tailwind rule sees.
+ */
+@utility duration-press {
+  --tw-duration: var(--duration-press);
+  transition-duration: var(--duration-press);
 }
 
-@media (prefers-color-scheme: dark) {
+@utility duration-hover {
+  --tw-duration: var(--duration-hover);
+  transition-duration: var(--duration-hover);
+}
+
+@utility duration-move {
+  --tw-duration: var(--duration-move);
+  transition-duration: var(--duration-move);
+}
+
+@utility duration-reveal {
+  --tw-duration: var(--duration-reveal);
+  transition-duration: var(--duration-reveal);
+}
+
+@utility duration-zoom {
+  --tw-duration: var(--duration-zoom);
+  transition-duration: var(--duration-zoom);
+}
+
+@media (min-width: 48rem) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --shell-pad: 2rem;
   }
 }
 
+* {
+  min-width: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-stone-50);
+  color: var(--color-ink-800);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+::selection {
+  background: var(--color-brass-100);
+  color: var(--color-ink-900);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brass-500);
+  outline-offset: 3px;
+  border-radius: 2px;
+  transition: outline-offset var(--duration-press) var(--ease-parish);
+}
+
+/*
+ * Hover vocabulary.
+ *
+ * Every interactive surface on the site picks one of these instead of
+ * restating a transform, a duration and a curve inline. That is what keeps a
+ * card, a button and a footer link moving by the same amount, for the same
+ * time, on the same curve — and it means there is exactly one place to change
+ * how the whole site feels.
+ *
+ * These run on `--duration-move`, not `--duration-hover`: a colour swap is
+ * legible the moment it starts, but a box that physically travels has to be
+ * followed by the eye, and at the shorter duration the lift reads as a jump
+ * rather than a movement.
+ */
+.card-hover,
+.hover-lift,
+.hover-nudge,
+.hover-rotate,
+.indicator,
+.press {
+  transition-property: transform, translate, scale, rotate, box-shadow,
+    background-color, border-color, outline-color, color, fill, stroke, opacity;
+  transition-duration: var(--duration-move);
+  transition-timing-function: var(--ease-parish);
+}
+
+/*
+ * The shields below anchor to their element, so it has to be positioned. This
+ * one declaration sits in `@layer components` rather than unlayered: an
+ * `absolute` or `fixed` utility on the same element lives in `@layer
+ * utilities`, which comes later, so the element's own positioning still wins
+ * and the shield anchors to it either way.
+ */
+@layer components {
+  .card-hover,
+  .hover-lift,
+  .hover-nudge {
+    position: relative;
+  }
+}
+
+/*
+ * Pointer shields.
+ *
+ * An element that moves on hover slides out from under the pointer. Catch it
+ * near the trailing edge and it un-hovers, falls back under the pointer,
+ * hovers again — a flicker loop that never settles.
+ *
+ * Each shield is a strip that stands still while its element moves: it is a
+ * child of the transformed element, so it is given the exact opposite
+ * translation and its position on screen never changes. It sits over the band
+ * the element is about to vacate, so once the pointer is inside the element it
+ * stays inside something belonging to it, and the loop cannot start.
+ *
+ * The geometry has to be exact. The shield covers the trailing `--lift` /
+ * `--nudge` of the element's resting box — no more, or it would extend the
+ * hover area past the visible control, and no less, or a gap opens between the
+ * moved element and the shield and the loop comes back in that gap.
+ *
+ * `z-index: -1` keeps the shield below the element's own content while still
+ * painting above its background, so it never swallows a click meant for a
+ * child link; in the vacated band there is nothing else to hit-test anyway.
+ */
+.card-hover::after,
+.hover-lift::after,
+.hover-nudge::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  transition: transform var(--duration-move) var(--ease-parish);
+}
+
+/* Card surfaces: news, office and link tiles. */
+.card-hover {
+  --lift: 4px;
+  will-change: transform;
+}
+
+.card-hover:hover {
+  transform: translateY(calc(var(--lift) * -1));
+  box-shadow: 0 18px 40px -28px rgb(16 29 38 / 0.55);
+}
+
+/* Buttons and icon tiles rise a little less than a whole card. */
+.hover-lift {
+  --lift: 2px;
+}
+
+.hover-lift:hover {
+  transform: translateY(calc(var(--lift) * -1));
+}
+
+.card-hover::after,
+.hover-lift::after {
+  top: calc(100% - var(--lift));
+  right: 0;
+  left: 0;
+  height: var(--lift);
+}
+
+.card-hover:hover::after,
+.hover-lift:hover::after {
+  transform: translateY(var(--lift));
+}
+
+/* Inline links slide toward the thing they open. */
+.hover-nudge {
+  --nudge: 4px;
+}
+
+.hover-nudge:hover {
+  transform: translateX(var(--nudge));
+}
+
+.hover-nudge::after {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--nudge);
+}
+
+.hover-nudge:hover::after {
+  transform: translateX(calc(var(--nudge) * -1));
+}
+
+/* Close buttons — the only rotation on the site, and it turns in place. */
+.hover-rotate:hover {
+  transform: rotate(90deg);
+}
+
+/*
+ * Indicators: a child that moves because something around it changed state —
+ * the arrows that slide when their card is hovered, the rules of the menu
+ * button folding into a cross when the menu opens.
+ *
+ * They carry no movement of their own; a `group-hover:translate-*` utility or a
+ * class toggled from React supplies that. What they need is this clock, so an
+ * arrow and the card lifting under it arrive together instead of 180ms apart.
+ *
+ * They need no pointer shield either, because the pointer is never on them — it
+ * is on the surface driving them. That is also the way to move something on
+ * hover without any flicker loop at all: leave the hit target where it is and
+ * slide a child inside it. The lightbox arrows are built exactly that way.
+ *
+ * The class carries no declarations of its own — it exists to join the shared
+ * transition above and the reduced-motion exemption below.
+ */
+
+/*
+ * A disabled control does not answer the pointer. `:hover` still matches on a
+ * disabled button, so this has to be said explicitly.
+ */
+.card-hover:disabled:hover,
+.hover-lift:disabled:hover,
+.hover-nudge:disabled:hover,
+.hover-rotate:disabled:hover,
+.press:disabled:active {
+  transform: none;
+}
+
+/*
+ * Pointer-down feedback. Kept on its own short duration so a press answers at
+ * once while the hover it interrupts still eases.
+ */
+.press:active,
+.card-hover:active,
+.hover-lift:active,
+.hover-nudge:active,
+.hover-rotate:active {
+  transition-duration: var(--duration-press);
+}
+
+.press:active {
+  transform: scale(0.97);
+}
+
+.hover-lift:active {
+  transform: translateY(0);
+}
+
+/*
+ * Navbar underline: a brass rule that grows from the left on hover and stays
+ * out for the current page.
+ */
+.nav-underline {
+  position: relative;
+}
+
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  bottom: -0.125rem;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--color-brass-500);
+  transition: width var(--duration-hover) var(--ease-parish);
+}
+
+.nav-underline:hover::after,
+.nav-underline[aria-current="page"]::after {
+  width: 100%;
+}
+
+/* Rich text links animate their underline rather than snapping colour. */
+.prose-parish a {
+  transition: color var(--duration-hover) var(--ease-parish);
+}
+
+/* Page shell — one width for every section so nothing drifts. */
+.shell {
+  width: 100%;
+  max-width: var(--shell-max);
+  margin-inline: auto;
+  padding-inline: var(--shell-pad);
+}
+
+/*
+ * Eyebrow: letterspaced small caps preceded by a brass rule. Used as the only
+ * section-labelling device on the site, so structure reads the same everywhere.
+ */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-brass-600);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 2rem;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+.eyebrow-light {
+  color: var(--color-brass-300);
+}
+
+/* Rich text coming out of Payload's Lexical editor. */
+.prose-parish {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-ink-700);
+}
+
+.prose-parish > * + * {
+  margin-top: 1.15em;
+}
+
+.prose-parish h2,
+.prose-parish h3 {
+  font-family: var(--font-display);
+  color: var(--color-ink-900);
+  line-height: 1.25;
+  margin-top: 1.8em;
+}
+
+.prose-parish h2 {
+  font-size: 1.6rem;
+}
+
+.prose-parish h3 {
+  font-size: 1.3rem;
+}
+
+.prose-parish a {
+  color: var(--color-sea-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.prose-parish a:hover {
+  color: var(--color-brass-600);
+}
+
+.prose-parish ul,
+.prose-parish ol {
+  padding-left: 1.35rem;
+}
+
+.prose-parish ul {
+  list-style: disc;
+}
+
+.prose-parish ol {
+  list-style: decimal;
+}
+
+.prose-parish li + li {
+  margin-top: 0.4em;
+}
+
+.prose-parish blockquote {
+  border-left: 2px solid var(--color-brass-500);
+  padding-left: 1.15rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--color-ink-900);
+}
+
+/*
+ * Reduced motion.
+ *
+ * Windows reports this preference whenever "Animation effects" is off
+ * (Settings → Accessibility → Visual effects), which is also the default in an
+ * RDP session and under "Adjust for best performance" — so it is on for far
+ * more people than have actually asked for less motion, and a blanket kill
+ * switch here is what makes the site feel broken rather than calm.
+ *
+ * What it removes: everything that travels across the page on its own — scroll
+ * reveals, the sliding menu and lightbox, image zooms, looping animations.
+ *
+ * What it keeps: colour and opacity, which are not motion at all, and the hover
+ * vocabulary below. Those move 2–4px, only while the pointer is held on the
+ * control, and stop the moment it leaves; that is feedback, not animation, and
+ * removing it costs the loop-prevention geometry that depends on the shield and
+ * its element travelling together.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+
+    transition-property: color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke, opacity, box-shadow !important;
+    transition-duration: var(--duration-hover) !important;
+    transition-delay: 0ms !important;
+  }
+
+  /*
+   * Exempt the hover vocabulary. A class selector outranks `*`, so these win
+   * even though both sides are `!important`.
+   */
+  .card-hover,
+  .hover-lift,
+  .hover-nudge,
+  .hover-rotate,
+  .indicator,
+  .press,
+  .card-hover::after,
+  .hover-lift::after,
+  .hover-nudge::after {
+    transition-property: transform, translate, scale, rotate, box-shadow,
+      background-color, border-color, outline-color, color, fill, stroke,
+      opacity !important;
+    transition-duration: var(--duration-move) !important;
+  }
+
+  .press:active,
+  .card-hover:active,
+  .hover-lift:active,
+  .hover-nudge:active,
+  .hover-rotate:active {
+    transition-duration: var(--duration-press) !important;
+  }
 }

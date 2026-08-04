@@ -23,9 +23,26 @@ function toIsoDate(value) {
   return d.toISOString();
 }
 
+/**
+ * Mirrors `lib/routes.ts#internalHref` — the site is served with
+ * `trailingSlash: true`, so every sitemap entry must carry the slash or search
+ * engines crawl a 308 first.
+ */
+function withTrailingSlash(path) {
+  const value = String(path || "/").trim();
+  const [pathAndQuery, hash = ""] = value.split("#");
+  const [rawPath, query = ""] = pathAndQuery.split("?");
+
+  let normalised = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+  const hasExtension = /\.[a-z0-9]{2,5}$/i.test(normalised);
+  if (!hasExtension && !normalised.endsWith("/")) normalised = `${normalised}/`;
+
+  return `${normalised}${query ? `?${query}` : ""}${hash ? `#${hash}` : ""}`;
+}
+
 function resolveAbsoluteUrl(urlOrPath, baseUrl) {
   try {
-    return new URL(urlOrPath, baseUrl).toString();
+    return new URL(withTrailingSlash(urlOrPath), baseUrl).toString();
   } catch {
     return String(urlOrPath);
   }
@@ -124,19 +141,31 @@ async function fetchMediaEntries() {
 async function main() {
   const nowIso = new Date().toISOString();
 
-  // Static routes. Add CMS-driven entries here as content collections land.
   const baseEntries = [
-    {
-      loc: resolveAbsoluteUrl("/", SITE_URL),
-      lastmod: nowIso,
-      changefreq: "weekly",
-      priority: 1.0,
-    },
-  ];
+    { path: "/", changefreq: "weekly", priority: 1.0 },
+    { path: "/vijesti/", changefreq: "weekly", priority: 0.8 },
+    { path: "/o-nama/", changefreq: "monthly", priority: 0.7 },
+    { path: "/kontakt/", changefreq: "monthly", priority: 0.7 },
+  ].map((entry) => ({
+    loc: resolveAbsoluteUrl(entry.path, SITE_URL),
+    lastmod: nowIso,
+    changefreq: entry.changefreq,
+    priority: entry.priority,
+  }));
+
+  const newsDocs = await fetchDocs("news");
+  const newsEntries = newsDocs
+    .filter((doc) => doc?.slug && doc?._status !== "draft")
+    .map((doc) => ({
+      loc: resolveAbsoluteUrl(`/vijesti/${doc.slug}/`, SITE_URL),
+      lastmod: doc.updatedAt || doc.publishedAt,
+      changefreq: "monthly",
+      priority: 0.6,
+    }));
 
   const media = await fetchMediaEntries();
 
-  const sitemapXml = generateUrlSetXml(baseEntries);
+  const sitemapXml = generateUrlSetXml([...baseEntries, ...newsEntries]);
   const mediaSitemapXml = generateUrlSetXml([
     {
       loc: resolveAbsoluteUrl("/", SITE_URL),

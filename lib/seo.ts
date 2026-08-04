@@ -159,6 +159,14 @@ export function buildBusinessJsonLd(contact?: {
   };
 }
 
+/**
+ * JSON-LD payload for a <script> tag. `<` is escaped so CMS copy containing
+ * `</script>` cannot break out of the tag.
+ */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export type BreadcrumbItem = { name: string; href: string };
 
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
