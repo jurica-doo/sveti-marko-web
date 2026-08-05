@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 
 import { HashLink } from "@/components/ui/HashLink";
+import { SamePageLink } from "@/components/ui/SamePageLink";
 import { internalHref, isExternalHref } from "@/lib/routes";
 
 type SmartLinkProps = {
@@ -15,11 +15,13 @@ type SmartLinkProps = {
  *
  * Internal paths are normalised to the trailing-slash form the site is served
  * under, so no navigation ever costs a 308 redirect. External links get
- * `target="_blank"` with the matching `rel`.
+ * `target="_blank"` with the matching `rel` and stay a plain `<a>`.
  *
- * Anything carrying a fragment is handed to `HashLink`, which is the only
- * variant that needs to run on the client — so a page full of ordinary links
- * ships no extra JavaScript for it.
+ * Both internal variants run on the client, because both have to answer a click
+ * that the router would otherwise treat as a no-op: `HashLink` scrolls to a
+ * fragment already on the page, and `SamePageLink` scrolls back to the top when
+ * the link points at the page you are reading. They are two small components
+ * shared by every link on the site, not per-link JavaScript.
  */
 export function SmartLink({ href, children, className, ...rest }: SmartLinkProps) {
   if (isExternalHref(href)) {
@@ -49,8 +51,8 @@ export function SmartLink({ href, children, className, ...rest }: SmartLinkProps
   }
 
   return (
-    <Link href={resolved} className={className} {...rest}>
+    <SamePageLink href={resolved} className={className} {...rest}>
       {children}
-    </Link>
+    </SamePageLink>
   );
 }
