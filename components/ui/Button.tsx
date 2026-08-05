@@ -16,6 +16,15 @@ const VARIANTS: Record<Variant, string> = {
     "border border-stone-50/40 text-stone-50 hover:border-brass-300 hover:text-brass-300 backdrop-blur-sm",
 };
 
+/**
+ * The button look on its own, for the rare control that genuinely is a
+ * `<button>` — retrying after an error, say — rather than a link. Exported so
+ * those cannot drift from the real thing by being restyled by hand.
+ */
+export function buttonClasses(variant: Variant = "solid"): string {
+  return `${BASE} ${VARIANTS[variant]}`;
+}
+
 export function ButtonLink({
   href,
   children,
@@ -28,7 +37,10 @@ export function ButtonLink({
   className?: string;
 }) {
   return (
-    <SmartLink href={href} className={`${BASE} ${VARIANTS[variant]} ${className}`}>
+    <SmartLink
+      href={href}
+      className={`${BASE} ${VARIANTS[variant]} ${className}`}
+    >
       {children}
     </SmartLink>
   );
