@@ -12,13 +12,25 @@ import type { MediaImageType } from "@/lib/types";
 
 type GalleryItem = { image: MediaImageType; id?: string };
 
+/** Shape for anything uploaded before Payload recorded dimensions. */
+const FALLBACK_RATIO = { width: 4, height: 3 };
+
 /**
- * Photo grid with a lightbox. The lightbox is portalled to <body> so it is not
- * clipped by the article's `prose` container or its overflow rules.
+ * Photo grid with a lightbox.
+ *
+ * Laid out as a mosaic — CSS columns with `break-inside-avoid` — rather than a
+ * grid of identical crops. The parish photographs run from 116x208 to 584x342,
+ * and a fixed 4:3 cell threw most of each one away. Columns let every picture
+ * keep its own proportions, which is also what makes the wall knit together
+ * instead of reading as a table.
+ *
+ * The lightbox is portalled to <body> so it is not clipped by the article's
+ * `prose` container or its overflow rules.
  */
 export function Gallery({ items }: { items: GalleryItem[] }) {
   const photos = items.filter((item) => Boolean(imageUrl(item.image)));
   const [index, setIndex] = useState<number | null>(null);
+  const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const mounted = useIsMounted();
 
   const close = useCallback(() => setIndex(null), []);
@@ -57,26 +69,53 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
   const active = index === null ? null : photos[index];
   const activeUrl = active ? imageUrl(active.image) : undefined;
 
+  const lightboxRatio =
+    (active?.image.width || FALLBACK_RATIO.width) /
+    (active?.image.height || FALLBACK_RATIO.height);
+
   return (
     <>
-      <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {/*
+        `columns` rather than `grid`: a grid row is as tall as its tallest cell,
+        so mixing portrait and landscape leaves holes under the short ones.
+        Columns flow each picture directly under the last, which is the whole
+        mosaic effect.
+      */}
+      <ul className="mt-12 columns-2 gap-3 sm:columns-3">
         {photos.map((item, i) => {
           const url = imageUrl(item.image);
+          const key = item.id ?? String(item.image.id);
+
           return (
-            <li key={item.id ?? item.image.id}>
+            <li key={key} className="mb-3 break-inside-avoid">
               <button
                 type="button"
                 onClick={() => setIndex(i)}
-                className="press group relative block aspect-4/3 w-full cursor-pointer overflow-hidden bg-stone-100 ring-1 ring-stone-200 hover:ring-brass-500/60"
+                className="press group relative block w-full cursor-pointer overflow-hidden rounded-lg bg-stone-100 ring-1 ring-stone-200 hover:ring-brass-500/60"
                 aria-label={`Otvori sliku ${i + 1}`}
               >
                 {url ? (
                   <Image
                     src={url}
                     alt={item.image.alt || ""}
-                    fill
+                    width={item.image.width || FALLBACK_RATIO.width}
+                    height={item.image.height || FALLBACK_RATIO.height}
                     sizes="(min-width: 640px) 33vw, 50vw"
-                    className="zoom-media object-cover group-hover:scale-105"
+                    onLoad={() =>
+                      setLoaded((current) => ({ ...current, [key]: true }))
+                    }
+                    /*
+                     * The stone tile behind is the skeleton. Because the width
+                     * and height are known, the tile is already the right shape
+                     * before anything downloads — so the page does not reflow
+                     * when the picture arrives, it just fades onto its own
+                     * placeholder. Fading opacity rather than running a shimmer
+                     * keeps it working under reduced motion, where keyframes
+                     * are cut to nothing.
+                     */
+                    className={`zoom-media h-auto w-full ${
+                      loaded[key] ? "opacity-100" : "opacity-0"
+                    } group-hover:scale-105`}
                   />
                 ) : null}
               </button>
@@ -90,7 +129,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
             <AnimatePresence>
               {active && activeUrl ? (
                 <motion.div
-                  className="fixed inset-0 z-[110] flex items-center justify-center bg-ink-900/95 p-4"
+                  className="fixed inset-0 z-110 flex items-center justify-center bg-ink-900/95 p-4 backdrop-blur-sm sm:p-8"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -99,31 +138,67 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                   aria-modal="true"
                   aria-label="Galerija"
                 >
+                  {/*
+                    Click anywhere to dismiss, but with the ordinary pointer.
+                    `cursor-zoom-out` implied the click would zoom the picture
+                    rather than close the whole thing, which is the opposite of
+                    what it does.
+                  */}
                   <button
                     type="button"
-                    className="absolute inset-0 h-full w-full cursor-zoom-out"
+                    className="absolute inset-0 h-full w-full cursor-default"
                     onClick={close}
                     aria-label="Zatvori galeriju"
                   />
 
+                  {/*
+                    Sized to the picture rather than to a fixed frame, so it is
+                    centred at its own proportions instead of being letterboxed
+                    inside a 3:2 box it never fills.
+                  */}
                   <motion.figure
-                    className="relative max-h-[85vh] w-full max-w-5xl"
+                    /*
+                      `w-full` matters: the frame inside sizes itself with
+                      `w-full`, and a flex item with only a `max-w` is sized by
+                      its content — so the width resolved against nothing and
+                      the picture collapsed to zero.
+                    */
+                    className="pointer-events-none relative z-10 flex w-full max-h-full max-w-5xl flex-col items-center"
                     initial={{ scale: 0.94, opacity: 0, y: 12 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.94, opacity: 0, y: 12 }}
                     transition={transition("move")}
                   >
-                    <div className="relative aspect-[3/2] w-full">
+                    {/*
+                      The frame takes the picture's own aspect ratio and is
+                      capped on both axes, so it scales to fit the viewport
+                      without ever being letterboxed. That matters for the
+                      rounding: the corners belong to the photograph, not to a
+                      box it happens to sit inside. Sizing by intrinsic width
+                      instead left small images at native size — a 156px
+                      photograph stranded in the middle of a full-screen
+                      overlay.
+                    */}
+                    <div
+                      className="relative w-full overflow-hidden rounded-xl shadow-2xl"
+                      style={{
+                        aspectRatio: String(lightboxRatio),
+                        maxHeight: "78vh",
+                        maxWidth: `calc(78vh * ${lightboxRatio})`,
+                      }}
+                    >
                       <Image
                         src={activeUrl}
                         alt={active.image.alt || ""}
                         fill
                         sizes="90vw"
-                        className="object-contain"
+                        priority
+                        className="object-cover"
                       />
                     </div>
+
                     {active.image.caption ? (
-                      <figcaption className="mt-4 text-center text-[0.85rem] text-stone-200/70">
+                      <figcaption className="mt-4 max-w-2xl text-center text-[0.85rem] text-stone-200/70">
                         {active.image.caption}
                       </figcaption>
                     ) : null}
@@ -148,9 +223,14 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                     type="button"
                     onClick={close}
                     aria-label="Zatvori galeriju"
-                    className="hover-rotate absolute top-5 right-5 z-10 flex h-10 w-10 cursor-pointer items-center justify-center text-stone-200 hover:text-brass-300"
+                    className="hover-rotate absolute top-5 right-5 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-stone-50/10 text-stone-200 backdrop-blur-md hover:bg-stone-50/20 hover:text-brass-300"
                   >
-                    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M5 5l10 10M15 5L5 15"
                         stroke="currentColor"
@@ -170,12 +250,9 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
 }
 
 /**
- * The button itself does not move. It used to slide sideways on hover, which
- * meant that catching it near its trailing edge slid it out from under the
- * pointer, un-hovered it, and started the flicker loop — and being absolutely
- * positioned, it could not take a `.hover-nudge` shield the way the footer
- * links do. Sliding the glyph inside a stationary hit target gives the same
- * read with nothing to guard against.
+ * Deliberately not `.hover-nudge`: the `-translate-y-1/2` here is layout, not
+ * motion, so these arrows slide their glyph inside a stationary hit target
+ * rather than moving the button out from under the pointer.
  */
 function LightboxButton({
   side,
@@ -191,7 +268,7 @@ function LightboxButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`group absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center border border-stone-50/20 text-stone-200 transition-colors hover:border-brass-500 hover:text-brass-300 ${
+      className={`group absolute top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-stone-50/10 text-stone-200 backdrop-blur-md transition-colors hover:bg-stone-50/20 hover:text-brass-300 ${
         side === "left" ? "left-4" : "right-4"
       }`}
     >
