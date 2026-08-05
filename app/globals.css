@@ -334,8 +334,20 @@ h4,
 }
 
 /*
- * Navbar underline: a brass rule that grows from the left on hover and stays
- * out for the current page.
+ * Navbar underline: a brass rule that draws in from the left on hover and
+ * clears away to the right on the way out, and stays out for the current page.
+ *
+ * Revealed by clipping, not by scaling or by animating width.
+ *
+ * The rule is always its full size and never transformed; only the clip moves.
+ * `inset(0 0 0 100%)` hides it behind its own left edge, and opening that to
+ * zero wipes it in from the left — while closing it sends the same edge back
+ * across, so it leaves in the direction it arrived rather than retracting.
+ *
+ * Scaling would do the same trick with `transform-origin`, but a 1px-high box
+ * under a transform gets composited and re-rasterised, and the line renders
+ * visibly thinner while it animates than it does at rest. Clipping leaves the
+ * box alone, so the weight is identical at every point of the sweep.
  */
 .nav-underline {
   position: relative;
@@ -346,15 +358,16 @@ h4,
   position: absolute;
   bottom: -0.125rem;
   left: 0;
-  width: 0;
+  width: 100%;
   height: 1px;
   background: var(--color-brass-500);
-  transition: width var(--duration-hover) var(--ease-parish);
+  clip-path: inset(0 0 0 100%);
+  transition: clip-path var(--duration-hover) var(--ease-parish);
 }
 
 .nav-underline:hover::after,
 .nav-underline[aria-current="page"]::after {
-  width: 100%;
+  clip-path: inset(0 0 0 0);
 }
 
 /* Rich text links animate their underline rather than snapping colour. */
@@ -429,6 +442,29 @@ h4,
   transition-duration: var(--duration-reveal);
   transition-timing-function: var(--ease-parish);
   transition-delay: var(--menu-delay, 0ms);
+}
+
+/*
+ * The scroll cue at the foot of the hero.
+ *
+ * A small, slow travel rather than a bounce: the hero now fills the screen
+ * exactly, so this is the only thing telling a visitor the page continues, and
+ * it has to read as an invitation rather than a demand.
+ */
+@keyframes scroll-cue {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(0.4rem);
+    opacity: 1;
+  }
+}
+
+.scroll-cue {
+  animation: scroll-cue 2.4s var(--ease-parish-in-out) infinite;
 }
 
 /*
@@ -647,6 +683,15 @@ h4,
     transition-duration: var(--duration-zoom) !important;
   }
 
+  /*
+   * The navbar underline draws and clears with a clip, so without this it is
+   * the one hover on the site that would snap while everything beside it eases.
+   */
+  .nav-underline::after {
+    transition-property: clip-path !important;
+    transition-duration: var(--duration-hover) !important;
+  }
+
   .press:active,
   .card-hover:active,
   .hover-lift:active,
@@ -675,5 +720,14 @@ h4,
     transition-property: transform, translate, opacity !important;
     transition-duration: var(--duration-reveal) !important;
     transition-delay: var(--menu-delay, 0ms) !important;
+  }
+
+  /*
+   * The scroll cue keeps moving. It is the only signal that a full-screen hero
+   * has anything below it, and a still arrow reads as decoration rather than an
+   * instruction. It travels 6px, slowly, in one place.
+   */
+  .scroll-cue {
+    animation: scroll-cue 2.4s var(--ease-parish-in-out) infinite !important;
   }
 }

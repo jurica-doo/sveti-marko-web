@@ -4,7 +4,8 @@ import { SchedulePlaque } from "@/components/home/SchedulePlaque";
 import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { imageUrl } from "@/lib/media";
-import { SCHEDULE_ANCHOR } from "@/lib/routes";
+import { SmartLink } from "@/components/ui/SmartLink";
+import { ROUTES, SCHEDULE_ANCHOR } from "@/lib/routes";
 import type { HomePageType, ScheduleType } from "@/lib/types";
 
 export function Hero({
@@ -17,7 +18,9 @@ export function Hero({
   const hero = home.hero;
   const background = imageUrl(hero.image);
 
-  const masses = (schedule?.masses ?? []).filter((row) => row.highlight !== false);
+  const masses = (schedule?.masses ?? []).filter(
+    (row) => row.highlight !== false,
+  );
   const confessions = (schedule?.confessions ?? []).filter(
     (row) => row.highlight !== false,
   );
@@ -28,12 +31,16 @@ export function Hero({
     // hero runs behind the transparent bar. Keep the two in step.
     <section className="relative -mt-18 lg:-mt-20">
       {/*
-        Trimmed from 38/46rem: the plaque used to be pulled up into this box,
-        so the photograph had to carry the height the overlap ate. Now that the
-        band stands on its own, the same trim keeps the times sitting where
-        they did relative to the fold.
+        Exactly one screen. The section is pulled up under the transparent
+        header, so it starts at the very top of the viewport and `100dvh` lands
+        its bottom edge on the fold — no sliver of the schedule band showing
+        underneath to say "there is more, but not yet".
+
+        `dvh` rather than `vh` because mobile browsers shrink the viewport as
+        their toolbars retract; `vh` is fixed to the largest size and would run
+        the hero off the bottom of the screen on first paint.
       */}
-      <div className="relative min-h-144 overflow-hidden bg-ink-900 lg:min-h-168">
+      <div className="relative h-dvh min-h-144 overflow-hidden bg-ink-900">
         {background ? (
           <Image
             src={background}
@@ -56,7 +63,9 @@ export function Hero({
         <div className="absolute inset-0 bg-linear-to-b from-ink-900/75 via-ink-900/45 to-ink-900/85" />
         <div className="absolute inset-0 bg-linear-to-r from-ink-900/70 via-ink-900/10 to-transparent" />
 
-        <div className="shell relative flex min-h-144 flex-col justify-end pt-32 pb-16 lg:min-h-168 lg:pt-40 lg:pb-24">
+        {/* `h-full` so the copy tracks the screen the photograph now fills;
+            the bottom padding clears the scroll cue below it. */}
+        <div className="shell relative flex h-full flex-col justify-end pt-32 pb-24 lg:pt-40 lg:pb-28">
           <div className="max-w-2xl">
             {hero.eyebrow ? (
               <Reveal y={12}>
@@ -96,6 +105,34 @@ export function Hero({
             ) : null}
           </div>
         </div>
+
+        {/*
+          The only sign that a full-screen hero has anything under it. It scrolls
+          to the schedule band rather than by a fixed distance, so it always
+          lands on the next thing rather than somewhere between two.
+        */}
+        {showPlaque && (masses.length > 0 || confessions.length > 0) ? (
+          <SmartLink
+            href={ROUTES.schedule}
+            aria-label="Prijeđi na raspored"
+            className="absolute inset-x-0 bottom-7 z-10 mx-auto flex h-11 w-11 items-center justify-center text-stone-50 transition-colors hover:text-brass-300"
+          >
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="scroll-cue"
+            >
+              <path d="M12 4v14M6 13l6 6 6-6" />
+            </svg>
+          </SmartLink>
+        ) : null}
       </div>
 
       {/*
@@ -106,7 +143,10 @@ export function Hero({
         makes that seam deliberate.
       */}
       {showPlaque && (masses.length > 0 || confessions.length > 0) ? (
-        <div id={SCHEDULE_ANCHOR} className="scroll-mt-18 bg-ink-900 lg:scroll-mt-20">
+        <div
+          id={SCHEDULE_ANCHOR}
+          className="scroll-mt-18 bg-ink-900 lg:scroll-mt-20"
+        >
           <div className="h-px w-full bg-linear-to-r from-transparent via-brass-500/60 to-transparent" />
           <Reveal y={12} delay={0.2}>
             <div className="shell">

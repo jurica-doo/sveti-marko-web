@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 
-import { NewsCard } from "@/components/news/NewsCard";
+import { NewsArchive } from "@/components/news/NewsArchive";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Reveal } from "@/components/ui/Reveal";
-import { getNews, getNewsPage } from "@/lib/api";
+import { getNewsPage, getNewsPaginated } from "@/lib/api";
 import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
 import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
@@ -30,10 +29,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function NewsIndexPage() {
-  const [page, news] = await Promise.all([
-    getNewsPage().catch(() => null),
-    getNews({ limit: 200 }).catch(() => []),
-  ]);
+  const page = await getNewsPage().catch(() => null);
+
+  // `perPage` is the office's own setting; nine fills the three-up grid evenly.
+  const perPage = page?.perPage || 9;
+  const firstPage = await getNewsPaginated({ page: 1, limit: perPage }).catch(
+    () => null,
+  );
+  const news = firstPage?.docs ?? [];
 
   const jsonLd = buildBreadcrumbJsonLd([
     { name: "Naslovnica", href: ROUTES.home },
@@ -57,17 +60,11 @@ export default async function NewsIndexPage() {
 
       <section className="shell py-16 lg:py-24">
         {news.length ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {news.map((item, index) => (
-              <Reveal
-                key={item.id}
-                delay={(index % 3) * 0.08}
-                className="h-full"
-              >
-                <NewsCard news={item} priority={index < 3} />
-              </Reveal>
-            ))}
-          </div>
+          <NewsArchive
+            initial={news}
+            perPage={perPage}
+            hasMore={Boolean(firstPage?.hasNextPage)}
+          />
         ) : (
           <p className="max-w-xl text-[1.05rem] text-ink-500">
             {page?.emptyMessage || FALLBACK.emptyMessage}

@@ -170,6 +170,32 @@ export async function getNews({
   return data.docs ?? [];
 }
 
+/**
+ * The path a page of published news lives at.
+ *
+ * Exported as a string rather than hidden inside a fetch so the archive can
+ * request the next page straight from the browser: the CMS origin is public
+ * (`NEXT_PUBLIC_CMS_URL`) and already on the CORS allowlist, so paging needs no
+ * route of our own standing between the two.
+ */
+export function newsPagePath({
+  page = 1,
+  limit = 9,
+}: { page?: number; limit?: number } = {}): string {
+  return `${CMS_URL}/api/news?limit=${limit}&page=${page}&depth=2&sort=-publishedAt&where[_status][equals]=published`;
+}
+
+/** One page of published news, newest first, with the paging flags. */
+export async function getNewsPaginated({
+  page = 1,
+  limit = 9,
+}: { page?: number; limit?: number } = {}): Promise<PaginatedDocs<NewsType>> {
+  return cmsFetch<PaginatedDocs<NewsType>>(
+    newsPagePath({ page, limit }).replace(CMS_URL, ""),
+    { label: "news page" },
+  );
+}
+
 export async function getNewsBySlug(slug: string): Promise<NewsType | null> {
   const data = await cmsFetch<PaginatedDocs<NewsType>>(
     `/api/news?where[slug][equals]=${encodeURIComponent(

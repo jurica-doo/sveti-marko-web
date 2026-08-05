@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useIsMounted } from "@/hooks/useIsMounted";
@@ -14,6 +14,9 @@ type GalleryItem = { image: MediaImageType; id?: string };
 
 /** Shape for anything uploaded before Payload recorded dimensions. */
 const FALLBACK_RATIO = { width: 4, height: 3 };
+
+/** Photographs shown before the reader asks for the rest. */
+const FIRST_BATCH = 10;
 
 /**
  * Photo grid with a lightbox.
@@ -28,10 +31,27 @@ const FALLBACK_RATIO = { width: 4, height: 3 };
  * `prose` container or its overflow rules.
  */
 export function Gallery({ items }: { items: GalleryItem[] }) {
-  const photos = items.filter((item) => Boolean(imageUrl(item.image)));
+  /*
+   * Memoised so `step` can depend on the count without the React Compiler
+   * having to assume the array is rebuilt — and mutated — on every render.
+   */
+  const photos = useMemo(
+    () => items.filter((item) => Boolean(imageUrl(item.image))),
+    [items],
+  );
   const [index, setIndex] = useState<number | null>(null);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
+  const [shown, setShown] = useState(FIRST_BATCH);
   const mounted = useIsMounted();
+
+  /*
+   * Only the visible photographs are mounted, so an article with fifty pictures
+   * does not put fifty requests on the page before anyone has scrolled to them.
+   * The lightbox still steps through the whole set: `photos` stays the source
+   * of truth for navigation, `visible` only governs what the wall renders.
+   */
+  const visible = photos.slice(0, shown);
+  const remaining = photos.length - visible.length;
 
   const close = useCallback(() => setIndex(null), []);
 
@@ -82,7 +102,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
         mosaic effect.
       */}
       <ul className="mt-12 columns-2 gap-3 sm:columns-3">
-        {photos.map((item, i) => {
+        {visible.map((item, i) => {
           const url = imageUrl(item.image);
           const key = item.id ?? String(item.image.id);
 
@@ -123,6 +143,18 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
           );
         })}
       </ul>
+
+      {remaining > 0 ? (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShown((current) => current + FIRST_BATCH)}
+            className="hover-lift inline-flex cursor-pointer items-center justify-center border border-ink-900/25 px-7 py-3.5 text-[0.78rem] font-semibold tracking-[0.16em] text-ink-900 uppercase hover:border-brass-500 hover:text-brass-600"
+          >
+            Učitaj još ({remaining})
+          </button>
+        </div>
+      ) : null}
 
       {mounted
         ? createPortal(

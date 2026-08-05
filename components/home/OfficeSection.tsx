@@ -27,11 +27,18 @@ export function OfficeSection({
           intro={section?.intro}
         />
 
-        <div className="mt-12">
+        {/*
+          Two cards side by side on desktop rather than one narrow column with
+          the rest of the row empty. The hours and the notes were always two
+          separate things stacked inside one box — the row divider between them
+          said as much — so giving each its own card fills the width without
+          inventing content to fill it. Below `lg` they stack, unchanged.
+        */}
+        <div className="mt-12 grid gap-6 lg:grid-cols-2 lg:gap-8">
           {hours.length ? (
-            <Reveal className="lg:max-w-2xl">
-              <div className="bg-stone-50 p-7 ring-1 ring-stone-200 sm:p-8">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-brass-600">
+            <Reveal>
+              <div className="h-full bg-stone-50 p-7 ring-1 ring-stone-200 sm:p-8">
+                <p className="text-[0.68rem] font-semibold tracking-[0.22em] text-brass-600 uppercase">
                   Radno vrijeme
                 </p>
 
@@ -55,21 +62,32 @@ export function OfficeSection({
                     </div>
                   ))}
                 </dl>
+              </div>
+            </Reveal>
+          ) : null}
 
-                {notes.length ? (
-                  <div className="mt-7 space-y-4 border-t border-stone-200 pt-6">
-                    {notes.map((note, index) => (
-                      <div key={note.id ?? index}>
-                        <p className="font-display text-[1.05rem] text-ink-900">
-                          {note.title}
-                        </p>
-                        <p className="mt-1 text-[0.9rem] leading-relaxed text-ink-500">
-                          {note.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
+          {notes.length ? (
+            <Reveal delay={0.08}>
+              <div className="h-full bg-stone-50 p-7 ring-1 ring-stone-200 sm:p-8">
+                <p className="text-[0.68rem] font-semibold tracking-[0.22em] text-brass-600 uppercase">
+                  Važne napomene
+                </p>
+
+                <div className="mt-6 space-y-5 divide-y divide-stone-200">
+                  {notes.map((note, index) => (
+                    <div
+                      key={note.id ?? index}
+                      className={index > 0 ? "pt-5" : ""}
+                    >
+                      <p className="font-display text-[1.05rem] text-ink-900">
+                        {note.title}
+                      </p>
+                      <p className="mt-1 text-[0.9rem] leading-relaxed text-ink-500">
+                        {note.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </Reveal>
           ) : null}
