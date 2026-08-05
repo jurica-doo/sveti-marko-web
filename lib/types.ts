@@ -108,6 +108,15 @@ export interface SettingsType {
     | null;
 }
 
+/** Adoration, rosary and the first-Friday devotions. */
+export type DevotionRow = {
+  title: string;
+  day?: string | null;
+  times?: string | null;
+  note?: string | null;
+  id?: string;
+};
+
 export type ScheduleRow = {
   day: string;
   times: string;
@@ -121,15 +130,7 @@ export interface ScheduleType {
   massesNote?: string | null;
   confessions?: ScheduleRow[] | null;
   confessionsNote?: string | null;
-  devotions?:
-    | {
-        title: string;
-        day?: string | null;
-        times?: string | null;
-        note?: string | null;
-        id?: string;
-      }[]
-    | null;
+  devotions?: DevotionRow[] | null;
   officeHours?:
     | { day: string; hours: string; note?: string | null; id?: string }[]
     | null;

@@ -67,7 +67,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
               <button
                 type="button"
                 onClick={() => setIndex(i)}
-                className="press group relative block aspect-4/3 w-full overflow-hidden bg-stone-100 ring-1 ring-stone-200 hover:ring-brass-500/60"
+                className="press group relative block aspect-4/3 w-full cursor-pointer overflow-hidden bg-stone-100 ring-1 ring-stone-200 hover:ring-brass-500/60"
                 aria-label={`Otvori sliku ${i + 1}`}
               >
                 {url ? (
@@ -76,7 +76,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                     alt={item.image.alt || ""}
                     fill
                     sizes="(min-width: 640px) 33vw, 50vw"
-                    className="object-cover transition-transform duration-zoom group-hover:scale-105"
+                    className="zoom-media object-cover group-hover:scale-105"
                   />
                 ) : null}
               </button>
@@ -148,7 +148,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                     type="button"
                     onClick={close}
                     aria-label="Zatvori galeriju"
-                    className="hover-rotate absolute top-5 right-5 z-10 flex h-10 w-10 items-center justify-center text-stone-200 hover:text-brass-300"
+                    className="hover-rotate absolute top-5 right-5 z-10 flex h-10 w-10 cursor-pointer items-center justify-center text-stone-200 hover:text-brass-300"
                   >
                     <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
                       <path
@@ -191,7 +191,7 @@ function LightboxButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`group absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-stone-50/20 text-stone-200 transition-colors hover:border-brass-500 hover:text-brass-300 ${
+      className={`group absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center border border-stone-50/20 text-stone-200 transition-colors hover:border-brass-500 hover:text-brass-300 ${
         side === "left" ? "left-4" : "right-4"
       }`}
     >

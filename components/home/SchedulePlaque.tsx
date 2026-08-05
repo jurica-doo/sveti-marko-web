@@ -1,5 +1,5 @@
 import { bindTimeRanges } from "@/lib/format";
-import type { ScheduleRow } from "@/lib/types";
+import type { DevotionRow, ScheduleRow } from "@/lib/types";
 
 /**
  * The signature element of the site: a plaque of times, set like the carved
@@ -18,12 +18,14 @@ export function SchedulePlaque({
   masses,
   confessionsTitle,
   confessions,
+  devotions = [],
   tone = "dark",
 }: {
   massesTitle?: string | null;
   masses: ScheduleRow[];
   confessionsTitle?: string | null;
   confessions: ScheduleRow[];
+  devotions?: DevotionRow[];
   tone?: "band" | "dark" | "light";
 }) {
   if (!masses.length && !confessions.length) return null;
@@ -43,7 +45,10 @@ export function SchedulePlaque({
    */
   const pad =
     tone === "band"
-      ? ["py-8 @3xl/plaque:py-11 @3xl/plaque:pr-10", "py-8 @3xl/plaque:py-11 @3xl/plaque:pl-10"]
+      ? [
+          "py-8 @3xl/plaque:py-11 @3xl/plaque:pr-10",
+          "py-8 @3xl/plaque:py-11 @3xl/plaque:pl-10",
+        ]
       : ["px-6 py-7 @3xl/plaque:px-8", "px-6 py-7 @3xl/plaque:px-8"];
 
   const label = onDark ? "text-brass-300" : "text-brass-600";
@@ -78,6 +83,57 @@ export function SchedulePlaque({
           ruleClass={rule}
         />
       </div>
+
+      {/*
+        Devotions run the full width beneath the two columns rather than
+        becoming a third one. There are only ever a handful, and a third narrow
+        column would leave the masses and confessions cramped for the sake of
+        entries nobody is scanning as urgently.
+      */}
+      {devotions.length ? (
+        <div
+          className={`border-t border-current/10 ${
+            tone === "band"
+              ? "py-8 @3xl/plaque:py-9"
+              : "px-6 py-7 @3xl/plaque:px-8"
+          }`}
+        >
+          <p
+            className={`text-[0.68rem] font-semibold tracking-[0.22em] uppercase ${label}`}
+          >
+            Pobožnosti
+          </p>
+
+          {/*
+            Three across where there is room. Each cell is its own container, so
+            a cell too narrow for a ledger row stacks its time under the title
+            on its own — the same rule the columns above follow.
+          */}
+          <dl className="mt-5 grid gap-x-10 gap-y-5 @3xl/plaque:grid-cols-3">
+            {devotions.map((item, index) => (
+              <div
+                key={item.id ?? `${item.title}-${index}`}
+                className="@container/devotion flex flex-col gap-1.5 @sm/devotion:flex-row @sm/devotion:items-baseline @sm/devotion:gap-6"
+              >
+                <dt className="text-[0.95rem] leading-snug @sm/devotion:flex-1">
+                  {item.title}
+                  {item.day ? (
+                    <span className={`mt-0.5 block text-[0.78rem] ${muted}`}>
+                      {item.day}
+                      {item.note ? ` · ${item.note}` : ""}
+                    </span>
+                  ) : null}
+                </dt>
+                {item.times ? (
+                  <dd className="font-display text-[1.35rem] leading-tight tracking-tight @sm/devotion:w-40 @sm/devotion:shrink-0">
+                    {bindTimeRanges(item.times)}
+                  </dd>
+                ) : null}
+              </div>
+            ))}
+          </dl>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -432,6 +432,21 @@ h4,
 }
 
 /*
+ * The slow push on a photograph when the card or tile around it is hovered.
+ *
+ * A class rather than utilities so it can be exempted from the reduced-motion
+ * block: without that the scale still happens, it just happens instantly, which
+ * is a harder cut than no movement at all — the card under it eases while the
+ * picture inside snaps.
+ */
+.zoom-media {
+  transition-property: transform, translate, scale;
+  transition-duration: var(--duration-zoom);
+  transition-timing-function: var(--ease-parish);
+  will-change: transform;
+}
+
+/*
  * Slim scrollbar for panes that scroll inside the page rather than being the
  * page — currently the mobile menu on a short screen.
  *
@@ -619,6 +634,17 @@ h4,
       background-color, border-color, outline-color, color, fill, stroke,
       opacity !important;
     transition-duration: var(--duration-move) !important;
+  }
+
+  /*
+   * The image zoom too. It is a large-area scale, which is the kind of motion
+   * this query is really aimed at — but it only runs while the pointer is held
+   * on the card, and leaving it out meant the picture jumped while the card
+   * around it eased, which reads worse than either choice made consistently.
+   */
+  .zoom-media {
+    transition-property: transform, translate, scale !important;
+    transition-duration: var(--duration-zoom) !important;
   }
 
   .press:active,

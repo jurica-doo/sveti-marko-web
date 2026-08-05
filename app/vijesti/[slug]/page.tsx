@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import { Gallery } from "@/components/news/Gallery";
@@ -69,7 +68,6 @@ export default async function NewsDetailPage({
   const all = await getNews({ limit: 12 }).catch(() => []);
   const related = all.filter((item) => item.id !== news.id).slice(0, 3);
 
-  const cover = imageUrl(news.coverImage);
   const category = categoryTitle(news);
 
   const jsonLd = {
@@ -142,19 +140,6 @@ export default async function NewsDetailPage({
         </header>
 
         <div className="shell">
-          {cover ? (
-            <Reveal className="relative -mt-10 aspect-[16/9] w-full overflow-hidden bg-stone-100 lg:-mt-14">
-              <Image
-                src={cover}
-                alt={news.coverImage?.alt || news.title}
-                fill
-                priority
-                sizes="(min-width: 1280px) 78rem, 100vw"
-                className="object-cover"
-              />
-            </Reveal>
-          ) : null}
-
           <div className="mx-auto max-w-3xl py-14 lg:py-20">
             <RichTextRenderer content={news.content} />
 

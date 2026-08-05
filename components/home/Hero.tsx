@@ -115,6 +115,7 @@ export function Hero({
                 masses={masses}
                 confessionsTitle={hero.confessionsTitle}
                 confessions={confessions}
+                devotions={schedule?.devotions ?? []}
                 tone="band"
               />
             </div>

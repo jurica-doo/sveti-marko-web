@@ -35,7 +35,7 @@ export function NewsCard({
               fill
               priority={priority}
               sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover transition-transform duration-zoom group-hover:scale-[1.06]"
+              className="zoom-media object-cover group-hover:scale-[1.06]"
             />
           ) : null}
 
