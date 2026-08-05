@@ -4,9 +4,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { MenuToggleIcon } from "@/components/ui/MenuToggleIcon";
 import { SmartLink } from "@/components/ui/SmartLink";
 import { internalHref, ROUTES } from "@/lib/routes";
-import type { SettingsType } from "@/lib/types";
+import type { ScheduleType, SettingsType } from "@/lib/types";
 
 const FALLBACK_NAV = [
   { label: "Naslovnica", href: ROUTES.home },
@@ -15,24 +16,21 @@ const FALLBACK_NAV = [
   { label: "Kontakt", href: ROUTES.contact },
 ];
 
-/**
- * The three rules of the menu button, closed and open. The outer two travel to
- * the middle and cross; the middle one has nowhere to go, so it fades and
- * collapses its width rather than sitting under the cross.
- */
-const BAR_POSITIONS = [
-  { closed: "-translate-y-1.5", open: "translate-y-0 rotate-45" },
-  { closed: "opacity-100", open: "w-0 opacity-0" },
-  { closed: "translate-y-1.5", open: "translate-y-0 -rotate-45" },
-];
-
-export function Navbar({ settings }: { settings: SettingsType }) {
+export function Navbar({
+  settings,
+  schedule,
+}: {
+  settings: SettingsType;
+  schedule?: ScheduleType | null;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const items = (settings.navigation ?? [])
-    .filter((item): item is { label: string; href: string } => Boolean(item?.label && item?.href))
+    .filter((item): item is { label: string; href: string } =>
+      Boolean(item?.label && item?.href),
+    )
     .map((item) => ({ label: item.label, href: internalHref(item.href) }));
 
   const navItems = items.length ? items : FALLBACK_NAV;
@@ -47,25 +45,27 @@ export function Navbar({ settings }: { settings: SettingsType }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const solid = scrolled || !overlay;
+  const scrolledOrInner = scrolled || !overlay;
+
+  /*
+   * The bar goes opaque while the menu is open as well. The sheet behind it is
+   * stone, and on the home hero the bar is transparent with white type — which
+   * would be invisible against it. Going solid also means bar and sheet share
+   * one surface rather than looking like two stacked panels.
+   */
+  const solid = scrolledOrInner || open;
 
   const isActive = (href: string) =>
     href === ROUTES.home ? pathname === href : pathname.startsWith(href);
 
+  // The bottom hairline is a shadow rather than a border on purpose. The home
+  // hero cancels the header with `-mt-18 lg:-mt-20` to sit underneath it; a
+  // border would add a 1px row that the pull-up does not cover, and the page
+  // background would show through as a pale line above the hero.
   return (
     <>
-      {/*
-        The bottom hairline is a shadow rather than a border on purpose. The
-        home hero cancels the header with `-mt-18 lg:-mt-20` to sit underneath
-        it; a border would add a 1px row that the pull-up does not cover, and
-        the page background would show through as a pale line above the hero.
-      */}
       <header
-        className={`sticky top-0 transition-all duration-move ${
-          // Above the menu overlay (z-100) while it is open, so the one toggle
-          // stays reachable instead of being buried under the scrim.
-          open ? "z-101" : "z-50"
-        } ${
+        className={`sticky top-0 z-50 transition-all duration-move ${
           solid
             ? "bg-stone-50/95 shadow-[0_1px_0_0_var(--color-stone-200)] backdrop-blur-md"
             : "bg-transparent shadow-none"
@@ -73,20 +73,21 @@ export function Navbar({ settings }: { settings: SettingsType }) {
       >
         <div className="shell flex h-18 items-center justify-between gap-6 lg:h-20">
           {/*
-            The wordmark stays above the open panel, so it is the one way to
-            navigate that the menu's own links do not already close.
-          */}
+          Closes the menu on its way home: the wordmark stays in the bar while
+          the panel is open, so it is the one link that the menu's own items do
+          not already close.
+        */}
           <SmartLink
             href={ROUTES.home}
             onClick={() => setOpen(false)}
             className="group flex items-center gap-3 leading-none sm:gap-4"
           >
             {/*
-              `.brand-mark` fills the church outline with `currentColor`, so
-              setting the same colour as the wordmark keeps the two in step
-              through the header's transparent-to-solid change instead of
-              needing a second image.
-            */}
+            `.brand-mark` fills the church outline with `currentColor`, so
+            setting the same colour as the wordmark keeps the two in step
+            through the header's transparent-to-solid change instead of
+            needing a second image.
+          */}
             <span
               aria-hidden="true"
               className={`brand-mark indicator h-8 w-10 shrink-0 transition-colors group-hover:scale-110 sm:h-9 sm:w-11 ${
@@ -154,42 +155,42 @@ export function Navbar({ settings }: { settings: SettingsType }) {
               </SmartLink>
             ) : null}
 
-            {/*
-              One control for both states. It used to be a hamburger here and a
-              separate cross inside the panel, so opening the menu swapped one
-              button for another in a different place — which is what made the
-              whole thing feel abrupt. Now the three rules fold into the cross
-              and unfold back, in place, on the shared motion clock.
-            */}
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
               aria-label={open ? "Zatvori izbornik" : "Otvori izbornik"}
               aria-expanded={open}
-              className={`press relative -mr-2 flex h-10 w-10 items-center justify-center lg:hidden ${
-                // Open, the button sits over the panel, which is always light.
-                open || solid ? "text-ink-900" : "text-stone-50"
+              aria-controls="mobile-menu"
+              className={`-mr-2 flex h-10 w-10 items-center justify-center transition-colors lg:hidden ${
+                solid ? "text-ink-900" : "text-stone-50"
               }`}
             >
-              {BAR_POSITIONS.map((bar, index) => (
-                <span
-                  key={index}
-                  aria-hidden="true"
-                  className={`indicator absolute h-px w-[22px] origin-center bg-current ${
-                    open ? bar.open : bar.closed
-                  }`}
-                />
-              ))}
+              <MenuToggleIcon open={open} className="h-9 w-9" />
             </button>
           </div>
         </div>
       </header>
 
+      {/*
+        A sibling of the header, not a child of it. The header's `z-50` opens a
+        stacking context, so a sheet nested inside it would be layered against
+        the bar rather than against the page — and at `z-40` it would have
+        covered the very bar it belongs to. Out here the two are ordered against
+        each other: sheet at 40, header at 50, so the wordmark, the mark and the
+        toggle all stay above it and keep working while the menu is open.
+
+        `masses` are the same `highlight` rows the hero band shows, read from the
+        same `schedule` global — so the office edits mass times in one place and
+        every surface that quotes them follows.
+      */}
       <MobileMenu
         open={open}
         onClose={() => setOpen(false)}
         items={navItems}
         cta={settings.headerCta}
+        masses={(schedule?.masses ?? []).filter(
+          (row) => row.highlight !== false,
+        )}
       />
     </>
   );

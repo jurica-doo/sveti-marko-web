@@ -57,7 +57,7 @@ export default async function RootLayout({
       <body className="flex min-h-full flex-col antialiased">
         <MotionProvider>
           <AnnouncementBar settings={settings} />
-          <Navbar settings={settings} />
+          <Navbar settings={settings} schedule={schedule} />
           <main className="flex-1">{children}</main>
           <Footer settings={settings} contact={contact} schedule={schedule} />
         </MotionProvider>

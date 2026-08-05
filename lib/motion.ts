@@ -10,6 +10,17 @@
 /** `--ease-parish`, in the tuple form Framer wants. */
 export const EASE_PARISH: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
+/**
+ * `--ease-parish-in-out`. The default curve above is heavily front-loaded — it
+ * covers 40% of the distance in the first 10% of the time, which is right for
+ * something answering a pointer but reads as a snap on anything that unfolds.
+ * This one eases at both ends, so opening and closing feel like the same
+ * gesture run forwards and backwards.
+ */
+export const EASE_PARISH_IN_OUT: [number, number, number, number] = [
+  0.65, 0, 0.35, 1,
+];
+
 /** Seconds, matching the CSS tokens of the same name. */
 export const DURATION = {
   press: 0.12,
@@ -43,6 +54,11 @@ export const SCROLL = {
  */
 export function transition(name: DurationName, delay = 0) {
   return { duration: DURATION[name], delay, ease: EASE_PARISH };
+}
+
+/** As `transition`, on the symmetrical curve — for panels that open and shut. */
+export function transitionInOut(name: DurationName, delay = 0) {
+  return { duration: DURATION[name], delay, ease: EASE_PARISH_IN_OUT };
 }
 
 /**
