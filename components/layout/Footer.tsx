@@ -1,5 +1,5 @@
 import { SmartLink } from "@/components/ui/SmartLink";
-import { telHref } from "@/lib/format";
+import { bindTimeRanges, telHref } from "@/lib/format";
 import type { ContactPageType, ScheduleType, SettingsType } from "@/lib/types";
 
 const SOCIAL_LABELS: Record<string, string> = {
@@ -156,18 +156,31 @@ export function Footer({
             </address>
           ) : null}
 
+          {/*
+            Titled, because this block sits directly under the office address
+            and its hours — without a label the two read as one list and the
+            mass times look like opening times.
+          */}
           {masses.length ? (
-            <dl className="mt-6 space-y-1.5 border-t border-stone-50/10 pt-5 text-[0.9rem]">
-              {masses.map((row, index) => (
-                <div
-                  key={row.id ?? `${row.day}-${index}`}
-                  className="flex justify-between gap-4"
-                >
-                  <dt className="text-stone-200/60">{row.day}</dt>
-                  <dd className="text-right text-stone-50">{row.times}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="mt-6 border-t border-stone-50/10 pt-5">
+              <p className="text-[0.7rem] font-semibold tracking-[0.2em] text-brass-300 uppercase">
+                Svete mise
+              </p>
+
+              <dl className="mt-3 space-y-1.5 text-[0.9rem]">
+                {masses.map((row, index) => (
+                  <div
+                    key={row.id ?? `${row.day}-${index}`}
+                    className="flex justify-between gap-4"
+                  >
+                    <dt className="text-stone-200/60">{row.day}</dt>
+                    <dd className="text-right text-stone-50">
+                      {bindTimeRanges(row.times)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           ) : null}
         </div>
       </div>
