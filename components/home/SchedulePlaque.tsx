@@ -26,6 +26,7 @@ export function SchedulePlaque({
   confessions,
   devotions = [],
   tone = "dark",
+  className = "",
 }: {
   massesTitle?: string | null;
   masses: ScheduleRow[];
@@ -33,6 +34,8 @@ export function SchedulePlaque({
   confessions: ScheduleRow[];
   devotions?: DevotionRow[];
   tone?: "band" | "dark" | "light";
+  /** For a caller that needs the card to fill a column, e.g. `lg:flex-1`. */
+  className?: string;
 }) {
   if (!masses.length && !confessions.length) return null;
 
@@ -54,7 +57,7 @@ export function SchedulePlaque({
    * own horizontal padding; the side insets only exist to hold the two lower
    * sections off the divider between them.
    */
-  const padY = isBand ? "py-8 @3xl/plaque:py-11" : "px-6 py-7 @3xl/plaque:px-8";
+  const padY = isBand ? "py-8 @3xl/plaque:py-11" : "px-6 py-9 @3xl/plaque:px-8";
   const insetStart = isBand ? "@3xl/plaque:pr-10" : "";
   const insetEnd = isBand ? "@3xl/plaque:pl-10" : "";
 
@@ -90,7 +93,9 @@ export function SchedulePlaque({
    * those apart, so the narrow instance used to get the wide layout and squeeze.
    */
   return (
-    <div className={`@container/plaque w-full ${shell}`}>
+    <div
+      className={`@container/plaque flex w-full flex-col ${shell} ${className}`}
+    >
       {masses.length ? (
         <div className={padY}>
           <SectionLabel className={label}>
@@ -115,7 +120,7 @@ export function SchedulePlaque({
 
       {lower.length ? (
         <div
-          className={`grid border-t border-current/10 divide-y divide-current/10 ${
+          className={`grid flex-1 border-t border-current/10 divide-y divide-current/10 ${
             lower.length > 1
               ? "@3xl/plaque:grid-cols-2 @3xl/plaque:divide-x @3xl/plaque:divide-y-0"
               : ""

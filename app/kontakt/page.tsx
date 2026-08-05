@@ -192,47 +192,28 @@ export default async function ContactPage() {
             ) : null}
           </Reveal>
 
+          {/*
+            One block, three sections — the same object the hero band shows.
+            Devotions used to sit in a card of their own here purely because
+            they were not wired into the plaque yet, which left the page drawing
+            two different kinds of divider for the same job: a rule between
+            masses and confessions, a gap before devotions. The labelled
+            sections and the rules between them already say where one list ends
+            and the next begins.
+          */}
           <Reveal delay={0.1} className="flex flex-col lg:col-span-7">
             <SchedulePlaque
               massesTitle="Svete mise"
               masses={schedule?.masses ?? []}
               confessionsTitle="Ispovijed"
               confessions={schedule?.confessions ?? []}
+              devotions={schedule?.devotions ?? []}
               tone="light"
+              className="lg:flex-1"
             />
-
-            {schedule?.devotions?.length ? (
-              <div className="mt-6 bg-stone-100 p-7 ring-1 ring-stone-200 sm:p-8 lg:flex-1">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-brass-600">
-                  Pobožnosti
-                </p>
-                <dl className="mt-5 divide-y divide-stone-200">
-                  {schedule.devotions.map((item, index) => (
-                    <div
-                      key={item.id ?? index}
-                      className="flex items-baseline justify-between gap-5 py-3"
-                    >
-                      <dt className="text-[0.95rem] text-ink-700">
-                        {item.title}
-                        {item.day ? (
-                          <span className="mt-0.5 block text-[0.8rem] text-ink-400">
-                            {item.day}
-                            {item.note ? ` · ${item.note}` : ""}
-                          </span>
-                        ) : null}
-                      </dt>
-                      <dd className="text-right font-display text-[1.1rem] leading-tight text-ink-900">
-                        {bindTimeRanges(item.times)}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            ) : null}
           </Reveal>
         </div>
       </section>
-
     </>
   );
 }
