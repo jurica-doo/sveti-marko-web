@@ -15,13 +15,13 @@ export const revalidate = 60;
  * `about-page` global has an upload of its own — at which point that wins,
  * see `StorySection`.
  *
- * The statue portrait sits in the parish section rather than under its own
- * "Nebeski zaštitnik" heading — that section has been dropped from the page.
- * Its title/feastDay/body still live in the CMS `patron` group untouched, so
- * bringing it back later is just adding the `StorySection` call again.
+ * There is no "Crkva" section on the page any more, so its interior photo
+ * moved to the parish section instead of sitting unused. Its CMS `church`
+ * group is untouched, so bringing the section back is just re-adding the
+ * `StorySection` call.
  */
-const CHURCH_IMAGE = "/sveti-marko-unutrasnjost-sa-strane.jpg";
-const PARISH_IMAGE = "/sveti-marko-kip.jpg";
+const PARISH_IMAGE = "/sveti-marko-unutrasnjost-sa-strane.jpg";
+const PATRON_IMAGE = "/sveti-marko-kip.jpg";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getAboutPage().catch(() => null);
@@ -63,14 +63,15 @@ export default async function AboutPage() {
         title={page.parish?.title}
         body={page.parish?.body}
         image={page.parish?.image || PARISH_IMAGE}
-        imageOrientation="portrait"
       />
 
       <StorySection
-        eyebrow="Crkva"
-        title={page.church?.title || "Crkva svetog Marka"}
-        body={page.church?.body}
-        image={page.church?.image || CHURCH_IMAGE}
+        eyebrow="Nebeski zaštitnik"
+        title={page.patron?.title}
+        meta={page.patron?.feastDay ? `Blagdan · ${page.patron.feastDay}` : null}
+        body={page.patron?.body}
+        image={page.patron?.image || PATRON_IMAGE}
+        imageOrientation="portrait"
         flip
         tone="muted"
       />
