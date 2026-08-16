@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { ContactForm } from "@/components/contact/ContactForm";
 import { SchedulePlaque } from "@/components/home/SchedulePlaque";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Reveal } from "@/components/ui/Reveal";
@@ -212,6 +213,10 @@ export default async function ContactPage() {
               className="lg:flex-1"
             />
           </Reveal>
+        </div>
+
+        <div className="mt-10 lg:mt-14">
+          <ContactForm whatsappNumber={contact.mobile || contact.phone} />
         </div>
       </section>
     </>

@@ -8,6 +8,10 @@ import type { MediaImageType, RichText } from "@/lib/types";
 /**
  * Text-and-image block used three times on the About page (parish, church,
  * patron). `flip` alternates the image side so the page reads as a rhythm.
+ *
+ * `image` also takes a bare string — a path straight into `/public` — so a
+ * section can ship with a real photograph before the CMS field behind it has
+ * one uploaded. Once an editor sets the field, the CMS image wins.
  */
 export function StorySection({
   eyebrow,
@@ -22,13 +26,14 @@ export function StorySection({
   title?: string | null;
   meta?: string | null;
   body?: RichText;
-  image?: MediaImageType | null;
+  image?: MediaImageType | string | null;
   flip?: boolean;
   tone?: "light" | "muted";
 }) {
   if (!title && !body) return null;
 
-  const source = imageUrl(image);
+  const source = typeof image === "string" ? image : imageUrl(image);
+  const alt = typeof image === "string" ? title || "" : image?.alt || title || "";
 
   return (
     <section
@@ -43,7 +48,7 @@ export function StorySection({
           >
             <Image
               src={source}
-              alt={image?.alt || title || ""}
+              alt={alt}
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="object-cover"

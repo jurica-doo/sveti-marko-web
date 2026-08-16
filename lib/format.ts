@@ -100,3 +100,25 @@ export function telHref(phone?: string | null): string | undefined {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned ? `tel:${cleaned}` : undefined;
 }
+
+/**
+ * `https://wa.me/<digits>` for a parish contact number, with the message
+ * from the contact form pre-filled.
+ *
+ * `wa.me` wants the number in full international form with no leading `+`.
+ * The office's numbers are entered in local form (`0` trunk prefix), so a
+ * bare `0` is swapped for Croatia's `385` — the only country this parish's
+ * numbers are ever in.
+ */
+export function waHref(phone?: string | null, message?: string): string | undefined {
+  if (!phone) return undefined;
+
+  let digits = phone.replace(/\D/g, "");
+  if (!digits) return undefined;
+
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  else if (digits.startsWith("0")) digits = `385${digits.slice(1)}`;
+
+  const base = `https://wa.me/${digits}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
