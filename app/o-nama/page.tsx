@@ -11,12 +11,17 @@ import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/
 export const revalidate = 60;
 
 /**
- * Fallback photographs, used until the matching CMS field
- * (`church.image` / `patron.image` on the `about-page` global) has an upload
- * of its own — at which point that wins, see `StorySection`.
+ * Fallback photographs, used until the matching CMS field on the
+ * `about-page` global has an upload of its own — at which point that wins,
+ * see `StorySection`.
+ *
+ * The statue portrait sits in the parish section rather than under its own
+ * "Nebeski zaštitnik" heading — that section has been dropped from the page.
+ * Its title/feastDay/body still live in the CMS `patron` group untouched, so
+ * bringing it back later is just adding the `StorySection` call again.
  */
 const CHURCH_IMAGE = "/sveti-marko-unutrasnjost-sa-strane.jpg";
-const PATRON_IMAGE = "/sveti-marko-kip.jpg";
+const PARISH_IMAGE = "/sveti-marko-kip.jpg";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getAboutPage().catch(() => null);
@@ -57,7 +62,8 @@ export default async function AboutPage() {
         eyebrow="Župna zajednica"
         title={page.parish?.title}
         body={page.parish?.body}
-        image={page.parish?.image}
+        image={page.parish?.image || PARISH_IMAGE}
+        imageOrientation="portrait"
       />
 
       <StorySection
@@ -67,14 +73,6 @@ export default async function AboutPage() {
         image={page.church?.image || CHURCH_IMAGE}
         flip
         tone="muted"
-      />
-
-      <StorySection
-        eyebrow="Nebeski zaštitnik"
-        title={page.patron?.title}
-        meta={page.patron?.feastDay ? `Blagdan · ${page.patron.feastDay}` : null}
-        body={page.patron?.body}
-        image={page.patron?.image || PATRON_IMAGE}
       />
     </>
   );

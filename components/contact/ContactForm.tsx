@@ -155,7 +155,7 @@ export function ContactForm({
           <button
             type="submit"
             disabled={status === "sending"}
-            className={`${buttonClasses("solid")} disabled:cursor-not-allowed disabled:opacity-60`}
+            className={`${buttonClasses("solid")} cursor-pointer disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {status === "sending"
               ? "Šalje se…"
@@ -198,7 +198,7 @@ function ChannelPill({
       role="radio"
       aria-checked={active}
       onClick={onSelect}
-      className={`press inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[0.72rem] font-semibold uppercase tracking-[0.14em] transition-colors ${
+      className={`press inline-flex cursor-pointer items-center gap-2 rounded-full px-5 py-2.5 text-[0.72rem] font-semibold uppercase tracking-[0.14em] transition-colors ${
         active ? "bg-sea-800 text-stone-50" : "text-ink-500 hover:text-ink-900"
       }`}
     >

@@ -6,8 +6,8 @@ import { RichTextRenderer } from "@/lib/richtext";
 import type { MediaImageType, RichText } from "@/lib/types";
 
 /**
- * Text-and-image block used three times on the About page (parish, church,
- * patron). `flip` alternates the image side so the page reads as a rhythm.
+ * Text-and-image block used twice on the About page (parish, church). `flip`
+ * alternates the image side so the page reads as a rhythm.
  *
  * `image` also takes a bare string — a path straight into `/public` — so a
  * section can ship with a real photograph before the CMS field behind it has
@@ -19,6 +19,7 @@ export function StorySection({
   meta,
   body,
   image,
+  imageOrientation = "landscape",
   flip = false,
   tone = "light",
 }: {
@@ -27,6 +28,13 @@ export function StorySection({
   meta?: string | null;
   body?: RichText;
   image?: MediaImageType | string | null;
+  /**
+   * "portrait" is for a photo that is genuinely taller than wide — the
+   * statue in the parish section — rather than the usual wide shot. It gets
+   * a matching 3:4 frame instead of the standard 4:3 one, and is capped
+   * narrower so it doesn't tower over the text beside it.
+   */
+  imageOrientation?: "landscape" | "portrait";
   flip?: boolean;
   tone?: "light" | "muted";
 }) {
@@ -34,6 +42,7 @@ export function StorySection({
 
   const source = typeof image === "string" ? image : imageUrl(image);
   const alt = typeof image === "string" ? title || "" : image?.alt || title || "";
+  const isPortrait = imageOrientation === "portrait";
 
   return (
     <section
@@ -42,15 +51,17 @@ export function StorySection({
       <div className="shell grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         {source ? (
           <Reveal
-            className={`relative aspect-[4/3] w-full overflow-hidden bg-stone-200 ${
-              flip ? "lg:order-2" : ""
-            }`}
+            className={`relative w-full overflow-hidden bg-stone-200 ${
+              isPortrait ? "aspect-3/4 max-w-sm mx-auto lg:mx-0" : "aspect-4/3"
+            } ${flip ? "lg:order-2" : ""}`}
           >
             <Image
               src={source}
               alt={alt}
               fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
+              sizes={
+                isPortrait ? "(min-width: 1024px) 24rem, 60vw" : "(min-width: 1024px) 50vw, 100vw"
+              }
               className="object-cover"
             />
           </Reveal>
