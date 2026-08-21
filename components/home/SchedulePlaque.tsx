@@ -1,5 +1,9 @@
 import { bindTimeRanges } from "@/lib/format";
-import type { DevotionRow, ScheduleRow, SpecialScheduleBlock } from "@/lib/types";
+import type {
+  DevotionRow,
+  ScheduleRow,
+  SpecialScheduleBlock,
+} from "@/lib/types";
 
 /**
  * The signature element of the site: a plaque of times, set like the carved
@@ -50,7 +54,8 @@ export function SchedulePlaque({
     (block) => block.active !== false && block.entries?.length,
   );
 
-  if (!masses.length && !confessions.length && !specialBlocks.length) return null;
+  if (!masses.length && !confessions.length && !specialBlocks.length)
+    return null;
 
   const onDark = tone !== "light";
   const isBand = tone === "band";
@@ -72,6 +77,9 @@ export function SchedulePlaque({
     ? "border-brass-300/30 bg-brass-500/10"
     : "border-brass-500/35 bg-brass-100/50";
   const specialRule = onDark ? "border-brass-300/25" : "border-brass-500/25";
+  const specialTitleUnderline = onDark
+    ? "decoration-brass-300/40"
+    : "decoration-brass-500/40";
 
   /*
    * In `band` the plaque already sits inside the page gutter, so it drops its
@@ -137,7 +145,9 @@ export function SchedulePlaque({
                 key={block.id ?? `${block.title}-${blockIndex}`}
                 className={`border px-5 py-5 @3xl/plaque:px-6 ${specialCard}`}
               >
-                <p className="font-display text-[1.15rem] leading-tight">
+                <p
+                  className={`inline-block underline decoration-1 underline-offset-4 font-display text-[1.2rem] leading-tight ${specialTitleUnderline}`}
+                >
                   {block.title}
                 </p>
                 <dl className="mt-4 space-y-3">
