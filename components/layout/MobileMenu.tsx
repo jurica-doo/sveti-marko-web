@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 
+import { LanguageSwitcherInline } from "@/components/layout/LanguageSwitcher";
 import { SmartLink } from "@/components/ui/SmartLink";
 import { bindTimeRanges } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -186,6 +187,26 @@ export function MobileMenu({
             ) : null}
 
             {/*
+              The language choice lives here rather than in the bar on mobile:
+              the bar is down to the wordmark and the toggle at this width, and
+              a switcher squeezed between them competes with both. Inside the
+              sheet it sits with the other things you might come to the menu to
+              change.
+            */}
+            <div
+              style={revealDelay(items.length + 1)}
+              className={`menu-reveal pt-9 ${
+                open ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0"
+              }`}
+            >
+              <LanguageSwitcherInline
+                dict={dict}
+                tabbable={open}
+                onNavigate={onClose}
+              />
+            </div>
+
+            {/*
               A glance at the times, so the commonest question the site is asked
               is answered without leaving the menu. The button above still goes
               to the full schedule for everything else — confessions, devotions,
@@ -193,7 +214,7 @@ export function MobileMenu({
             */}
             {masses.length ? (
               <div
-                style={revealDelay(items.length + 1)}
+                style={revealDelay(items.length + 2)}
                 className={`menu-reveal pt-9 ${
                   open
                     ? "translate-y-0 opacity-100"

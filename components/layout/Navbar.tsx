@@ -171,12 +171,14 @@ export function Navbar({
             ) : null}
 
             {/*
-              Visible at every width, not tucked behind the hamburger — the
-              language a visitor reads the site in matters as much on a phone
-              as on desktop, arguably more since that is where a wrong guess
-              (browser locale, geography) is likeliest to have landed them.
+              Desktop only. At `lg` and up the bar has room for it beside the
+              CTA; below that the bar is just the wordmark and the toggle, and
+              `MobileMenu` carries the same choice inside the sheet instead —
+              laid out flat, so it is one tap rather than two.
             */}
-            <LanguageSwitcher dict={dict} solid={solid} />
+            <div className="hidden lg:block">
+              <LanguageSwitcher dict={dict} solid={solid} />
+            </div>
 
             <button
               type="button"

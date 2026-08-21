@@ -121,3 +121,62 @@ export function LanguageSwitcher({
     </div>
   );
 }
+
+/**
+ * The same choice, laid out flat — for the mobile menu sheet.
+ *
+ * Not the bloom-open version above: that trades a second tap for space it
+ * does not need to save here, and a dropdown that opens *inside* an already
+ * open panel reads as a menu within a menu. The sheet has room to show all
+ * four at once, so every language is one tap away and the current one is
+ * visibly marked rather than having to be inferred from the trigger.
+ *
+ * `tabbable` because the sheet is never unmounted — it is switched with
+ * opacity so it can animate out — and links inside a hidden panel must stay
+ * out of the tab order.
+ */
+export function LanguageSwitcherInline({
+  dict,
+  tabbable,
+  onNavigate,
+}: {
+  dict: Dictionary;
+  tabbable: boolean;
+  onNavigate?: () => void;
+}) {
+  const locale = useLocale();
+  const pathname = usePathname();
+
+  return (
+    <nav aria-label={dict.languageSwitcher.label}>
+      <p className="text-[0.6rem] tracking-[0.3em] text-ink-400 uppercase">
+        {dict.languageSwitcher.label}
+      </p>
+
+      <ul className="mt-5 flex flex-wrap items-center gap-3">
+        {LOCALES.map((code) => {
+          const active = code === locale;
+
+          return (
+            <li key={code}>
+              <a
+                href={swapLocale(pathname, code)}
+                aria-label={LOCALE_META[code].nativeName}
+                aria-current={active ? "true" : undefined}
+                tabIndex={tabbable ? undefined : -1}
+                onClick={onNavigate}
+                className={`press flex ${BUBBLE} ${LABEL} items-center justify-center rounded-full ring-1 transition-colors ${
+                  active
+                    ? "bg-sea-800 text-stone-50 ring-sea-800"
+                    : "text-ink-700 ring-stone-200 hover:text-brass-600 hover:ring-brass-500"
+                }`}
+              >
+                {LOCALE_META[code].shortLabel}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
