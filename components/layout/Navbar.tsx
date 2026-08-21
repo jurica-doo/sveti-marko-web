@@ -8,6 +8,7 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 import { MenuToggleIcon } from "@/components/ui/MenuToggleIcon";
 import { SmartLink } from "@/components/ui/SmartLink";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { stripLocale } from "@/lib/i18n/routes";
 import { internalHref, ROUTES } from "@/lib/routes";
 import type { ScheduleType, SettingsType } from "@/lib/types";
 
@@ -39,8 +40,18 @@ export function Navbar({
 
   const navItems = items.length ? items : fallbackNav;
 
+  /*
+   * Compared without the locale prefix. `usePathname()` reports the URL as
+   * served — `/it/vijesti/` — while `ROUTES` and the CMS's own nav hrefs are
+   * bare (`/vijesti/`), because `SmartLink` is what adds the prefix, and only
+   * at render time. Matching the two directly would therefore fail on every
+   * locale but hr, leaving the home page without its transparent header and
+   * no nav item ever marked current.
+   */
+  const localePath = stripLocale(pathname);
+
   // The home hero sits under the header, so the bar starts transparent there.
-  const overlay = pathname === ROUTES.home;
+  const overlay = localePath === ROUTES.home;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -60,7 +71,7 @@ export function Navbar({
   const solid = scrolledOrInner || open;
 
   const isActive = (href: string) =>
-    href === ROUTES.home ? pathname === href : pathname.startsWith(href);
+    href === ROUTES.home ? localePath === href : localePath.startsWith(href);
 
   // The bottom hairline is a shadow rather than a border on purpose. The home
   // hero cancels the header with `-mt-18 lg:-mt-20` to sit underneath it; a
