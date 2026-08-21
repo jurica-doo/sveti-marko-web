@@ -162,12 +162,21 @@ export function buildBusinessJsonLd(contact?: {
     sameAs: [] as string[],
     ...(contact?.workingHours && contact.workingHours.length > 0
       ? {
-          openingHoursSpecification: contact.workingHours.map((wh) => ({
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: wh.day,
-            opens: wh.hours.split("-")[0]?.trim() ?? "",
-            closes: wh.hours.split("-")[1]?.trim() ?? "",
-          })),
+          // Only rows that are both filled in and actually a range (not
+          // "Zatvoreno"/"Closed", which has no dash to split on) become a
+          // spec entry — CMS content that's missing or unrecognised for
+          // this locale is skipped rather than emitted as a broken one.
+          openingHoursSpecification: contact.workingHours
+            .filter((wh) => wh.day && wh.hours?.includes("–"))
+            .map((wh) => {
+              const [opens, closes] = wh.hours.split("–");
+              return {
+                "@type": "OpeningHoursSpecification",
+                dayOfWeek: wh.day,
+                opens: opens?.trim() ?? "",
+                closes: closes?.trim() ?? "",
+              };
+            }),
         }
       : {}),
   };
