@@ -23,7 +23,7 @@ export function ContactForm({
 }: {
   whatsappNumber?: string | null;
 }) {
-  const [channel, setChannel] = useState<Channel>("whatsapp");
+  const [channel, setChannel] = useState<Channel>("email");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -94,8 +94,8 @@ export function ContactForm({
         Pošaljite poruku
       </h2>
       <p className="mt-3 max-w-lg text-[1rem] text-ink-500">
-        Odaberite kako vam je lakše javiti se — poruka na WhatsApp ili izravno
-        na e-mail župnog ureda.
+        Odaberite kako vam je lakše javiti se — izravno na e-mail župnog
+        ureda ili porukom na WhatsApp.
       </p>
 
       <div
@@ -104,18 +104,18 @@ export function ContactForm({
         className="mt-8 inline-flex gap-1 rounded-full bg-stone-50 p-1 ring-1 ring-stone-200"
       >
         <ChannelPill
-          active={channel === "whatsapp"}
-          onSelect={() => selectChannel("whatsapp")}
-          icon={<WhatsAppIcon />}
-        >
-          WhatsApp poruka
-        </ChannelPill>
-        <ChannelPill
           active={channel === "email"}
           onSelect={() => selectChannel("email")}
           icon={<MailIcon />}
         >
-          E-mail poruka
+          E-mail
+        </ChannelPill>
+        <ChannelPill
+          active={channel === "whatsapp"}
+          onSelect={() => selectChannel("whatsapp")}
+          icon={<WhatsAppIcon />}
+        >
+          WhatsApp
         </ChannelPill>
       </div>
 
@@ -226,9 +226,24 @@ function Field({
   );
 }
 
+/*
+ * Sized in CSS rather than via the `width`/`height` attributes: the pill's
+ * label wraps to two lines below `sm` (there isn't room for it beside the
+ * icon otherwise), which leaves the icon sitting next to a taller block of
+ * text than a single-line pill would — a fixed 15px icon read as an
+ * afterthought next to it. Growing the icon (not the pill's own padding)
+ * answers that without making the pill itself any wider.
+ */
+const PILL_ICON_CLASSES = "h-4.5 w-4.5 shrink-0 lg:h-5 lg:w-5";
+
 function WhatsAppIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={PILL_ICON_CLASSES}
+    >
       <path d="M12 5.5a6.4 6.4 0 00-5.5 9.7L5.6 19l3.9-1a6.4 6.4 0 102.5-12.5zm0 11.7a5.3 5.3 0 01-2.7-.7l-.2-.1-2.3.6.6-2.2-.1-.2a5.3 5.3 0 114.7 2.6z" />
     </svg>
   );
@@ -237,13 +252,12 @@ function WhatsAppIcon() {
 function MailIcon() {
   return (
     <svg
-      width="15"
-      height="15"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.6"
       aria-hidden="true"
+      className={PILL_ICON_CLASSES}
     >
       <rect x="4" y="6" width="16" height="12" />
       <path d="M4 7l8 6 8-6" />
