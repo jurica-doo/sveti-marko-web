@@ -21,6 +21,8 @@ export function hasLocale(value: string): value is Locale {
 type LocaleMeta = {
   /** The language's own name for itself, used in the switcher's aria-label. */
   nativeName: string;
+  /** Two-letter label shown in the switcher bubbles. */
+  shortLabel: string;
   /** BCP 47 tag for `<html lang>`, `hreflang` and OpenGraph's dashed form. */
   tag: string;
   /** `og:locale` — same information, underscored. */
@@ -28,8 +30,8 @@ type LocaleMeta = {
 };
 
 export const LOCALE_META: Record<Locale, LocaleMeta> = {
-  hr: { nativeName: "Hrvatski", tag: "hr", ogLocale: "hr_HR" },
-  en: { nativeName: "English", tag: "en", ogLocale: "en_US" },
-  it: { nativeName: "Italiano", tag: "it", ogLocale: "it_IT" },
-  pl: { nativeName: "Polski", tag: "pl", ogLocale: "pl_PL" },
+  hr: { nativeName: "Hrvatski", shortLabel: "HR", tag: "hr", ogLocale: "hr_HR" },
+  en: { nativeName: "English", shortLabel: "EN", tag: "en", ogLocale: "en_US" },
+  it: { nativeName: "Italiano", shortLabel: "IT", tag: "it", ogLocale: "it_IT" },
+  pl: { nativeName: "Polski", shortLabel: "PL", tag: "pl", ogLocale: "pl_PL" },
 };

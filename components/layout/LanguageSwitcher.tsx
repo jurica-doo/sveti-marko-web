@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { FLAGS } from "@/components/layout/flags";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { LOCALE_META, LOCALES } from "@/lib/i18n/config";
 import { useLocale } from "@/lib/i18n/context";
@@ -13,17 +12,23 @@ const BUBBLE = "h-9 w-9 sm:h-10 sm:w-10";
 /** Vertical spacing between stacked bubbles, in px — matches `BUBBLE` + a gap. */
 const STEP = 46;
 
+/** The two-letter codes are set like the nav's own small caps. */
+const LABEL = "text-[0.68rem] font-semibold uppercase tracking-[0.06em] sm:text-[0.72rem]";
+
 /**
- * Flags only, no text — a trigger bubble showing the active language, which
- * on click blooms into a short column of the other three below it. Collapsed,
- * only the trigger shows; the others sit scaled to nothing directly behind it
- * and grow into place on open, the same "fluid menu" motion as the mobile
+ * A trigger bubble showing the active language's code, which on click blooms
+ * into a short column of the other three below it. Collapsed, only the
+ * trigger shows; the others sit scaled to nothing directly behind it and
+ * grow into place on open, the same "fluid menu" motion as the mobile
  * navigation toggle.
  *
  * Every bubble is a real `<a href>` to the equivalent page in that language
  * (via `swapLocale`) — a plain anchor, not a client-router push, so the
  * language actually changes on click with no JavaScript required to work at
  * all; the bloom-open animation is a progressive enhancement on top.
+ *
+ * The trigger tracks the header's own transparent/solid state, since over the
+ * home hero it sits on a photograph and everywhere else on stone.
  */
 export function LanguageSwitcher({
   dict,
@@ -38,7 +43,6 @@ export function LanguageSwitcher({
   const rootRef = useRef<HTMLDivElement>(null);
 
   const others = LOCALES.filter((code) => code !== locale);
-  const CurrentFlag = FLAGS[locale];
 
   useEffect(() => {
     if (!open) return;
@@ -67,15 +71,15 @@ export function LanguageSwitcher({
         aria-expanded={open}
         aria-controls="language-switcher-menu"
         aria-label={dict.languageSwitcher.label}
-        className={`press relative z-20 flex ${BUBBLE} shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full shadow-sm ring-2 transition-shadow duration-hover ${
+        className={`press relative z-20 flex ${BUBBLE} ${LABEL} shrink-0 cursor-pointer items-center justify-center rounded-full ring-1 transition-colors duration-hover ${
           open
-            ? "ring-brass-500"
+            ? "bg-sea-800 text-stone-50 ring-brass-500"
             : solid
-              ? "ring-stone-200"
-              : "ring-stone-50/50"
+              ? "bg-stone-100 text-ink-900 ring-stone-200 hover:text-brass-600 hover:ring-brass-500"
+              : "bg-stone-50/10 text-stone-50 ring-stone-50/50 backdrop-blur-sm hover:text-brass-300 hover:ring-brass-300"
         }`}
       >
-        <CurrentFlag />
+        {LOCALE_META[locale].shortLabel}
       </button>
 
       <div
@@ -86,7 +90,6 @@ export function LanguageSwitcher({
         className="absolute top-0 left-1/2"
       >
         {others.map((target, index) => {
-          const Flag = FLAGS[target];
           const y = (index + 1) * STEP;
 
           return (
@@ -97,7 +100,7 @@ export function LanguageSwitcher({
               aria-label={LOCALE_META[target].nativeName}
               tabIndex={open ? 0 : -1}
               onClick={() => setOpen(false)}
-              className={`press absolute top-0 left-0 flex ${BUBBLE} items-center justify-center overflow-hidden rounded-full bg-stone-50 shadow-md ring-1 ring-stone-200 will-change-transform ${
+              className={`press absolute top-0 left-0 flex ${BUBBLE} ${LABEL} items-center justify-center rounded-full bg-stone-50 text-ink-700 shadow-md ring-1 ring-stone-200 transition-colors will-change-transform hover:text-brass-600 hover:ring-brass-500 ${
                 open ? "" : "pointer-events-none"
               }`}
               style={{
@@ -106,11 +109,11 @@ export function LanguageSwitcher({
                   : "translate(-50%, 0px) scale(0.4)",
                 opacity: open ? 1 : 0,
                 zIndex: others.length - index,
-                transition: `transform var(--duration-hover) var(--ease-parish), opacity var(--duration-hover) var(--ease-parish)`,
+                transition: `transform var(--duration-hover) var(--ease-parish), opacity var(--duration-hover) var(--ease-parish), color var(--duration-hover) var(--ease-parish)`,
                 transitionDelay: open ? `${index * 45}ms` : "0ms",
               }}
             >
-              <Flag />
+              {LOCALE_META[target].shortLabel}
             </a>
           );
         })}
