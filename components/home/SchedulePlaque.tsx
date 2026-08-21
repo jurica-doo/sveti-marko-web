@@ -142,9 +142,7 @@ export function SchedulePlaque({
                 key={block.id ?? `${block.title}-${blockIndex}`}
                 className={`border px-5 py-5 @3xl/plaque:px-6 ${specialCard}`}
               >
-                <p
-                  className={`inline-block font-display text-[1.2rem] leading-tight`}
-                >
+                <p className="font-display text-[1.2rem] leading-tight">
                   {block.title}
                 </p>
                 <dl className="mt-4 space-y-3">
