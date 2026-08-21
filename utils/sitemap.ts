@@ -7,11 +7,18 @@ export type SitemapChangeFreq =
   | "yearly"
   | "never";
 
+export type SitemapAlternate = {
+  hreflang: string;
+  href: string;
+};
+
 export type SitemapUrlEntry = {
   loc: string;
   lastmod?: string;
   changefreq?: SitemapChangeFreq;
   priority?: number;
+  /** Other languages' copies of this same page — emits `<xhtml:link rel="alternate">` siblings. */
+  alternates?: SitemapAlternate[];
 };
 
 function escapeXml(value: string): string {
@@ -51,6 +58,13 @@ export function generateUrlSetXml(entries: SitemapUrlEntry[]): string {
       const changefreq = e.changefreq;
       const priority = e.priority;
 
+      const alternates = (e.alternates ?? [])
+        .map(
+          (alt) =>
+            `    <xhtml:link rel="alternate" hreflang="${escapeXml(alt.hreflang)}" href="${escapeXml(alt.href)}" />`,
+        )
+        .join("\n");
+
       return [
         "  <url>",
         `    <loc>${loc}</loc>`,
@@ -61,6 +75,7 @@ export function generateUrlSetXml(entries: SitemapUrlEntry[]): string {
         isValidPriority(priority ?? Number.NaN)
           ? `    <priority>${(priority as number).toFixed(1)}</priority>`
           : null,
+        alternates || null,
         "  </url>",
       ]
         .filter(Boolean)
@@ -70,7 +85,7 @@ export function generateUrlSetXml(entries: SitemapUrlEntry[]): string {
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     urls,
     "</urlset>",
     "",

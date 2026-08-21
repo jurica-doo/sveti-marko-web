@@ -1,0 +1,136 @@
+{
+  "languageSwitcher": {
+    "label": "Choose language"
+  },
+  "nav": {
+    "ariaLabel": "Main menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "scheduleHeading": "Mass schedule",
+    "fallback": {
+      "home": "Home",
+      "news": "News",
+      "about": "About",
+      "contact": "Contact"
+    }
+  },
+  "breadcrumb": {
+    "trailAriaLabel": "Breadcrumb",
+    "home": "Home"
+  },
+  "footer": {
+    "office": "Parish office",
+    "masses": "Holy Mass",
+    "creditPrefix": "Design and build —"
+  },
+  "contact": {
+    "eyebrow": "Get in touch",
+    "heading": "Send a message",
+    "intro": "Choose whichever is easiest for you — straight to the parish office's e-mail, or a message on WhatsApp.",
+    "channelGroupLabel": "How to send your message",
+    "emailTab": "E-mail",
+    "whatsappTab": "WhatsApp",
+    "nameLabel": "Full name",
+    "emailLabel": "E-mail",
+    "messageLabel": "Message",
+    "sendingLabel": "Sending…",
+    "openWhatsapp": "Open WhatsApp",
+    "sendMessage": "Send message",
+    "sentWhatsapp": "WhatsApp is opening in a new tab.",
+    "sentEmail": "Your message has been sent. We'll get back to you soon.",
+    "errorRequiredWithEmail": "Name, e-mail and message are required.",
+    "errorRequired": "Name and message are required.",
+    "errorWhatsappUnavailable": "WhatsApp isn't available right now — please send an e-mail instead.",
+    "errorGeneric": "Something went wrong.",
+    "whatsappGreeting": "Hello, I'm {name}."
+  },
+  "apiContact": {
+    "emailUnavailable": "E-mail isn't available right now. Please try WhatsApp instead.",
+    "requiredFields": "Name, e-mail and message are required.",
+    "genericError": "Something went wrong. Please try again.",
+    "subjectPrefix": "New message from"
+  },
+  "news": {
+    "readMore": "Read more",
+    "loadMore": "Load more",
+    "loading": "Loading…",
+    "loadFailed": "Couldn't load more. Please try again.",
+    "allNews": "All news",
+    "moreFromParish": "More from the parish",
+    "notFoundTitle": "Article not found",
+    "archiveTitle": "Parish news",
+    "archiveEyebrow": "From the parish",
+    "archiveIntro": "Notices, announcements and reports from the life of the parish of St Mark on Neslanovac.",
+    "archiveEmpty": "There is no news published yet."
+  },
+  "gallery": {
+    "openImage": "Open photo {n}",
+    "loadMore": "Load more ({n})",
+    "dialogLabel": "Gallery",
+    "close": "Close gallery",
+    "prev": "Previous photo",
+    "next": "Next photo"
+  },
+  "hero": {
+    "scrollToSchedule": "Jump to the schedule"
+  },
+  "about": {
+    "parishEyebrow": "Parish community",
+    "patronEyebrow": "Patron saint",
+    "feastLabel": "Feast day",
+    "breadcrumbTitle": "About"
+  },
+  "contactPage": {
+    "breadcrumbTitle": "Contact",
+    "officeHoursLabel": "Parish office hours",
+    "directionsLabel": "Getting here",
+    "openInMaps": "Open in Google Maps",
+    "mapTitle": "Map — Church of St Mark, Neslanovac",
+    "phoneLabel": "Phone",
+    "mobileLabel": "Mobile",
+    "emailLabel": "E-mail",
+    "ibanLabel": "IBAN",
+    "oibLabel": "Tax ID (OIB)"
+  },
+  "schedulePlaque": {
+    "confessionsFallback": "Confession",
+    "devotions": "Devotions"
+  },
+  "home": {
+    "officeEyebrow": "Parish office",
+    "officeTitle": "Office hours and sacraments",
+    "officeHoursLabel": "Office hours",
+    "officeNotesLabel": "Important notices",
+    "newsEyebrow": "From the parish",
+    "newsTitle": "News and announcements",
+    "newsCta": "All news",
+    "linksEyebrow": "Links",
+    "linksTitle": "Where to next",
+    "linkFallbackLabel": "Link",
+    "linkGroups": {
+      "crkva": "The Church in Croatia",
+      "duhovnost": "Spirituality and media",
+      "zajednica": "Community and place"
+    }
+  },
+  "status": {
+    "error": {
+      "eyebrow": "Error",
+      "title": "Something got stuck on our end",
+      "body1": "The fault is on our side, not yours — the candle flickered for a moment. Trying again is usually enough.",
+      "body2": "If it keeps happening, let the parish office know and we'll pass it on to whoever keeps this running.",
+      "errorCode": "Error code:",
+      "retry": "Try again",
+      "home": "Home"
+    },
+    "notFound": {
+      "metaTitle": "Page not found",
+      "eyebrow": "Error 404",
+      "title": "There's no page at this address",
+      "body1": "Looks like you've strayed off the path a little — it happens to the best pilgrims. The link is probably outdated, or the page has since moved.",
+      "body2": "Head back to the homepage, or see what's new in the parish.",
+      "home": "Home",
+      "news": "News"
+    }
+  }
+}

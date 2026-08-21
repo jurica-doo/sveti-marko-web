@@ -7,6 +7,9 @@
  * trailing-slash form, and leaves external URLs, mailto/tel and hashes alone.
  */
 
+import type { Locale } from "./i18n/config";
+import { withLocale } from "./i18n/routes";
+
 /**
  * The mass-times band on the home page. Kept here rather than inline because
  * two places have to agree on it: the element that carries the `id`, and any
@@ -87,13 +90,21 @@ function splitOnce(value: string, separator: string): [string, string] {
   return [value.slice(0, index), value.slice(index + 1)];
 }
 
-/** Absolute canonical URL for metadata and structured data. */
+/**
+ * Absolute canonical URL for metadata and structured data.
+ *
+ * `locale` is optional (rather than threaded through every existing call
+ * site) — omit it for a bare hr URL, pass it to point at that language's
+ * copy of the page instead. See `lib/i18n/routes.ts#withLocale`.
+ */
 export function absoluteUrl(
   path: string,
+  locale?: Locale,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr",
 ): string {
   try {
-    return new URL(internalHref(path), siteUrl).toString();
+    const localizedPath = locale ? withLocale(internalHref(path), locale) : internalHref(path);
+    return new URL(localizedPath, siteUrl).toString();
   } catch {
     return siteUrl;
   }

@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useIsMounted } from "@/hooks/useIsMounted";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { t } from "@/lib/i18n/interpolate";
 import { imageUrl } from "@/lib/media";
 import { transition } from "@/lib/motion";
 import type { MediaImageType } from "@/lib/types";
@@ -30,7 +32,7 @@ const FIRST_BATCH = 10;
  * The lightbox is portalled to <body> so it is not clipped by the article's
  * `prose` container or its overflow rules.
  */
-export function Gallery({ items }: { items: GalleryItem[] }) {
+export function Gallery({ items, dict }: { items: GalleryItem[]; dict: Dictionary }) {
   /*
    * Memoised so `step` can depend on the count without the React Compiler
    * having to assume the array is rebuilt — and mutated — on every render.
@@ -112,7 +114,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                 type="button"
                 onClick={() => setIndex(i)}
                 className="press group relative block w-full cursor-pointer overflow-hidden rounded-lg bg-stone-100 ring-1 ring-stone-200 hover:ring-brass-500/60"
-                aria-label={`Otvori sliku ${i + 1}`}
+                aria-label={t(dict.gallery.openImage, { n: i + 1 })}
               >
                 {url ? (
                   <Image
@@ -151,7 +153,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
             onClick={() => setShown((current) => current + FIRST_BATCH)}
             className="hover-lift inline-flex cursor-pointer items-center justify-center border border-ink-900/25 px-7 py-3.5 text-[0.78rem] font-semibold tracking-[0.16em] text-ink-900 uppercase hover:border-brass-500 hover:text-brass-600"
           >
-            Učitaj još ({remaining})
+            {t(dict.gallery.loadMore, { n: remaining })}
           </button>
         </div>
       ) : null}
@@ -168,7 +170,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                   transition={transition("hover")}
                   role="dialog"
                   aria-modal="true"
-                  aria-label="Galerija"
+                  aria-label={dict.gallery.dialogLabel}
                 >
                   {/*
                     Click anywhere to dismiss, but with the ordinary pointer.
@@ -180,7 +182,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                     type="button"
                     className="absolute inset-0 h-full w-full cursor-default"
                     onClick={close}
-                    aria-label="Zatvori galeriju"
+                    aria-label={dict.gallery.close}
                   />
 
                   {/*
@@ -241,12 +243,12 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                       <LightboxButton
                         side="left"
                         onClick={() => step(-1)}
-                        label="Prethodna slika"
+                        label={dict.gallery.prev}
                       />
                       <LightboxButton
                         side="right"
                         onClick={() => step(1)}
-                        label="Sljedeća slika"
+                        label={dict.gallery.next}
                       />
                     </>
                   ) : null}
@@ -254,7 +256,7 @@ export function Gallery({ items }: { items: GalleryItem[] }) {
                   <button
                     type="button"
                     onClick={close}
-                    aria-label="Zatvori galeriju"
+                    aria-label={dict.gallery.close}
                     className="hover-rotate absolute top-5 right-5 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-stone-50/10 text-stone-200 backdrop-blur-md hover:bg-stone-50/20 hover:text-brass-300"
                   >
                     <svg

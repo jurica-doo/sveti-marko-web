@@ -3,25 +3,22 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { MenuToggleIcon } from "@/components/ui/MenuToggleIcon";
 import { SmartLink } from "@/components/ui/SmartLink";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { internalHref, ROUTES } from "@/lib/routes";
 import type { ScheduleType, SettingsType } from "@/lib/types";
-
-const FALLBACK_NAV = [
-  { label: "Naslovnica", href: ROUTES.home },
-  { label: "Vijesti", href: ROUTES.news },
-  { label: "O nama", href: ROUTES.about },
-  { label: "Kontakt", href: ROUTES.contact },
-];
 
 export function Navbar({
   settings,
   schedule,
+  dict,
 }: {
   settings: SettingsType;
   schedule?: ScheduleType | null;
+  dict: Dictionary;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -33,7 +30,14 @@ export function Navbar({
     )
     .map((item) => ({ label: item.label, href: internalHref(item.href) }));
 
-  const navItems = items.length ? items : FALLBACK_NAV;
+  const fallbackNav = [
+    { label: dict.nav.fallback.home, href: ROUTES.home },
+    { label: dict.nav.fallback.news, href: ROUTES.news },
+    { label: dict.nav.fallback.about, href: ROUTES.about },
+    { label: dict.nav.fallback.contact, href: ROUTES.contact },
+  ];
+
+  const navItems = items.length ? items : fallbackNav;
 
   // The home hero sits under the header, so the bar starts transparent there.
   const overlay = pathname === ROUTES.home;
@@ -114,7 +118,7 @@ export function Navbar({
             </span>
           </SmartLink>
 
-          <nav className="hidden lg:block" aria-label="Glavni izbornik">
+          <nav className="hidden lg:block" aria-label={dict.nav.ariaLabel}>
             <ul className="flex items-center gap-9">
               {navItems.map((item, index) => {
                 const active = isActive(item.href);
@@ -141,7 +145,7 @@ export function Navbar({
             </ul>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {settings.headerCta?.label && settings.headerCta.href ? (
               <SmartLink
                 href={settings.headerCta.href}
@@ -155,10 +159,18 @@ export function Navbar({
               </SmartLink>
             ) : null}
 
+            {/*
+              Visible at every width, not tucked behind the hamburger — the
+              language a visitor reads the site in matters as much on a phone
+              as on desktop, arguably more since that is where a wrong guess
+              (browser locale, geography) is likeliest to have landed them.
+            */}
+            <LanguageSwitcher dict={dict} solid={solid} />
+
             <button
               type="button"
               onClick={() => setOpen((value) => !value)}
-              aria-label={open ? "Zatvori izbornik" : "Otvori izbornik"}
+              aria-label={open ? dict.nav.closeMenu : dict.nav.openMenu}
               aria-expanded={open}
               aria-controls="mobile-menu"
               className={`-mr-2 flex h-10 w-10 items-center justify-center transition-colors lg:hidden ${
@@ -191,6 +203,7 @@ export function Navbar({
         masses={(schedule?.masses ?? []).filter(
           (row) => row.highlight !== false,
         )}
+        dict={dict}
       />
     </>
   );

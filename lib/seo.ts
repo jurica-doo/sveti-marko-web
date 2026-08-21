@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+import { LOCALES, LOCALE_META, type Locale } from "./i18n/config";
+import { withLocale } from "./i18n/routes";
+
 // TODO: replace the brand constants below once the real copy/branding lands.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr";
 const SITE_NAME = "Sv. Marko";
@@ -39,7 +42,9 @@ export type SeoInput = {
   title: string;
   absoluteTitle?: boolean;
   description?: string | null;
+  /** Bare, un-prefixed path (e.g. `ROUTES.news`) — `locale` supplies the prefix. */
   path: string;
+  locale: Locale;
   imageUrl?: string | null;
   imageAlt?: string | null;
   imageWidth?: number | null;
@@ -50,7 +55,7 @@ export type SeoInput = {
 
 export function buildSeoMetadata(input: SeoInput): Metadata {
   const description = (input.description || DEFAULT_DESCRIPTION).trim();
-  const absolutePageUrl = toAbsoluteSiteUrl(input.path);
+  const absolutePageUrl = toAbsoluteSiteUrl(withLocale(input.path, input.locale));
   const imageUrl = toAbsoluteSiteUrl(input.imageUrl || DEFAULT_OG_IMAGE);
 
   const metadataTitle: Metadata["title"] = input.absoluteTitle
@@ -67,12 +72,21 @@ export function buildSeoMetadata(input: SeoInput): Metadata {
     },
   ];
 
+  // Every language's copy of this same page, plus `x-default` pointing at the
+  // hr URL — hr is what a visitor with no locale preference lands on.
+  const languages: Record<string, string> = {
+    "x-default": toAbsoluteSiteUrl(withLocale(input.path, "hr")),
+  };
+  for (const locale of LOCALES) {
+    languages[LOCALE_META[locale].tag] = toAbsoluteSiteUrl(withLocale(input.path, locale));
+  }
+
   return {
     title: metadataTitle,
     description,
     alternates: {
       canonical: absolutePageUrl,
-      languages: { "hr-HR": absolutePageUrl },
+      languages,
     },
     keywords: input.keywords,
     robots: {
@@ -88,7 +102,7 @@ export function buildSeoMetadata(input: SeoInput): Metadata {
     },
     openGraph: {
       siteName: SITE_NAME,
-      locale: "hr_HR",
+      locale: LOCALE_META[input.locale].ogLocale,
       title: input.title,
       description,
       type: input.type || "website",
@@ -102,7 +116,7 @@ export function buildSeoMetadata(input: SeoInput): Metadata {
       images: [imageUrl],
     },
     other: {
-      "content-language": "hr",
+      "content-language": input.locale,
     },
   };
 }
@@ -169,7 +183,7 @@ export function serializeJsonLd(data: unknown): string {
 
 export type BreadcrumbItem = { name: string; href: string };
 
-export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+export function buildBreadcrumbJsonLd(items: BreadcrumbItem[], locale: Locale) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -177,7 +191,7 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
       "@type": "ListItem",
       position: i + 1,
       name: item.name,
-      item: toAbsoluteSiteUrl(item.href),
+      item: toAbsoluteSiteUrl(withLocale(item.href, locale)),
     })),
   };
 }

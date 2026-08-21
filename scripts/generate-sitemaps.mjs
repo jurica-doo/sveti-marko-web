@@ -7,6 +7,22 @@ const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL || "http://localhost:3001";
 const IMAGE_BASE_PATH = "/sv-marko/medija/slike";
 const VIDEO_BASE_PATH = "/sv-marko/medija/videa";
 
+/**
+ * Mirrors `lib/i18n/config.ts` — hr is primary and unprefixed, en/it/pl are
+ * prefixed. Duplicated here (a plain Node script, not built through the
+ * Next/TS toolchain) rather than imported, same reasoning as the XML helpers
+ * below already being their own copy of the `lib/`/`utils/` originals.
+ */
+const LOCALES = ["hr", "en", "it", "pl"];
+const DEFAULT_LOCALE = "hr";
+const HREFLANG = { hr: "hr", en: "en", it: "it", pl: "pl" };
+
+/** Mirrors `lib/i18n/routes.ts#withLocale`. */
+function withLocale(pathname, locale) {
+  if (locale === DEFAULT_LOCALE) return pathname;
+  return pathname === "/" ? `/${locale}/` : `/${locale}${pathname}`;
+}
+
 function escapeXml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -48,6 +64,27 @@ function resolveAbsoluteUrl(urlOrPath, baseUrl) {
   }
 }
 
+/** Trailing-slash-normalises `pagePath`, then prefixes it for `locale`. */
+function resolveLocalizedUrl(pagePath, locale, baseUrl) {
+  return resolveAbsoluteUrl(withLocale(withTrailingSlash(pagePath), locale), baseUrl);
+}
+
+/** This same page, once per locale, each carrying the others as `<xhtml:link alternate>`. */
+function localizedEntries(pagePath, changefreq, priority, lastmod) {
+  const alternates = LOCALES.map((locale) => ({
+    hreflang: HREFLANG[locale],
+    href: resolveLocalizedUrl(pagePath, locale, SITE_URL),
+  }));
+
+  return LOCALES.map((locale) => ({
+    loc: resolveLocalizedUrl(pagePath, locale, SITE_URL),
+    lastmod,
+    changefreq,
+    priority,
+    alternates,
+  }));
+}
+
 function isValidPriority(priority) {
   return Number.isFinite(priority) && priority >= 0 && priority <= 1;
 }
@@ -61,6 +98,13 @@ function generateUrlSetXml(entries) {
       const changefreq = e.changefreq;
       const priority = e.priority;
 
+      const alternates = (e.alternates || [])
+        .map(
+          (alt) =>
+            `    <xhtml:link rel="alternate" hreflang="${escapeXml(alt.hreflang)}" href="${escapeXml(alt.href)}" />`,
+        )
+        .join("\n");
+
       const lines = [
         "  <url>",
         `    <loc>${loc}</loc>`,
@@ -71,6 +115,7 @@ function generateUrlSetXml(entries) {
         isValidPriority(priority)
           ? `    <priority>${priority.toFixed(1)}</priority>`
           : null,
+        alternates || null,
         "  </url>",
       ].filter(Boolean);
 
@@ -80,7 +125,7 @@ function generateUrlSetXml(entries) {
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     urls,
     "</urlset>",
     "",
@@ -146,22 +191,21 @@ async function main() {
     { path: "/vijesti/", changefreq: "weekly", priority: 0.8 },
     { path: "/o-nama/", changefreq: "monthly", priority: 0.7 },
     { path: "/kontakt/", changefreq: "monthly", priority: 0.7 },
-  ].map((entry) => ({
-    loc: resolveAbsoluteUrl(entry.path, SITE_URL),
-    lastmod: nowIso,
-    changefreq: entry.changefreq,
-    priority: entry.priority,
-  }));
+  ].flatMap((entry) =>
+    localizedEntries(entry.path, entry.changefreq, entry.priority, nowIso),
+  );
 
   const newsDocs = await fetchDocs("news");
   const newsEntries = newsDocs
     .filter((doc) => doc?.slug && doc?._status !== "draft")
-    .map((doc) => ({
-      loc: resolveAbsoluteUrl(`/vijesti/${doc.slug}/`, SITE_URL),
-      lastmod: doc.updatedAt || doc.publishedAt,
-      changefreq: "monthly",
-      priority: 0.6,
-    }));
+    .flatMap((doc) =>
+      localizedEntries(
+        `/vijesti/${doc.slug}/`,
+        "monthly",
+        0.6,
+        doc.updatedAt || doc.publishedAt,
+      ),
+    );
 
   const media = await fetchMediaEntries();
 

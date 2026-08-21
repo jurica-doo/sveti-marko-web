@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { ContactForm } from "@/components/contact/ContactForm";
 import { SchedulePlaque } from "@/components/home/SchedulePlaque";
@@ -6,6 +7,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Reveal } from "@/components/ui/Reveal";
 import { getContactPage, getSchedule } from "@/lib/api";
 import { bindTimeRanges, telHref } from "@/lib/format";
+import { hasLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
 import {
@@ -17,31 +20,49 @@ import {
 
 export const revalidate = 60;
 
-export async function generateMetadata(): Promise<Metadata> {
-  const page = await getContactPage().catch(() => null);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  if (!hasLocale(lang)) return {};
+  const page = await getContactPage(lang).catch(() => null);
 
   return buildSeoMetadata({
     title: page?.metaTitle || page?.title || "Kontakt",
     description: page?.metaDescription || page?.intro,
     path: ROUTES.contact,
+    locale: lang,
     imageUrl: imageUrl(page?.heroImage),
   });
 }
 
-export default async function ContactPage() {
+export default async function ContactPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
+  const dict = getDictionary(lang);
+
   const [page, schedule] = await Promise.all([
-    getContactPage(),
-    getSchedule().catch(() => null),
+    getContactPage(lang),
+    getSchedule(lang).catch(() => null),
   ]);
 
   const contact = page.contact;
   const map = page.map;
 
   const jsonLd = [
-    buildBreadcrumbJsonLd([
-      { name: "Naslovnica", href: ROUTES.home },
-      { name: page.title, href: ROUTES.contact },
-    ]),
+    buildBreadcrumbJsonLd(
+      [
+        { name: dict.breadcrumb.home, href: ROUTES.home },
+        { name: page.title, href: ROUTES.contact },
+      ],
+      lang,
+    ),
     buildBusinessJsonLd({
       phone: contact.phone ?? undefined,
       email: contact.email ?? undefined,
@@ -65,14 +86,15 @@ export default async function ContactPage() {
         title={page.title}
         intro={page.intro}
         image={page.heroImage}
-        breadcrumb={[{ label: "Kontakt", href: ROUTES.contact }]}
+        breadcrumb={[{ label: dict.contactPage.breadcrumbTitle, href: ROUTES.contact }]}
+        dict={dict}
       />
 
       <section className="shell py-16 lg:py-24">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
           <Reveal className="flex flex-col lg:col-span-5">
             <p className="eyebrow">
-              {contact.parishOfficeName || "Župni ured"}
+              {contact.parishOfficeName || dict.footer.office}
             </p>
 
             <address className="mt-7 not-italic">
@@ -86,7 +108,7 @@ export default async function ContactPage() {
 
               <dl className="mt-8 divide-y divide-stone-200 border-y border-stone-200">
                 {contact.phone ? (
-                  <Row label="Telefon">
+                  <Row label={dict.contactPage.phoneLabel}>
                     <a
                       href={telHref(contact.phone)}
                       className="text-sea-800 transition-colors hover:text-brass-600"
@@ -96,7 +118,7 @@ export default async function ContactPage() {
                   </Row>
                 ) : null}
                 {contact.mobile ? (
-                  <Row label="Mobitel">
+                  <Row label={dict.contactPage.mobileLabel}>
                     <a
                       href={telHref(contact.mobile)}
                       className="text-sea-800 transition-colors hover:text-brass-600"
@@ -106,7 +128,7 @@ export default async function ContactPage() {
                   </Row>
                 ) : null}
                 {contact.email ? (
-                  <Row label="E-mail">
+                  <Row label={dict.contactPage.emailLabel}>
                     <a
                       href={`mailto:${contact.email}`}
                       className="text-sea-800 transition-colors hover:text-brass-600"
@@ -115,15 +137,19 @@ export default async function ContactPage() {
                     </a>
                   </Row>
                 ) : null}
-                {contact.iban ? <Row label="IBAN">{contact.iban}</Row> : null}
-                {contact.oib ? <Row label="OIB">{contact.oib}</Row> : null}
+                {contact.iban ? (
+                  <Row label={dict.contactPage.ibanLabel}>{contact.iban}</Row>
+                ) : null}
+                {contact.oib ? (
+                  <Row label={dict.contactPage.oibLabel}>{contact.oib}</Row>
+                ) : null}
               </dl>
             </address>
 
             {schedule?.officeHours?.length ? (
               <div className="mt-10">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-brass-600">
-                  Radno vrijeme župnog ureda
+                  {dict.contactPage.officeHoursLabel}
                 </p>
                 <dl className="mt-5 divide-y divide-stone-200">
                   {schedule.officeHours.map((row, index) => (
@@ -160,13 +186,13 @@ export default async function ContactPage() {
             {map?.embedUrl ? (
               <div className="mt-10 flex flex-col lg:flex-1">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-brass-600">
-                  Kako do nas
+                  {dict.contactPage.directionsLabel}
                 </p>
 
                 <div className="mt-5 aspect-4/3 w-full overflow-hidden bg-stone-200 ring-1 ring-stone-200 lg:aspect-auto lg:min-h-64 lg:flex-1">
                   <iframe
                     src={map.embedUrl}
-                    title="Karta — crkva sv. Marka, Neslanovac"
+                    title={dict.contactPage.mapTitle}
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                     className="h-full w-full border-0"
@@ -180,7 +206,7 @@ export default async function ContactPage() {
                     rel="noopener noreferrer"
                     className="group mt-4 inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-sea-800 transition-colors hover:text-brass-600"
                   >
-                    Otvori u Google Kartama
+                    {dict.contactPage.openInMaps}
                     <span
                       aria-hidden="true"
                       className="indicator group-hover:translate-x-1 group-hover:-translate-y-1"
@@ -204,20 +230,21 @@ export default async function ContactPage() {
           */}
           <Reveal delay={0.1} className="flex flex-col lg:col-span-7">
             <SchedulePlaque
-              massesTitle="Svete mise"
+              massesTitle={dict.footer.masses}
               masses={schedule?.masses ?? []}
-              confessionsTitle="Ispovijed"
+              confessionsTitle={dict.schedulePlaque.confessionsFallback}
               confessions={schedule?.confessions ?? []}
               devotions={schedule?.devotions ?? []}
               special={schedule?.specialSchedule ?? []}
               tone="light"
               className="lg:flex-1"
+              dict={dict}
             />
           </Reveal>
         </div>
 
         <div className="mt-10 lg:mt-14">
-          <ContactForm whatsappNumber={contact.mobile || contact.phone} />
+          <ContactForm whatsappNumber={contact.mobile || contact.phone} dict={dict} />
         </div>
       </section>
     </>

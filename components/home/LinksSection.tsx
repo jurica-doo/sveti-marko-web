@@ -1,13 +1,8 @@
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SmartLink } from "@/components/ui/SmartLink";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { HomePageType, UsefulLinkType } from "@/lib/types";
-
-const GROUP_LABELS: Record<string, string> = {
-  crkva: "Crkva u Hrvatskoj",
-  duhovnost: "Duhovnost i mediji",
-  zajednica: "Zajednica i mjesto",
-};
 
 function hostname(url: string): string {
   try {
@@ -20,18 +15,22 @@ function hostname(url: string): string {
 export function LinksSection({
   section,
   links,
+  dict,
 }: {
   section: HomePageType["linksSection"];
   links: UsefulLinkType[];
+  dict: Dictionary;
 }) {
   const visible = links.filter((link) => link.featuredOnHome !== false);
   if (!visible.length) return null;
 
+  const groupLabels = dict.home.linkGroups;
+
   return (
     <section className="shell py-20 lg:py-28">
       <SectionHeading
-        eyebrow={section?.eyebrow || "Poveznice"}
-        title={section?.title || "Gdje dalje"}
+        eyebrow={section?.eyebrow || dict.home.linksEyebrow}
+        title={section?.title || dict.home.linksTitle}
         intro={section?.intro}
       />
 
@@ -43,7 +42,7 @@ export function LinksSection({
               className="card-hover group flex h-full flex-col bg-stone-50 p-7 hover:bg-stone-100"
             >
               <span className="text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-brass-600">
-                {GROUP_LABELS[link.group ?? "crkva"] ?? "Poveznica"}
+                {groupLabels[link.group ?? "crkva"] ?? dict.home.linkFallbackLabel}
               </span>
 
               <span className="mt-4 flex items-start justify-between gap-4">

@@ -1,5 +1,6 @@
 import { SmartLink } from "@/components/ui/SmartLink";
 import { bindTimeRanges, telHref } from "@/lib/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { ContactPageType, ScheduleType, SettingsType } from "@/lib/types";
 
 const SOCIAL_LABELS: Record<string, string> = {
@@ -45,10 +46,12 @@ export function Footer({
   settings,
   contact,
   schedule,
+  dict,
 }: {
   settings: SettingsType;
   contact?: ContactPageType | null;
   schedule?: ScheduleType | null;
+  dict: Dictionary;
 }) {
   const year = new Date().getFullYear();
   const address = contact?.contact;
@@ -124,7 +127,7 @@ export function Footer({
 
         <div className="lg:col-span-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-brass-300">
-            Župni ured
+            {dict.footer.office}
           </p>
 
           {address ? (
@@ -164,7 +167,7 @@ export function Footer({
           {masses.length ? (
             <div className="mt-6 border-t border-stone-50/10 pt-5">
               <p className="text-[0.7rem] font-semibold tracking-[0.2em] text-brass-300 uppercase">
-                Svete mise
+                {dict.footer.masses}
               </p>
 
               <dl className="mt-3 space-y-1.5 text-[0.9rem]">
@@ -197,7 +200,7 @@ export function Footer({
             nowhere else.
           */}
           <p>
-            Dizajn i izrada —{" "}
+            {dict.footer.creditPrefix}{" "}
             <SmartLink
               href="https://druid-forge.hr"
               className="hover-nudge inline-block text-stone-200/80 hover:text-brass-300"

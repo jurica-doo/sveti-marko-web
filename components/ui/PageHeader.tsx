@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { SmartLink } from "@/components/ui/SmartLink";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
 import type { MediaImageType } from "@/lib/types";
@@ -15,12 +16,14 @@ export function PageHeader({
   intro,
   image,
   breadcrumb,
+  dict,
 }: {
   eyebrow?: string | null;
   title: string;
   intro?: string | null;
   image?: MediaImageType | null;
   breadcrumb?: { label: string; href: string }[];
+  dict: Dictionary;
 }) {
   const background = imageUrl(image);
 
@@ -42,14 +45,14 @@ export function PageHeader({
 
       <div className="shell relative py-16 lg:py-24">
         {breadcrumb?.length ? (
-          <nav aria-label="Staza" className="mb-8">
+          <nav aria-label={dict.breadcrumb.trailAriaLabel} className="mb-8">
             <ol className="flex flex-wrap items-center gap-2 text-[0.72rem] uppercase tracking-[0.14em] text-stone-200/55">
               <li>
                 <SmartLink
                   href={ROUTES.home}
                   className="transition-colors hover:text-brass-300"
                 >
-                  Naslovnica
+                  {dict.breadcrumb.home}
                 </SmartLink>
               </li>
               {breadcrumb.map((crumb) => (

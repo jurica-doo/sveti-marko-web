@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 
 import { SmartLink } from "@/components/ui/SmartLink";
 import { bindTimeRanges } from "@/lib/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { LinkItem, ScheduleRow } from "@/lib/types";
 
 type NavItem = { label: string; href: string };
@@ -30,12 +31,14 @@ export function MobileMenu({
   items,
   cta,
   masses = [],
+  dict,
 }: {
   open: boolean;
   onClose: () => void;
   items: NavItem[];
   cta?: LinkItem | null;
   masses?: ScheduleRow[];
+  dict: Dictionary;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -142,7 +145,7 @@ export function MobileMenu({
           ref={scroller}
           className="scroll-slim flex-1 overflow-y-auto overscroll-contain"
         >
-          <nav aria-label="Glavni izbornik" className="shell pt-2 pb-10">
+          <nav aria-label={dict.nav.ariaLabel} className="shell pt-2 pb-10">
             {items.map((item, index) => (
               <SmartLink
                 key={`${item.href}-${index}`}
@@ -198,7 +201,7 @@ export function MobileMenu({
                 }`}
               >
                 <p className="text-[0.6rem] tracking-[0.3em] text-ink-400 uppercase">
-                  Raspored misa
+                  {dict.nav.scheduleHeading}
                 </p>
 
                 {/*

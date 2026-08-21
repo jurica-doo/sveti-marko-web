@@ -1,0 +1,136 @@
+{
+  "languageSwitcher": {
+    "label": "Scegli la lingua"
+  },
+  "nav": {
+    "ariaLabel": "Menu principale",
+    "openMenu": "Apri il menu",
+    "closeMenu": "Chiudi il menu",
+    "scheduleHeading": "Orario delle Sante Messe",
+    "fallback": {
+      "home": "Home",
+      "news": "Notizie",
+      "about": "Chi siamo",
+      "contact": "Contatti"
+    }
+  },
+  "breadcrumb": {
+    "trailAriaLabel": "Percorso",
+    "home": "Home"
+  },
+  "footer": {
+    "office": "Ufficio parrocchiale",
+    "masses": "Sante Messe",
+    "creditPrefix": "Progetto e realizzazione —"
+  },
+  "contact": {
+    "eyebrow": "Contattaci",
+    "heading": "Invia un messaggio",
+    "intro": "Scegli il modo più comodo per te — direttamente all'e-mail dell'ufficio parrocchiale, oppure con un messaggio su WhatsApp.",
+    "channelGroupLabel": "Come inviare il messaggio",
+    "emailTab": "E-mail",
+    "whatsappTab": "WhatsApp",
+    "nameLabel": "Nome e cognome",
+    "emailLabel": "E-mail",
+    "messageLabel": "Messaggio",
+    "sendingLabel": "Invio in corso…",
+    "openWhatsapp": "Apri WhatsApp",
+    "sendMessage": "Invia messaggio",
+    "sentWhatsapp": "WhatsApp si apre in una nuova scheda.",
+    "sentEmail": "Messaggio inviato. Ti risponderemo al più presto.",
+    "errorRequiredWithEmail": "Nome, e-mail e messaggio sono obbligatori.",
+    "errorRequired": "Nome e messaggio sono obbligatori.",
+    "errorWhatsappUnavailable": "WhatsApp non è al momento disponibile — invia un'e-mail.",
+    "errorGeneric": "Qualcosa è andato storto.",
+    "whatsappGreeting": "Salve, sono {name}."
+  },
+  "apiContact": {
+    "emailUnavailable": "L'invio via e-mail non è al momento disponibile. Prova con WhatsApp.",
+    "requiredFields": "Nome, e-mail e messaggio sono obbligatori.",
+    "genericError": "Qualcosa è andato storto. Riprova.",
+    "subjectPrefix": "Nuovo messaggio da"
+  },
+  "news": {
+    "readMore": "Leggi di più",
+    "loadMore": "Carica altre",
+    "loading": "Caricamento…",
+    "loadFailed": "Caricamento non riuscito. Riprova.",
+    "allNews": "Tutte le notizie",
+    "moreFromParish": "Altro dalla parrocchia",
+    "notFoundTitle": "Notizia non trovata",
+    "archiveTitle": "Notizie della parrocchia",
+    "archiveEyebrow": "Dalla parrocchia",
+    "archiveIntro": "Avvisi, annunci e resoconti dalla vita della parrocchia di San Marco a Neslanovac.",
+    "archiveEmpty": "Al momento non ci sono notizie pubblicate."
+  },
+  "gallery": {
+    "openImage": "Apri foto {n}",
+    "loadMore": "Carica altre ({n})",
+    "dialogLabel": "Galleria",
+    "close": "Chiudi la galleria",
+    "prev": "Foto precedente",
+    "next": "Foto successiva"
+  },
+  "hero": {
+    "scrollToSchedule": "Vai all'orario"
+  },
+  "about": {
+    "parishEyebrow": "Comunità parrocchiale",
+    "patronEyebrow": "Santo patrono",
+    "feastLabel": "Festa",
+    "breadcrumbTitle": "Chi siamo"
+  },
+  "contactPage": {
+    "breadcrumbTitle": "Contatti",
+    "officeHoursLabel": "Orario dell'ufficio parrocchiale",
+    "directionsLabel": "Come raggiungerci",
+    "openInMaps": "Apri in Google Maps",
+    "mapTitle": "Mappa — Chiesa di San Marco, Neslanovac",
+    "phoneLabel": "Telefono",
+    "mobileLabel": "Cellulare",
+    "emailLabel": "E-mail",
+    "ibanLabel": "IBAN",
+    "oibLabel": "Codice fiscale (OIB)"
+  },
+  "schedulePlaque": {
+    "confessionsFallback": "Confessioni",
+    "devotions": "Devozioni"
+  },
+  "home": {
+    "officeEyebrow": "Ufficio parrocchiale",
+    "officeTitle": "Orari e sacramenti",
+    "officeHoursLabel": "Orario di apertura",
+    "officeNotesLabel": "Avvisi importanti",
+    "newsEyebrow": "Dalla parrocchia",
+    "newsTitle": "Notizie e avvisi",
+    "newsCta": "Tutte le notizie",
+    "linksEyebrow": "Collegamenti",
+    "linksTitle": "Dove andare ancora",
+    "linkFallbackLabel": "Collegamento",
+    "linkGroups": {
+      "crkva": "La Chiesa in Croazia",
+      "duhovnost": "Spiritualità e media",
+      "zajednica": "Comunità e territorio"
+    }
+  },
+  "status": {
+    "error": {
+      "eyebrow": "Errore",
+      "title": "Qualcosa si è inceppato da parte nostra",
+      "body1": "L'errore è dalla nostra parte, non dalla tua — la candela ha vacillato per un istante. Di solito basta riprovare.",
+      "body2": "Se il problema persiste, contatta l'ufficio parrocchiale e lo segnaleremo a chi si occupa del sito.",
+      "errorCode": "Codice errore:",
+      "retry": "Riprova",
+      "home": "Home"
+    },
+    "notFound": {
+      "metaTitle": "Pagina non trovata",
+      "eyebrow": "Errore 404",
+      "title": "Non c'è nessuna pagina a questo indirizzo",
+      "body1": "Sembra che tu abbia smarrito un po' la strada — capita anche ai migliori pellegrini. Il collegamento è probabilmente obsoleto, oppure la pagina è stata spostata.",
+      "body2": "Torna alla home o scopri le novità della parrocchia.",
+      "home": "Home",
+      "news": "Notizie"
+    }
+  }
+}

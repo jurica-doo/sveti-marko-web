@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Marcellus, Source_Sans_3 } from "next/font/google";
-import "./globals.css";
+import { notFound } from "next/navigation";
+import "../globals.css";
 
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { MotionProvider } from "@/components/ui/MotionProvider";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+import { LocaleProvider } from "@/lib/i18n/context";
+import { hasLocale, LOCALES } from "@/lib/i18n/config";
 import { seoRootDefaults } from "@/lib/seo";
 import { getSiteChrome } from "@/lib/site";
 
@@ -34,16 +38,27 @@ export const viewport: Viewport = {
   themeColor: "#101d26",
 };
 
+/** hr + en + it + pl, statically. `proxy.ts` rewrites bare paths to `/hr`. */
+export async function generateStaticParams() {
+  return LOCALES.map((lang) => ({ lang }));
+}
+
 export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ lang: string }>;
 }>) {
-  const { settings, contact, schedule } = await getSiteChrome();
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
+
+  const dict = getDictionary(lang);
+  const { settings, contact, schedule } = await getSiteChrome(lang, dict);
 
   return (
     <html
-      lang="hr"
+      lang={lang}
       suppressHydrationWarning
       className={`${marcellus.variable} ${sourceSans.variable} h-full`}
     >
@@ -55,12 +70,14 @@ export default async function RootLayout({
         </noscript>
       </head>
       <body className="flex min-h-full flex-col antialiased">
-        <MotionProvider>
-          <AnnouncementBar settings={settings} />
-          <Navbar settings={settings} schedule={schedule} />
-          <main className="flex-1">{children}</main>
-          <Footer settings={settings} contact={contact} schedule={schedule} />
-        </MotionProvider>
+        <LocaleProvider locale={lang}>
+          <MotionProvider>
+            <AnnouncementBar settings={settings} />
+            <Navbar settings={settings} schedule={schedule} dict={dict} />
+            <main className="flex-1">{children}</main>
+            <Footer settings={settings} contact={contact} schedule={schedule} dict={dict} />
+          </MotionProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

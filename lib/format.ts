@@ -1,3 +1,13 @@
+import type { Locale } from "./i18n/config";
+
+/**
+ * Croatian keeps its own hand-written month names rather than
+ * `Intl.DateTimeFormat("hr", …)`: dates here read in the genitive case
+ * ("12. rujna", not "12. Rujan"), which is the grammatically correct form
+ * for "the 12th of September" and not one `Intl`'s nominative month names
+ * produce. English/Italian/Polish don't have that case distinction, so
+ * `Intl` is fine for them.
+ */
 const MONTHS_HR = [
   "siječnja",
   "veljače",
@@ -34,14 +44,21 @@ function parse(value?: string | null): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** `12. rujna 1994.` */
-export function formatDateLong(value?: string | null): string {
+/** hr: `12. rujna 1994.` — en/it/pl: `Intl`'s own long-date form. */
+export function formatDateLong(value?: string | null, locale: Locale = "hr"): string {
   const date = parse(value);
   if (!date) return "";
-  return `${date.getDate()}. ${MONTHS_HR[date.getMonth()]} ${date.getFullYear()}.`;
+  if (locale === "hr") {
+    return `${date.getDate()}. ${MONTHS_HR[date.getMonth()]} ${date.getFullYear()}.`;
+  }
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
-/** `12.09.1994.` */
+/** `12.09.1994.` — the numeric form is the same shape in every locale here. */
 export function formatDateShort(value?: string | null): string {
   const date = parse(value);
   if (!date) return "";
@@ -51,16 +68,23 @@ export function formatDateShort(value?: string | null): string {
 }
 
 /** Day / month / year parts for the carved date block on news cards. */
-export function dateParts(value?: string | null): {
+export function dateParts(
+  value?: string | null,
+  locale: Locale = "hr",
+): {
   day: string;
   month: string;
   year: string;
 } | null {
   const date = parse(value);
   if (!date) return null;
+  const month =
+    locale === "hr"
+      ? MONTHS_SHORT_HR[date.getMonth()]
+      : new Intl.DateTimeFormat(locale, { month: "short" }).format(date).replace(/\.$/, "");
   return {
     day: String(date.getDate()).padStart(2, "0"),
-    month: MONTHS_SHORT_HR[date.getMonth()],
+    month,
     year: String(date.getFullYear()),
   };
 }

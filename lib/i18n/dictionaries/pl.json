@@ -1,0 +1,136 @@
+{
+  "languageSwitcher": {
+    "label": "Wybierz język"
+  },
+  "nav": {
+    "ariaLabel": "Menu główne",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu",
+    "scheduleHeading": "Harmonogram Mszy Świętych",
+    "fallback": {
+      "home": "Strona główna",
+      "news": "Aktualności",
+      "about": "O nas",
+      "contact": "Kontakt"
+    }
+  },
+  "breadcrumb": {
+    "trailAriaLabel": "Ścieżka",
+    "home": "Strona główna"
+  },
+  "footer": {
+    "office": "Biuro parafialne",
+    "masses": "Msze Święte",
+    "creditPrefix": "Projekt i realizacja —"
+  },
+  "contact": {
+    "eyebrow": "Skontaktuj się z nami",
+    "heading": "Wyślij wiadomość",
+    "intro": "Wybierz, co jest dla Ciebie wygodniejsze — bezpośrednio na e-mail biura parafialnego lub wiadomością na WhatsApp.",
+    "channelGroupLabel": "Sposób wysłania wiadomości",
+    "emailTab": "E-mail",
+    "whatsappTab": "WhatsApp",
+    "nameLabel": "Imię i nazwisko",
+    "emailLabel": "E-mail",
+    "messageLabel": "Wiadomość",
+    "sendingLabel": "Wysyłanie…",
+    "openWhatsapp": "Otwórz WhatsApp",
+    "sendMessage": "Wyślij wiadomość",
+    "sentWhatsapp": "WhatsApp otwiera się w nowej karcie.",
+    "sentEmail": "Wiadomość została wysłana. Wkrótce się odezwiemy.",
+    "errorRequiredWithEmail": "Imię, e-mail i wiadomość są wymagane.",
+    "errorRequired": "Imię i wiadomość są wymagane.",
+    "errorWhatsappUnavailable": "WhatsApp jest obecnie niedostępny — wyślij wiadomość e-mail.",
+    "errorGeneric": "Coś poszło nie tak.",
+    "whatsappGreeting": "Dzień dobry, nazywam się {name}."
+  },
+  "apiContact": {
+    "emailUnavailable": "Wysyłanie e-maili jest obecnie niedostępne. Spróbuj przez WhatsApp.",
+    "requiredFields": "Imię, e-mail i wiadomość są wymagane.",
+    "genericError": "Coś poszło nie tak. Spróbuj ponownie.",
+    "subjectPrefix": "Nowa wiadomość od"
+  },
+  "news": {
+    "readMore": "Czytaj więcej",
+    "loadMore": "Wczytaj więcej",
+    "loading": "Wczytywanie…",
+    "loadFailed": "Nie udało się wczytać. Spróbuj ponownie.",
+    "allNews": "Wszystkie aktualności",
+    "moreFromParish": "Więcej z życia parafii",
+    "notFoundTitle": "Nie znaleziono wiadomości",
+    "archiveTitle": "Aktualności parafialne",
+    "archiveEyebrow": "Z życia parafii",
+    "archiveIntro": "Ogłoszenia, zapowiedzi i relacje z życia parafii św. Marka na Neslanovacu.",
+    "archiveEmpty": "Obecnie nie ma opublikowanych aktualności."
+  },
+  "gallery": {
+    "openImage": "Otwórz zdjęcie {n}",
+    "loadMore": "Wczytaj więcej ({n})",
+    "dialogLabel": "Galeria",
+    "close": "Zamknij galerię",
+    "prev": "Poprzednie zdjęcie",
+    "next": "Następne zdjęcie"
+  },
+  "hero": {
+    "scrollToSchedule": "Przejdź do harmonogramu"
+  },
+  "about": {
+    "parishEyebrow": "Wspólnota parafialna",
+    "patronEyebrow": "Patron parafii",
+    "feastLabel": "Święto patronalne",
+    "breadcrumbTitle": "O nas"
+  },
+  "contactPage": {
+    "breadcrumbTitle": "Kontakt",
+    "officeHoursLabel": "Godziny otwarcia biura parafialnego",
+    "directionsLabel": "Jak do nas dotrzeć",
+    "openInMaps": "Otwórz w Mapach Google",
+    "mapTitle": "Mapa — kościół św. Marka, Neslanovac",
+    "phoneLabel": "Telefon",
+    "mobileLabel": "Komórka",
+    "emailLabel": "E-mail",
+    "ibanLabel": "IBAN",
+    "oibLabel": "NIP chorwacki (OIB)"
+  },
+  "schedulePlaque": {
+    "confessionsFallback": "Spowiedź",
+    "devotions": "Nabożeństwa"
+  },
+  "home": {
+    "officeEyebrow": "Biuro parafialne",
+    "officeTitle": "Godziny otwarcia i sakramenty",
+    "officeHoursLabel": "Godziny otwarcia",
+    "officeNotesLabel": "Ważne informacje",
+    "newsEyebrow": "Z życia parafii",
+    "newsTitle": "Aktualności i ogłoszenia",
+    "newsCta": "Wszystkie aktualności",
+    "linksEyebrow": "Odnośniki",
+    "linksTitle": "Co dalej",
+    "linkFallbackLabel": "Odnośnik",
+    "linkGroups": {
+      "crkva": "Kościół w Chorwacji",
+      "duhovnost": "Duchowość i media",
+      "zajednica": "Wspólnota i okolica"
+    }
+  },
+  "status": {
+    "error": {
+      "eyebrow": "Błąd",
+      "title": "Coś się zacięło po naszej stronie",
+      "body1": "To błąd po naszej stronie, nie po Twojej — świeca na chwilę zamigotała. Zwykle wystarczy spróbować ponownie.",
+      "body2": "Jeśli problem się powtórzy, zgłoś to w biurze parafialnym, a my przekażemy to osobom odpowiedzialnym za stronę.",
+      "errorCode": "Kod błędu:",
+      "retry": "Spróbuj ponownie",
+      "home": "Strona główna"
+    },
+    "notFound": {
+      "metaTitle": "Nie znaleziono strony",
+      "eyebrow": "Błąd 404",
+      "title": "Pod tym adresem nie ma żadnej strony",
+      "body1": "Wygląda na to, że nieco zboczyłeś z drogi — zdarza się to nawet najlepszym pielgrzymom. Link jest prawdopodobnie nieaktualny albo strona została przeniesiona.",
+      "body2": "Wróć na stronę główną albo zobacz, co nowego w parafii.",
+      "home": "Strona główna",
+      "news": "Aktualności"
+    }
+  }
+}

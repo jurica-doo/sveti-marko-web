@@ -5,15 +5,18 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { imageUrl } from "@/lib/media";
 import { SmartLink } from "@/components/ui/SmartLink";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { ROUTES, SCHEDULE_ANCHOR } from "@/lib/routes";
 import type { HomePageType, ScheduleType } from "@/lib/types";
 
 export function Hero({
   home,
   schedule,
+  dict,
 }: {
   home: HomePageType;
   schedule: ScheduleType | null;
+  dict: Dictionary;
 }) {
   const hero = home.hero;
   const background = imageUrl(hero.image);
@@ -119,7 +122,7 @@ export function Hero({
         {showPlaque && hasSchedule ? (
           <SmartLink
             href={ROUTES.schedule}
-            aria-label="Prijeđi na raspored"
+            aria-label={dict.hero.scrollToSchedule}
             className="absolute inset-x-0 bottom-7 z-10 mx-auto flex h-11 w-11 items-center justify-center text-stone-50 transition-colors hover:text-brass-300"
           >
             <svg
@@ -163,6 +166,7 @@ export function Hero({
                 devotions={schedule?.devotions ?? []}
                 special={schedule?.specialSchedule ?? []}
                 tone="band"
+                dict={dict}
               />
             </div>
           </Reveal>

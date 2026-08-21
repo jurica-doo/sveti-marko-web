@@ -5,6 +5,8 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { buttonClasses } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { waHref } from "@/lib/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { t } from "@/lib/i18n/interpolate";
 
 type Channel = "whatsapp" | "email";
 type Status = "idle" | "sending" | "sent" | "error";
@@ -20,12 +22,15 @@ const INPUT_CLASSES =
  */
 export function ContactForm({
   whatsappNumber,
+  dict,
 }: {
   whatsappNumber?: string | null;
+  dict: Dictionary;
 }) {
   const [channel, setChannel] = useState<Channel>("email");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const c = dict.contact;
 
   function selectChannel(next: Channel) {
     setChannel(next);
@@ -43,19 +48,15 @@ export function ContactForm({
 
     if (!name || !message || (channel === "email" && !email)) {
       setStatus("error");
-      setError(
-        channel === "email"
-          ? "Ime, e-mail i poruka su obavezni."
-          : "Ime i poruka su obavezni.",
-      );
+      setError(channel === "email" ? c.errorRequiredWithEmail : c.errorRequired);
       return;
     }
 
     if (channel === "whatsapp") {
-      const href = waHref(whatsappNumber, `Pozdrav, ja sam ${name}.\n\n${message}`);
+      const href = waHref(whatsappNumber, t(c.whatsappGreeting, { name }) + `\n\n${message}`);
       if (!href) {
         setStatus("error");
-        setError("WhatsApp trenutno nije dostupan — pošaljite e-mail poruku.");
+        setError(c.errorWhatsappUnavailable);
         return;
       }
       window.open(href, "_blank", "noopener,noreferrer");
@@ -71,36 +72,33 @@ export function ContactForm({
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, locale: dict.locale }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "Nešto je pošlo po krivu.");
+        throw new Error(body?.error || c.errorGeneric);
       }
 
       setStatus("sent");
       form.reset();
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Nešto je pošlo po krivu.");
+      setError(err instanceof Error ? err.message : c.errorGeneric);
     }
   }
 
   return (
     <Reveal className="bg-stone-100 px-6 py-9 ring-1 ring-stone-200 lg:px-10 lg:py-11">
-      <p className="eyebrow">Javite nam se</p>
+      <p className="eyebrow">{c.eyebrow}</p>
       <h2 className="mt-5 text-[1.9rem] leading-[1.18] text-ink-900 sm:text-[2.1rem]">
-        Pošaljite poruku
+        {c.heading}
       </h2>
-      <p className="mt-3 max-w-lg text-[1rem] text-ink-500">
-        Odaberite kako vam je lakše javiti se — izravno na e-mail župnog
-        ureda ili porukom na WhatsApp.
-      </p>
+      <p className="mt-3 max-w-lg text-[1rem] text-ink-500">{c.intro}</p>
 
       <div
         role="radiogroup"
-        aria-label="Način slanja poruke"
+        aria-label={c.channelGroupLabel}
         className="mt-8 inline-flex gap-1 rounded-full bg-stone-50 p-1 ring-1 ring-stone-200"
       >
         <ChannelPill
@@ -108,20 +106,20 @@ export function ContactForm({
           onSelect={() => selectChannel("email")}
           icon={<MailIcon />}
         >
-          E-mail
+          {c.emailTab}
         </ChannelPill>
         <ChannelPill
           active={channel === "whatsapp"}
           onSelect={() => selectChannel("whatsapp")}
           icon={<WhatsAppIcon />}
         >
-          WhatsApp
+          {c.whatsappTab}
         </ChannelPill>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="mt-8 grid gap-5 sm:grid-cols-2">
         <Field
-          label="Ime i prezime"
+          label={c.nameLabel}
           name="name"
           autoComplete="name"
           required
@@ -130,7 +128,7 @@ export function ContactForm({
 
         {channel === "email" ? (
           <Field
-            label="E-mail"
+            label={c.emailLabel}
             name="email"
             type="email"
             autoComplete="email"
@@ -141,7 +139,7 @@ export function ContactForm({
 
         <label className="block sm:col-span-2">
           <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-ink-400">
-            Poruka
+            {c.messageLabel}
           </span>
           <textarea
             name="message"
@@ -158,17 +156,15 @@ export function ContactForm({
             className={`${buttonClasses("solid")} cursor-pointer disabled:cursor-not-allowed disabled:opacity-60`}
           >
             {status === "sending"
-              ? "Šalje se…"
+              ? c.sendingLabel
               : channel === "whatsapp"
-                ? "Otvori WhatsApp"
-                : "Pošalji poruku"}
+                ? c.openWhatsapp
+                : c.sendMessage}
           </button>
 
           {status === "sent" ? (
             <p className="text-[0.85rem] text-sea-700">
-              {channel === "whatsapp"
-                ? "WhatsApp se otvara u novoj kartici."
-                : "Poruka je poslana. Javit ćemo vam se uskoro."}
+              {channel === "whatsapp" ? c.sentWhatsapp : c.sentEmail}
             </p>
           ) : null}
 

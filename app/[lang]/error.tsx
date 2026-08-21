@@ -4,6 +4,8 @@ import { useEffect } from "react";
 
 import { ButtonLink, buttonClasses } from "@/components/ui/Button";
 import { StatusPage } from "@/components/ui/StatusPage";
+import { useLocale } from "@/lib/i18n/context";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -16,6 +18,9 @@ import { ROUTES } from "@/lib/routes";
  * `reset()` re-renders the segment that failed. For a transient fault — the CMS
  * briefly unreachable, which is the likeliest cause here — that alone fixes it,
  * so it is the first thing offered.
+ *
+ * Reads the locale from context rather than `params` — an error boundary has
+ * no route params of its own — which is exactly what `LocaleProvider` is for.
  */
 export default function Error({
   error,
@@ -24,6 +29,9 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const locale = useLocale();
+  const s = getDictionary(locale).status.error;
+
   useEffect(() => {
     // The digest is the only handle on the server-side stack, which Next
     // deliberately withholds from the browser.
@@ -32,8 +40,8 @@ export default function Error({
 
   return (
     <StatusPage
-      eyebrow="Greška"
-      title="Nešto nam je zapelo"
+      eyebrow={s.eyebrow}
+      title={s.title}
       actions={
         <>
           <button
@@ -41,25 +49,19 @@ export default function Error({
             onClick={reset}
             className={`${buttonClasses("solid")} cursor-pointer`}
           >
-            Pokušaj ponovo
+            {s.retry}
           </button>
           <ButtonLink href={ROUTES.home} variant="outline">
-            Naslovnica
+            {s.home}
           </ButtonLink>
         </>
       }
     >
-      <p>
-        Greška je na našoj strani, ne na vašoj — svijeća je na trenutak
-        zatreperila. Pokušajte ponovo, obično je to dovoljno.
-      </p>
-      <p className="mt-4">
-        Ako se ponovi, javite se župnom uredu i reći ćemo onima koji ovo
-        održavaju.
-      </p>
+      <p>{s.body1}</p>
+      <p className="mt-4">{s.body2}</p>
       {error.digest ? (
         <p className="mt-6 text-[0.8rem] text-ink-400">
-          Oznaka greške: {error.digest}
+          {s.errorCode} {error.digest}
         </p>
       ) : null}
     </StatusPage>

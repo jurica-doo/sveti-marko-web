@@ -1,4 +1,5 @@
 import { bindTimeRanges } from "@/lib/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type {
   DevotionRow,
   ScheduleRow,
@@ -39,6 +40,7 @@ export function SchedulePlaque({
   special = [],
   tone = "dark",
   className = "",
+  dict,
 }: {
   massesTitle?: string | null;
   masses: ScheduleRow[];
@@ -49,6 +51,7 @@ export function SchedulePlaque({
   tone?: "band" | "dark" | "light";
   /** For a caller that needs the card to fill a column, e.g. `lg:flex-1`. */
   className?: string;
+  dict: Dictionary;
 }) {
   const specialBlocks = special.filter(
     (block) => block.active !== false && block.entries?.length,
@@ -103,12 +106,12 @@ export function SchedulePlaque({
     confessions.length
       ? {
           key: "confessions",
-          title: confessionsTitle || "Ispovijed",
+          title: confessionsTitle || dict.schedulePlaque.confessionsFallback,
           rows: confessions,
         }
       : null,
     devotionRows.length
-      ? { key: "devotions", title: "Pobožnosti", rows: devotionRows }
+      ? { key: "devotions", title: dict.schedulePlaque.devotions, rows: devotionRows }
       : null,
   ].filter((section) => section !== null);
 

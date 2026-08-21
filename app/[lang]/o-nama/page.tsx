@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { StorySection } from "@/components/about/StorySection";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getAboutPage } from "@/lib/api";
+import { hasLocale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { richTextToPlain } from "@/lib/richtext";
 import { ROUTES } from "@/lib/routes";
@@ -23,25 +26,43 @@ export const revalidate = 60;
 const PARISH_IMAGE = "/sveti-marko-unutrasnjost-sa-strane.jpg";
 const PATRON_IMAGE = "/sveti-marko-kip.jpg";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const page = await getAboutPage().catch(() => null);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  if (!hasLocale(lang)) return {};
+  const page = await getAboutPage(lang).catch(() => null);
 
   return buildSeoMetadata({
     title: page?.metaTitle || page?.title || "O nama",
     description:
       page?.metaDescription || page?.intro || richTextToPlain(page?.parish?.body),
     path: ROUTES.about,
+    locale: lang,
     imageUrl: imageUrl(page?.heroImage),
   });
 }
 
-export default async function AboutPage() {
-  const page = await getAboutPage();
+export default async function AboutPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
+  const dict = getDictionary(lang);
 
-  const jsonLd = buildBreadcrumbJsonLd([
-    { name: "Naslovnica", href: ROUTES.home },
-    { name: page.title, href: ROUTES.about },
-  ]);
+  const page = await getAboutPage(lang);
+
+  const jsonLd = buildBreadcrumbJsonLd(
+    [
+      { name: dict.breadcrumb.home, href: ROUTES.home },
+      { name: page.title, href: ROUTES.about },
+    ],
+    lang,
+  );
 
   return (
     <>
@@ -55,20 +76,25 @@ export default async function AboutPage() {
         title={page.title}
         intro={page.intro}
         image={page.heroImage}
-        breadcrumb={[{ label: "O nama", href: ROUTES.about }]}
+        breadcrumb={[{ label: dict.about.breadcrumbTitle, href: ROUTES.about }]}
+        dict={dict}
       />
 
       <StorySection
-        eyebrow="Župna zajednica"
+        eyebrow={dict.about.parishEyebrow}
         title={page.parish?.title}
         body={page.parish?.body}
         image={page.parish?.image || PARISH_IMAGE}
       />
 
       <StorySection
-        eyebrow="Nebeski zaštitnik"
+        eyebrow={dict.about.patronEyebrow}
         title={page.patron?.title}
-        meta={page.patron?.feastDay ? `Blagdan · ${page.patron.feastDay}` : null}
+        meta={
+          page.patron?.feastDay
+            ? `${dict.about.feastLabel} · ${page.patron.feastDay}`
+            : null
+        }
         body={page.patron?.body}
         image={page.patron?.image || PATRON_IMAGE}
         imageOrientation="portrait"

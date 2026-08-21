@@ -1,5 +1,6 @@
 import { Reveal } from "@/components/ui/Reveal";
 import { bindTimeRanges } from "@/lib/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import type { HomePageType, ScheduleType } from "@/lib/types";
 
@@ -9,9 +10,11 @@ import type { HomePageType, ScheduleType } from "@/lib/types";
 export function OfficeSection({
   section,
   schedule,
+  dict,
 }: {
   section: HomePageType["officeSection"];
   schedule: ScheduleType | null;
+  dict: Dictionary;
 }) {
   const hours = schedule?.officeHours ?? [];
   const notes = schedule?.officeNotes ?? [];
@@ -22,8 +25,8 @@ export function OfficeSection({
     <section className="bg-stone-100 py-20 lg:py-28">
       <div className="shell">
         <SectionHeading
-          eyebrow={section?.eyebrow || "Župni ured"}
-          title={section?.title || "Radno vrijeme i sakramenti"}
+          eyebrow={section?.eyebrow || dict.home.officeEyebrow}
+          title={section?.title || dict.home.officeTitle}
           intro={section?.intro}
         />
 
@@ -39,7 +42,7 @@ export function OfficeSection({
             <Reveal>
               <div className="h-full bg-stone-50 p-7 ring-1 ring-stone-200 sm:p-8">
                 <p className="text-[0.68rem] font-semibold tracking-[0.22em] text-brass-600 uppercase">
-                  Radno vrijeme
+                  {dict.home.officeHoursLabel}
                 </p>
 
                 <dl className="mt-6 divide-y divide-stone-200">
@@ -70,7 +73,7 @@ export function OfficeSection({
             <Reveal delay={0.08}>
               <div className="h-full bg-stone-50 p-7 ring-1 ring-stone-200 sm:p-8">
                 <p className="text-[0.68rem] font-semibold tracking-[0.22em] text-brass-600 uppercase">
-                  Važne napomene
+                  {dict.home.officeNotesLabel}
                 </p>
 
                 <div className="mt-6 space-y-5 divide-y divide-stone-200">

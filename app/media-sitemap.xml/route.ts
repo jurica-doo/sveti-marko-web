@@ -46,9 +46,10 @@ export async function GET() {
     // Fallback to dynamic generation below.
   }
 
+  // Locale doesn't matter here — only the (unlocalized) filenames are used.
   const [images, videos] = await Promise.all([
-    getAllImages().catch(() => []),
-    getAllVideos().catch(() => []),
+    getAllImages("hr").catch(() => []),
+    getAllVideos("hr").catch(() => []),
   ]);
 
   const imageEntries = images

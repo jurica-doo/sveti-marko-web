@@ -1,3 +1,4 @@
+import type { Locale } from "./i18n/config";
 import {
   AboutPageType,
   ContactPageType,
@@ -40,12 +41,24 @@ async function cmsFetch<T>(
   return (await res.json()) as T;
 }
 
+/**
+ * `&locale=xx` for every request. Payload is configured with
+ * `fallback: true` and `defaultLocale: 'hr'`, so a field the office hasn't
+ * translated yet for `locale` comes back as its Croatian value rather than
+ * blank — no explicit `fallback-locale` param needed.
+ */
+function withLocale(path: string, locale: Locale): string {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}locale=${locale}`;
+}
+
 /** `GET /api/globals/<slug>` */
 export async function getGlobal<T>(
   slug: string,
+  locale: Locale,
   { depth = 3, revalidate }: { depth?: number; revalidate?: number } = {},
 ): Promise<T> {
-  return cmsFetch<T>(`/api/globals/${slug}?depth=${depth}`, {
+  return cmsFetch<T>(withLocale(`/api/globals/${slug}?depth=${depth}`, locale), {
     label: `global ${slug}`,
     revalidate,
   });
@@ -54,6 +67,7 @@ export async function getGlobal<T>(
 /** `GET /api/<slug>` — returns `docs`. */
 export async function getCollection<T>(
   slug: string,
+  locale: Locale,
   {
     depth = 2,
     limit = 1000,
@@ -61,7 +75,7 @@ export async function getCollection<T>(
   }: { depth?: number; limit?: number; revalidate?: number } = {},
 ): Promise<T[]> {
   const data = await cmsFetch<PaginatedDocs<T>>(
-    `/api/${slug}?limit=${limit}&depth=${depth}`,
+    withLocale(`/api/${slug}?limit=${limit}&depth=${depth}`, locale),
     { label: `collection ${slug}`, revalidate },
   );
   return data.docs ?? [];
@@ -71,12 +85,16 @@ export async function getCollection<T>(
 export async function getBySlug<T>(
   collection: string,
   slug: string,
+  locale: Locale,
   { depth = 3, revalidate }: { depth?: number; revalidate?: number } = {},
 ): Promise<T> {
   const data = await cmsFetch<PaginatedDocs<T>>(
-    `/api/${collection}?where[slug][equals]=${encodeURIComponent(
-      slug,
-    )}&depth=${depth}&limit=1&draft=false`,
+    withLocale(
+      `/api/${collection}?where[slug][equals]=${encodeURIComponent(
+        slug,
+      )}&depth=${depth}&limit=1&draft=false`,
+      locale,
+    ),
     { label: `${collection} by slug`, revalidate },
   );
 
@@ -91,9 +109,10 @@ export async function getBySlug<T>(
 export async function getById<T>(
   collection: string,
   id: number | string,
+  locale: Locale,
   { depth = 3, revalidate }: { depth?: number; revalidate?: number } = {},
 ): Promise<T> {
-  return cmsFetch<T>(`/api/${collection}/${id}?depth=${depth}`, {
+  return cmsFetch<T>(withLocale(`/api/${collection}/${id}?depth=${depth}`, locale), {
     label: `${collection} by id`,
     revalidate,
   });
@@ -112,15 +131,15 @@ export async function checkCmsHealth(): Promise<boolean> {
   }
 }
 
-export async function getAllImages(): Promise<MediaImageType[]> {
-  return getCollection<MediaImageType>("media-images", {
+export async function getAllImages(locale: Locale): Promise<MediaImageType[]> {
+  return getCollection<MediaImageType>("media-images", locale, {
     depth: 0,
     limit: 1000,
   });
 }
 
-export async function getAllVideos(): Promise<MediaVideoType[]> {
-  return getCollection<MediaVideoType>("media-videos", {
+export async function getAllVideos(locale: Locale): Promise<MediaVideoType[]> {
+  return getCollection<MediaVideoType>("media-videos", locale, {
     depth: 0,
     limit: 1000,
   });
@@ -128,28 +147,28 @@ export async function getAllVideos(): Promise<MediaVideoType[]> {
 
 /* --------------------------------------------------------------- globals */
 
-export async function getSettings(): Promise<SettingsType> {
-  return getGlobal<SettingsType>("settings", { depth: 1 });
+export async function getSettings(locale: Locale): Promise<SettingsType> {
+  return getGlobal<SettingsType>("settings", locale, { depth: 1 });
 }
 
-export async function getSchedule(): Promise<ScheduleType> {
-  return getGlobal<ScheduleType>("schedule", { depth: 0 });
+export async function getSchedule(locale: Locale): Promise<ScheduleType> {
+  return getGlobal<ScheduleType>("schedule", locale, { depth: 0 });
 }
 
-export async function getHomePage(): Promise<HomePageType> {
-  return getGlobal<HomePageType>("home-page", { depth: 1 });
+export async function getHomePage(locale: Locale): Promise<HomePageType> {
+  return getGlobal<HomePageType>("home-page", locale, { depth: 1 });
 }
 
-export async function getNewsPage(): Promise<NewsPageType> {
-  return getGlobal<NewsPageType>("news-page", { depth: 1 });
+export async function getNewsPage(locale: Locale): Promise<NewsPageType> {
+  return getGlobal<NewsPageType>("news-page", locale, { depth: 1 });
 }
 
-export async function getAboutPage(): Promise<AboutPageType> {
-  return getGlobal<AboutPageType>("about-page", { depth: 1 });
+export async function getAboutPage(locale: Locale): Promise<AboutPageType> {
+  return getGlobal<AboutPageType>("about-page", locale, { depth: 1 });
 }
 
-export async function getContactPage(): Promise<ContactPageType> {
-  return getGlobal<ContactPageType>("contact-page", { depth: 1 });
+export async function getContactPage(locale: Locale): Promise<ContactPageType> {
+  return getGlobal<ContactPageType>("contact-page", locale, { depth: 1 });
 }
 
 /* ----------------------------------------------------------- collections */
@@ -158,13 +177,16 @@ export async function getContactPage(): Promise<ContactPageType> {
  * Published news, newest first. `featured` is sorted ahead of the rest so the
  * home page teaser can reuse the same ordering as the archive.
  */
-export async function getNews({
-  limit = 100,
-  featuredFirst = false,
-}: { limit?: number; featuredFirst?: boolean } = {}): Promise<NewsType[]> {
+export async function getNews(
+  locale: Locale,
+  { limit = 100, featuredFirst = false }: { limit?: number; featuredFirst?: boolean } = {},
+): Promise<NewsType[]> {
   const sort = featuredFirst ? "-featured,-publishedAt" : "-publishedAt";
   const data = await cmsFetch<PaginatedDocs<NewsType>>(
-    `/api/news?limit=${limit}&depth=2&sort=${encodeURIComponent(sort)}&where[_status][equals]=published`,
+    withLocale(
+      `/api/news?limit=${limit}&depth=2&sort=${encodeURIComponent(sort)}&where[_status][equals]=published`,
+      locale,
+    ),
     { label: "news" },
   );
   return data.docs ?? [];
@@ -178,36 +200,42 @@ export async function getNews({
  * (`NEXT_PUBLIC_CMS_URL`) and already on the CORS allowlist, so paging needs no
  * route of our own standing between the two.
  */
-export function newsPagePath({
-  page = 1,
-  limit = 9,
-}: { page?: number; limit?: number } = {}): string {
-  return `${CMS_URL}/api/news?limit=${limit}&page=${page}&depth=2&sort=-publishedAt&where[_status][equals]=published`;
+export function newsPagePath(
+  locale: Locale,
+  { page = 1, limit = 9 }: { page?: number; limit?: number } = {},
+): string {
+  return `${CMS_URL}${withLocale(
+    `/api/news?limit=${limit}&page=${page}&depth=2&sort=-publishedAt&where[_status][equals]=published`,
+    locale,
+  )}`;
 }
 
 /** One page of published news, newest first, with the paging flags. */
-export async function getNewsPaginated({
-  page = 1,
-  limit = 9,
-}: { page?: number; limit?: number } = {}): Promise<PaginatedDocs<NewsType>> {
+export async function getNewsPaginated(
+  locale: Locale,
+  { page = 1, limit = 9 }: { page?: number; limit?: number } = {},
+): Promise<PaginatedDocs<NewsType>> {
   return cmsFetch<PaginatedDocs<NewsType>>(
-    newsPagePath({ page, limit }).replace(CMS_URL, ""),
+    newsPagePath(locale, { page, limit }).replace(CMS_URL, ""),
     { label: "news page" },
   );
 }
 
-export async function getNewsBySlug(slug: string): Promise<NewsType | null> {
+export async function getNewsBySlug(slug: string, locale: Locale): Promise<NewsType | null> {
   const data = await cmsFetch<PaginatedDocs<NewsType>>(
-    `/api/news?where[slug][equals]=${encodeURIComponent(
-      slug,
-    )}&where[_status][equals]=published&depth=2&limit=1`,
+    withLocale(
+      `/api/news?where[slug][equals]=${encodeURIComponent(
+        slug,
+      )}&where[_status][equals]=published&depth=2&limit=1`,
+      locale,
+    ),
     { label: "news by slug" },
   );
   return data.docs?.[0] ?? null;
 }
 
-export async function getUsefulLinks(): Promise<UsefulLinkType[]> {
-  return getCollection<UsefulLinkType>("useful-links", {
+export async function getUsefulLinks(locale: Locale): Promise<UsefulLinkType[]> {
+  return getCollection<UsefulLinkType>("useful-links", locale, {
     depth: 0,
     limit: 100,
   });

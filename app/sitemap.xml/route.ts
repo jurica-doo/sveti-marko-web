@@ -1,5 +1,6 @@
-import { generateUrlSetXml, type SitemapUrlEntry } from "@/utils/sitemap";
+import { generateUrlSetXml, type SitemapAlternate, type SitemapUrlEntry } from "@/utils/sitemap";
 import { getNews } from "@/lib/api";
+import { LOCALE_META, LOCALES } from "@/lib/i18n/config";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -23,24 +24,47 @@ export async function GET() {
 
   const nowIso = new Date().toISOString();
 
+  /** This same path, once per locale, each carrying the others as `<xhtml:link alternate>`. */
+  function localizedEntries(
+    path: string,
+    changefreq: SitemapUrlEntry["changefreq"],
+    priority: number,
+    lastmod = nowIso,
+  ): SitemapUrlEntry[] {
+    const alternates: SitemapAlternate[] = LOCALES.map((locale) => ({
+      hreflang: LOCALE_META[locale].tag,
+      href: absoluteUrl(path, locale),
+    }));
+
+    return LOCALES.map((locale) => ({
+      loc: absoluteUrl(path, locale),
+      lastmod,
+      changefreq,
+      priority,
+      alternates,
+    }));
+  }
+
   // `absoluteUrl()` runs every path through the trailing-slash normaliser, so
   // the sitemap advertises exactly the URLs the site serves — no 308s.
   const base: SitemapUrlEntry[] = [
-    { loc: absoluteUrl(ROUTES.home), lastmod: nowIso, changefreq: "weekly", priority: 1 },
-    { loc: absoluteUrl(ROUTES.news), lastmod: nowIso, changefreq: "weekly", priority: 0.8 },
-    { loc: absoluteUrl(ROUTES.about), lastmod: nowIso, changefreq: "monthly", priority: 0.7 },
-    { loc: absoluteUrl(ROUTES.contact), lastmod: nowIso, changefreq: "monthly", priority: 0.7 },
+    ...localizedEntries(ROUTES.home, "weekly", 1),
+    ...localizedEntries(ROUTES.news, "weekly", 0.8),
+    ...localizedEntries(ROUTES.about, "monthly", 0.7),
+    ...localizedEntries(ROUTES.contact, "monthly", 0.7),
   ];
 
-  const news = await getNews({ limit: 500 }).catch(() => []);
+  const news = await getNews("hr", { limit: 500 }).catch(() => []);
   const newsEntries: SitemapUrlEntry[] = news
     .filter((item) => Boolean(item.slug))
-    .map((item) => ({
-      loc: absoluteUrl(ROUTES.newsDetail(item.slug as string)),
-      lastmod: item.updatedAt || item.publishedAt,
-      changefreq: "monthly" as const,
-      priority: 0.6,
-    }));
+    .flatMap((item) =>
+      localizedEntries(
+        ROUTES.newsDetail(item.slug as string),
+        "monthly",
+        0.6,
+        item.updatedAt || item.publishedAt,
+      ),
+    );
 
   const xml = generateUrlSetXml([...base, ...newsEntries]);
 

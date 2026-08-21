@@ -5,6 +5,7 @@ import { useState } from "react";
 import { NewsCard } from "@/components/news/NewsCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { newsPagePath } from "@/lib/api";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { NewsType, PaginatedDocs } from "@/lib/types";
 
 /**
@@ -19,12 +20,12 @@ export function NewsArchive({
   initial,
   perPage,
   hasMore: initialHasMore,
-  loadMoreLabel = "Učitaj više",
+  dict,
 }: {
   initial: NewsType[];
   perPage: number;
   hasMore: boolean;
-  loadMoreLabel?: string;
+  dict: Dictionary;
 }) {
   const [items, setItems] = useState(initial);
   const [page, setPage] = useState(1);
@@ -40,7 +41,7 @@ export function NewsArchive({
 
     try {
       const next = page + 1;
-      const res = await fetch(newsPagePath({ page: next, limit: perPage }));
+      const res = await fetch(newsPagePath(dict.locale, { page: next, limit: perPage }));
       if (!res.ok) throw new Error(String(res.status));
 
       const data = (await res.json()) as PaginatedDocs<NewsType>;
@@ -68,7 +69,7 @@ export function NewsArchive({
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, index) => (
           <Reveal key={item.id} delay={(index % 3) * 0.08} className="h-full">
-            <NewsCard news={item} priority={index < 3} />
+            <NewsCard news={item} priority={index < 3} dict={dict} />
           </Reveal>
         ))}
 
@@ -92,12 +93,12 @@ export function NewsArchive({
             disabled={loading}
             className="hover-lift inline-flex cursor-pointer items-center justify-center border border-ink-900/25 px-7 py-3.5 text-[0.78rem] font-semibold tracking-[0.16em] text-ink-900 uppercase hover:border-brass-500 hover:text-brass-600 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Učitavam…" : loadMoreLabel}
+            {loading ? dict.news.loading : dict.news.loadMore}
           </button>
 
           {failed ? (
             <p role="alert" className="text-[0.85rem] text-[#8f2d2d]">
-              Učitavanje nije uspjelo. Pokušajte ponovo.
+              {dict.news.loadFailed}
             </p>
           ) : null}
         </div>

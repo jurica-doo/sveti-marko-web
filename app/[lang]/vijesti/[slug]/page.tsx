@@ -8,6 +8,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SmartLink } from "@/components/ui/SmartLink";
 import { getNews, getNewsBySlug } from "@/lib/api";
 import { formatDateLong, isoDate } from "@/lib/format";
+import { hasLocale, LOCALES } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { RichTextRenderer } from "@/lib/richtext";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
@@ -18,10 +20,12 @@ export const revalidate = 60;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const news = await getNews({ limit: 200 }).catch(() => []);
-  return news
-    .filter((item) => Boolean(item.slug))
-    .map((item) => ({ slug: item.slug as string }));
+  // News slugs are canonical across locales (see the CMS localization plan),
+  // so each slug is combined with every language rather than fetched per-locale.
+  const news = await getNews("hr", { limit: 200 }).catch(() => []);
+  const slugs = news.filter((item) => Boolean(item.slug)).map((item) => item.slug as string);
+
+  return LOCALES.flatMap((lang) => slugs.map((slug) => ({ lang, slug })));
 }
 
 function categoryTitle(news: NewsType): string | null {
@@ -33,15 +37,18 @@ function categoryTitle(news: NewsType): string | null {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ lang: string; slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const news = await getNewsBySlug(slug).catch(() => null);
+  const { lang, slug } = await params;
+  if (!hasLocale(lang)) return {};
+  const dict = getDictionary(lang);
+  const news = await getNewsBySlug(slug, lang).catch(() => null);
 
   if (!news) {
     return buildSeoMetadata({
-      title: "Vijest nije pronađena",
+      title: dict.news.notFoundTitle,
       path: ROUTES.newsDetail(slug),
+      locale: lang,
     });
   }
 
@@ -49,6 +56,7 @@ export async function generateMetadata({
     title: news.title,
     description: news.excerpt,
     path: ROUTES.newsDetail(slug),
+    locale: lang,
     imageUrl: imageUrl(news.coverImage),
     imageAlt: news.coverImage?.alt,
     type: "article",
@@ -58,14 +66,17 @@ export async function generateMetadata({
 export default async function NewsDetailPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ lang: string; slug: string }>;
 }) {
-  const { slug } = await params;
-  const news = await getNewsBySlug(slug).catch(() => null);
+  const { lang, slug } = await params;
+  if (!hasLocale(lang)) notFound();
+  const dict = getDictionary(lang);
+
+  const news = await getNewsBySlug(slug, lang).catch(() => null);
 
   if (!news) notFound();
 
-  const all = await getNews({ limit: 12 }).catch(() => []);
+  const all = await getNews(lang, { limit: 12 }).catch(() => []);
   const related = all.filter((item) => item.id !== news.id).slice(0, 3);
 
   const category = categoryTitle(news);
@@ -77,7 +88,7 @@ export default async function NewsDetailPage({
     description: news.excerpt,
     datePublished: news.publishedAt,
     dateModified: news.updatedAt,
-    mainEntityOfPage: absoluteUrl(ROUTES.newsDetail(slug)),
+    mainEntityOfPage: absoluteUrl(ROUTES.newsDetail(slug), lang),
     ...(news.author ? { author: { "@type": "Organization", name: news.author } } : {}),
   };
 
@@ -91,14 +102,14 @@ export default async function NewsDetailPage({
       <article>
         <header className="bg-ink-900 pt-14 pb-16 lg:pt-20 lg:pb-20">
           <div className="shell">
-            <nav aria-label="Staza" className="mb-8">
+            <nav aria-label={dict.breadcrumb.trailAriaLabel} className="mb-8">
               <ol className="flex flex-wrap items-center gap-2 text-[0.72rem] uppercase tracking-[0.14em] text-stone-200/55">
                 <li>
                   <SmartLink
                     href={ROUTES.home}
                     className="transition-colors hover:text-brass-300"
                   >
-                    Naslovnica
+                    {dict.breadcrumb.home}
                   </SmartLink>
                 </li>
                 <li className="flex items-center gap-2">
@@ -109,7 +120,7 @@ export default async function NewsDetailPage({
                     href={ROUTES.news}
                     className="transition-colors hover:text-brass-300"
                   >
-                    Vijesti
+                    {dict.news.archiveTitle}
                   </SmartLink>
                 </li>
               </ol>
@@ -117,7 +128,7 @@ export default async function NewsDetailPage({
 
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-brass-300">
               <time dateTime={isoDate(news.publishedAt)}>
-                {formatDateLong(news.publishedAt)}
+                {formatDateLong(news.publishedAt, lang)}
               </time>
               {category ? (
                 <>
@@ -143,7 +154,7 @@ export default async function NewsDetailPage({
           <div className="mx-auto max-w-3xl py-14 lg:py-20">
             <RichTextRenderer content={news.content} />
 
-            {news.gallery?.length ? <Gallery items={news.gallery} /> : null}
+            {news.gallery?.length ? <Gallery items={news.gallery} dict={dict} /> : null}
 
             {news.author ? (
               <p className="mt-12 border-t border-stone-200 pt-6 text-[0.85rem] text-ink-400">
@@ -152,7 +163,7 @@ export default async function NewsDetailPage({
             ) : null}
 
             <div className="mt-10">
-              <ArrowLink href={ROUTES.news}>Sve vijesti</ArrowLink>
+              <ArrowLink href={ROUTES.news}>{dict.news.allNews}</ArrowLink>
             </div>
           </div>
         </div>
@@ -161,11 +172,11 @@ export default async function NewsDetailPage({
       {related.length ? (
         <section className="bg-stone-100 py-16 lg:py-24">
           <div className="shell">
-            <p className="eyebrow">Još iz župe</p>
+            <p className="eyebrow">{dict.news.moreFromParish}</p>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((item, index) => (
                 <Reveal key={item.id} delay={index * 0.08} className="h-full">
-                  <NewsCard news={item} />
+                  <NewsCard news={item} dict={dict} />
                 </Reveal>
               ))}
             </div>

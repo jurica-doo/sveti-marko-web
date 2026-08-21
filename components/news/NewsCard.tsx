@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { SmartLink } from "@/components/ui/SmartLink";
 import { dateParts, isoDate } from "@/lib/format";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
 import type { NewsType } from "@/lib/types";
@@ -15,12 +16,14 @@ function categoryTitle(news: NewsType): string | null {
 export function NewsCard({
   news,
   priority = false,
+  dict,
 }: {
   news: NewsType;
   priority?: boolean;
+  dict: Dictionary;
 }) {
   const cover = imageUrl(news.coverImage);
-  const parts = dateParts(news.publishedAt);
+  const parts = dateParts(news.publishedAt, dict.locale);
   const category = categoryTitle(news);
   const href = ROUTES.newsDetail(news.slug || String(news.id));
 
@@ -71,7 +74,7 @@ export function NewsCard({
           </p>
 
           <span className="mt-6 inline-flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-sea-800 transition-colors group-hover:text-brass-600">
-            Pročitaj više
+            {dict.news.readMore}
             <span
               aria-hidden="true"
               className="indicator group-hover:translate-x-1.5"

@@ -1,0 +1,136 @@
+{
+  "languageSwitcher": {
+    "label": "Odaberi jezik"
+  },
+  "nav": {
+    "ariaLabel": "Glavni izbornik",
+    "openMenu": "Otvori izbornik",
+    "closeMenu": "Zatvori izbornik",
+    "scheduleHeading": "Raspored misa",
+    "fallback": {
+      "home": "Naslovnica",
+      "news": "Vijesti",
+      "about": "O nama",
+      "contact": "Kontakt"
+    }
+  },
+  "breadcrumb": {
+    "trailAriaLabel": "Staza",
+    "home": "Naslovnica"
+  },
+  "footer": {
+    "office": "Župni ured",
+    "masses": "Svete mise",
+    "creditPrefix": "Dizajn i izrada —"
+  },
+  "contact": {
+    "eyebrow": "Javite nam se",
+    "heading": "Pošaljite poruku",
+    "intro": "Odaberite kako vam je lakše javiti se — izravno na e-mail župnog ureda ili porukom na WhatsApp.",
+    "channelGroupLabel": "Način slanja poruke",
+    "emailTab": "E-mail",
+    "whatsappTab": "WhatsApp",
+    "nameLabel": "Ime i prezime",
+    "emailLabel": "E-mail",
+    "messageLabel": "Poruka",
+    "sendingLabel": "Šalje se…",
+    "openWhatsapp": "Otvori WhatsApp",
+    "sendMessage": "Pošalji poruku",
+    "sentWhatsapp": "WhatsApp se otvara u novoj kartici.",
+    "sentEmail": "Poruka je poslana. Javit ćemo vam se uskoro.",
+    "errorRequiredWithEmail": "Ime, e-mail i poruka su obavezni.",
+    "errorRequired": "Ime i poruka su obavezni.",
+    "errorWhatsappUnavailable": "WhatsApp trenutno nije dostupan — pošaljite e-mail poruku.",
+    "errorGeneric": "Nešto je pošlo po krivu.",
+    "whatsappGreeting": "Pozdrav, ja sam {name}."
+  },
+  "apiContact": {
+    "emailUnavailable": "Slanje e-maila trenutno nije dostupno. Pokušajte putem WhatsAppa.",
+    "requiredFields": "Ime, e-mail i poruka su obavezni.",
+    "genericError": "Nešto je pošlo po krivu. Pokušajte ponovo.",
+    "subjectPrefix": "Nova poruka od"
+  },
+  "news": {
+    "readMore": "Pročitaj više",
+    "loadMore": "Učitaj više",
+    "loading": "Učitavam…",
+    "loadFailed": "Učitavanje nije uspjelo. Pokušajte ponovo.",
+    "allNews": "Sve vijesti",
+    "moreFromParish": "Još iz župe",
+    "notFoundTitle": "Vijest nije pronađena",
+    "archiveTitle": "Župne vijesti",
+    "archiveEyebrow": "Iz župe",
+    "archiveIntro": "Obavijesti, najave i izvještaji iz života župe sv. Marka na Neslanovcu.",
+    "archiveEmpty": "Trenutno nema objavljenih vijesti."
+  },
+  "gallery": {
+    "openImage": "Otvori sliku {n}",
+    "loadMore": "Učitaj još ({n})",
+    "dialogLabel": "Galerija",
+    "close": "Zatvori galeriju",
+    "prev": "Prethodna slika",
+    "next": "Sljedeća slika"
+  },
+  "hero": {
+    "scrollToSchedule": "Prijeđi na raspored"
+  },
+  "about": {
+    "parishEyebrow": "Župna zajednica",
+    "patronEyebrow": "Nebeski zaštitnik",
+    "feastLabel": "Blagdan",
+    "breadcrumbTitle": "O nama"
+  },
+  "contactPage": {
+    "breadcrumbTitle": "Kontakt",
+    "officeHoursLabel": "Radno vrijeme župnog ureda",
+    "directionsLabel": "Kako do nas",
+    "openInMaps": "Otvori u Google Kartama",
+    "mapTitle": "Karta — crkva sv. Marka, Neslanovac",
+    "phoneLabel": "Telefon",
+    "mobileLabel": "Mobitel",
+    "emailLabel": "E-mail",
+    "ibanLabel": "IBAN",
+    "oibLabel": "OIB"
+  },
+  "schedulePlaque": {
+    "confessionsFallback": "Ispovijed",
+    "devotions": "Pobožnosti"
+  },
+  "home": {
+    "officeEyebrow": "Župni ured",
+    "officeTitle": "Radno vrijeme i sakramenti",
+    "officeHoursLabel": "Radno vrijeme",
+    "officeNotesLabel": "Važne napomene",
+    "newsEyebrow": "Iz župe",
+    "newsTitle": "Vijesti i obavijesti",
+    "newsCta": "Sve vijesti",
+    "linksEyebrow": "Poveznice",
+    "linksTitle": "Gdje dalje",
+    "linkFallbackLabel": "Poveznica",
+    "linkGroups": {
+      "crkva": "Crkva u Hrvatskoj",
+      "duhovnost": "Duhovnost i mediji",
+      "zajednica": "Zajednica i mjesto"
+    }
+  },
+  "status": {
+    "error": {
+      "eyebrow": "Greška",
+      "title": "Nešto nam je zapelo",
+      "body1": "Greška je na našoj strani, ne na vašoj — svijeća je na trenutak zatreperila. Pokušajte ponovo, obično je to dovoljno.",
+      "body2": "Ako se ponovi, javite se župnom uredu i reći ćemo onima koji ovo održavaju.",
+      "errorCode": "Oznaka greške:",
+      "retry": "Pokušaj ponovo",
+      "home": "Naslovnica"
+    },
+    "notFound": {
+      "metaTitle": "Stranica nije pronađena",
+      "eyebrow": "Greška 404",
+      "title": "Ove stranice nema na ovoj adresi",
+      "body1": "Čini se da ste malo skrenuli s puta — događa se i najboljim hodočasnicima. Poveznica je vjerojatno zastarjela ili je stranica u međuvremenu premještena.",
+      "body2": "Vratite se na naslovnicu ili pogledajte što je novo u župi.",
+      "home": "Naslovnica",
+      "news": "Vijesti"
+    }
+  }
+}

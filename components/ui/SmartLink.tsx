@@ -1,7 +1,11 @@
+"use client";
+
 import type { AnchorHTMLAttributes, ReactNode } from "react";
 
 import { HashLink } from "@/components/ui/HashLink";
 import { SamePageLink } from "@/components/ui/SamePageLink";
+import { useLocale } from "@/lib/i18n/context";
+import { withLocale } from "@/lib/i18n/routes";
 import { internalHref, isExternalHref } from "@/lib/routes";
 
 type SmartLinkProps = {
@@ -17,6 +21,11 @@ type SmartLinkProps = {
  * under, so no navigation ever costs a 308 redirect. External links get
  * `target="_blank"` with the matching `rel` and stay a plain `<a>`.
  *
+ * It is also the one place that prefixes an internal `href` with the active
+ * locale (via `useLocale()`) — every `<SmartLink href={ROUTES.x}>` call site
+ * across the app hands it a bare, hr-shaped path and gets back a link to the
+ * right language automatically, with no per-call-site change needed.
+ *
  * Both internal variants run on the client, because both have to answer a click
  * that the router would otherwise treat as a no-op: `HashLink` scrolls to a
  * fragment already on the page, and `SamePageLink` scrolls back to the top when
@@ -24,6 +33,8 @@ type SmartLinkProps = {
  * shared by every link on the site, not per-link JavaScript.
  */
 export function SmartLink({ href, children, className, ...rest }: SmartLinkProps) {
+  const locale = useLocale();
+
   if (isExternalHref(href)) {
     const opensNewTab = href.startsWith("http") || href.startsWith("//");
     return (
@@ -40,7 +51,7 @@ export function SmartLink({ href, children, className, ...rest }: SmartLinkProps
     );
   }
 
-  const resolved = internalHref(href);
+  const resolved = withLocale(internalHref(href), locale);
 
   if (resolved.includes("#")) {
     return (
