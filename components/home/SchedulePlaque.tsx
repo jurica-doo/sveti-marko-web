@@ -77,9 +77,6 @@ export function SchedulePlaque({
     ? "border-brass-300/30 bg-brass-500/10"
     : "border-brass-500/35 bg-brass-100/50";
   const specialRule = onDark ? "border-brass-300/25" : "border-brass-500/25";
-  const specialTitleUnderline = onDark
-    ? "decoration-brass-300/40"
-    : "decoration-brass-500/40";
 
   /*
    * In `band` the plaque already sits inside the page gutter, so it drops its
@@ -146,7 +143,7 @@ export function SchedulePlaque({
                 className={`border px-5 py-5 @3xl/plaque:px-6 ${specialCard}`}
               >
                 <p
-                  className={`inline-block underline decoration-1 underline-offset-4 font-display text-[1.2rem] leading-tight ${specialTitleUnderline}`}
+                  className={`inline-block font-display text-[1.2rem] leading-tight`}
                 >
                   {block.title}
                 </p>
