@@ -1,5 +1,5 @@
 import { bindTimeRanges } from "@/lib/format";
-import type { DevotionRow, ScheduleRow } from "@/lib/types";
+import type { DevotionRow, ScheduleRow, SpecialScheduleBlock } from "@/lib/types";
 
 /**
  * The signature element of the site: a plaque of times, set like the carved
@@ -18,6 +18,13 @@ import type { DevotionRow, ScheduleRow } from "@/lib/types";
  * devotions share the row below, three entries each in a column. Splitting it
  * by count rather than by kind is what keeps the block from having one long
  * column beside a short one with dead space under it.
+ *
+ * `special` is a fourth, occasional tier above all of that: holiday blocks
+ * ("Božićna ispovijed", "Uskrsne mise") the office adds for a few weeks a
+ * year. Unlike the evergreen sections it gets its own outlined card per
+ * block — the one place this component draws a box on `band` — because it
+ * has to read as a temporary notice, not another permanent row, and a plain
+ * label among "Svete mise" / "Ispovijed" would not say that on its own.
  */
 export function SchedulePlaque({
   massesTitle,
@@ -25,6 +32,7 @@ export function SchedulePlaque({
   confessionsTitle,
   confessions,
   devotions = [],
+  special = [],
   tone = "dark",
   className = "",
 }: {
@@ -33,11 +41,16 @@ export function SchedulePlaque({
   confessionsTitle?: string | null;
   confessions: ScheduleRow[];
   devotions?: DevotionRow[];
+  special?: SpecialScheduleBlock[];
   tone?: "band" | "dark" | "light";
   /** For a caller that needs the card to fill a column, e.g. `lg:flex-1`. */
   className?: string;
 }) {
-  if (!masses.length && !confessions.length) return null;
+  const specialBlocks = special.filter(
+    (block) => block.active !== false && block.entries?.length,
+  );
+
+  if (!masses.length && !confessions.length && !specialBlocks.length) return null;
 
   const onDark = tone !== "light";
   const isBand = tone === "band";
@@ -51,6 +64,14 @@ export function SchedulePlaque({
   const label = onDark ? "text-brass-300" : "text-brass-600";
   const muted = onDark ? "text-stone-200/55" : "text-ink-400";
   const rule = onDark ? "border-stone-50/12" : "border-stone-200";
+
+  /* The special-schedule cards get their own warm-tinted variant of the same
+     border/rule pair, so they read as related to the plaque but distinct
+     from its evergreen rows. */
+  const specialCard = onDark
+    ? "border-brass-300/30 bg-brass-500/10"
+    : "border-brass-500/35 bg-brass-100/50";
+  const specialRule = onDark ? "border-brass-300/25" : "border-brass-500/25";
 
   /*
    * In `band` the plaque already sits inside the page gutter, so it drops its
@@ -96,6 +117,49 @@ export function SchedulePlaque({
     <div
       className={`@container/plaque flex w-full flex-col ${shell} ${className}`}
     >
+      {specialBlocks.length ? (
+        <div
+          className={`${padY} ${
+            masses.length || confessions.length || devotions.length
+              ? `border-b ${rule}`
+              : ""
+          }`}
+        >
+          <SectionLabel className={label}>Prigodni raspored</SectionLabel>
+
+          <div
+            className={`mt-5 grid gap-4 @3xl/plaque:gap-5 ${
+              specialBlocks.length > 1 ? "@3xl/plaque:grid-cols-2" : ""
+            }`}
+          >
+            {specialBlocks.map((block, blockIndex) => (
+              <div
+                key={block.id ?? `${block.title}-${blockIndex}`}
+                className={`border px-5 py-5 @3xl/plaque:px-6 ${specialCard}`}
+              >
+                <p className="font-display text-[1.15rem] leading-tight">
+                  {block.title}
+                </p>
+                <dl className="mt-4 space-y-3">
+                  {(block.entries ?? []).map((row, rowIndex) => (
+                    <Entry
+                      key={row.id ?? `${row.day}-${rowIndex}`}
+                      row={row}
+                      mutedClass={muted}
+                      className={
+                        rowIndex > 0
+                          ? `border-t pt-3 ${specialRule}`
+                          : undefined
+                      }
+                    />
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {masses.length ? (
         <div className={padY}>
           <SectionLabel className={label}>

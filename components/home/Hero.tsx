@@ -24,7 +24,12 @@ export function Hero({
   const confessions = (schedule?.confessions ?? []).filter(
     (row) => row.highlight !== false,
   );
+  const hasSpecialSchedule = (schedule?.specialSchedule ?? []).some(
+    (block) => block.active !== false && block.entries?.length,
+  );
   const showPlaque = hero.showSchedule !== false;
+  const hasSchedule =
+    masses.length > 0 || confessions.length > 0 || hasSpecialSchedule;
 
   return (
     // Pulled up by exactly the header height (`h-18 lg:h-20` in Navbar) so the
@@ -111,7 +116,7 @@ export function Hero({
           to the schedule band rather than by a fixed distance, so it always
           lands on the next thing rather than somewhere between two.
         */}
-        {showPlaque && (masses.length > 0 || confessions.length > 0) ? (
+        {showPlaque && hasSchedule ? (
           <SmartLink
             href={ROUTES.schedule}
             aria-label="Prijeđi na raspored"
@@ -156,6 +161,7 @@ export function Hero({
                 confessionsTitle={hero.confessionsTitle}
                 confessions={confessions}
                 devotions={schedule?.devotions ?? []}
+                special={schedule?.specialSchedule ?? []}
                 tone="band"
               />
             </div>

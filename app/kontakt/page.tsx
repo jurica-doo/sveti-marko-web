@@ -209,6 +209,7 @@ export default async function ContactPage() {
               confessionsTitle="Ispovijed"
               confessions={schedule?.confessions ?? []}
               devotions={schedule?.devotions ?? []}
+              special={schedule?.specialSchedule ?? []}
               tone="light"
               className="lg:flex-1"
             />

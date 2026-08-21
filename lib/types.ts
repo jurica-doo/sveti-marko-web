@@ -125,12 +125,33 @@ export type ScheduleRow = {
   id?: string;
 };
 
+/**
+ * A temporary block for a holiday or other one-off occasion — "Božićna
+ * ispovijed", "Uskrsne mise" — with its own list of dated entries. Separate
+ * from `masses`/`confessions` because those are the evergreen weekly
+ * schedule; this is whatever the office is announcing on top of it.
+ */
+export type SpecialScheduleRow = {
+  day: string;
+  times: string;
+  note?: string | null;
+  id?: string;
+};
+
+export type SpecialScheduleBlock = {
+  title: string;
+  active?: boolean | null;
+  entries?: SpecialScheduleRow[] | null;
+  id?: string;
+};
+
 export interface ScheduleType {
   masses?: ScheduleRow[] | null;
   massesNote?: string | null;
   confessions?: ScheduleRow[] | null;
   confessionsNote?: string | null;
   devotions?: DevotionRow[] | null;
+  specialSchedule?: SpecialScheduleBlock[] | null;
   officeHours?:
     | { day: string; hours: string; note?: string | null; id?: string }[]
     | null;
