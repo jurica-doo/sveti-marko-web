@@ -10,6 +10,23 @@ const DEFAULT_OG_IMAGE = "/og.png";
 const OG_IMAGE_SIZE = { width: 1200, height: 630 };
 
 /**
+ * Where the church actually stands.
+ *
+ * Read from the Google Maps place embed for "Crkva sv. Marko" — the `!3d`
+ * (latitude) and `!2d` (longitude) parameters of its `pb` string. Because the
+ * embed is a *place* embed rather than an address query, these are the pin
+ * Google itself holds for the building, not a geocode of the street.
+ *
+ * Six decimals is ~0.1 m, far finer than the building; the raw values carry
+ * more digits than the position is meaningful to.
+ *
+ * A constant rather than a CMS field: a church does not move, and a wrong
+ * value here sends people to the wrong place — so it should change only
+ * through a reviewed commit.
+ */
+const PARISH_GEO = { latitude: 43.521141, longitude: 16.476021 } as const;
+
+/**
  * The parish's own name for itself, per language. A searcher in Rome looks
  * for "San Marco Evangelista", not "Župa sv. Marka" — so the name, the
  * fallback description and the image alt all come out of the dictionary
@@ -275,8 +292,8 @@ export type SiteJsonLdInput = {
   /** Absolute URL of the parish logo, from `settings.logo`. */
   logoUrl?: string | null;
   /**
-   * Latitude/longitude of the church building. Omitted entirely unless both
-   * are supplied — a guessed coordinate sends people to the wrong place.
+   * Latitude/longitude of the church building. Defaults to `PARISH_GEO`;
+   * pass `null` to omit the `geo` node entirely.
    */
   geo?: { latitude: number; longitude: number } | null;
 };
@@ -307,8 +324,18 @@ export type SiteJsonLdInput = {
  * someone searching "Župa sv. Marka".
  */
 export function buildSiteJsonLd(input: SiteJsonLdInput) {
-  const { locale, contact, diocese, social, directionsUrl, officeHours, logoUrl, geo } =
-    input;
+  const {
+    locale,
+    contact,
+    diocese,
+    social,
+    directionsUrl,
+    officeHours,
+    logoUrl,
+    // `undefined` means "not specified" and takes the parish's own
+    // coordinates; an explicit `null` opts out.
+    geo = PARISH_GEO,
+  } = input;
   const { siteName, defaultDescription } = brand(locale);
 
   const alternateName = LOCALES.filter((l) => l !== locale).map((l) => brand(l).siteName);
