@@ -13,7 +13,12 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { RichTextRenderer } from "@/lib/richtext";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
-import { buildSeoMetadata, resolveCmsImageUrl, serializeJsonLd } from "@/lib/seo";
+import {
+  buildSeoMetadata,
+  ENTITY_ID,
+  resolveCmsImageUrl,
+  serializeJsonLd,
+} from "@/lib/seo";
 import type { NewsType } from "@/lib/types";
 
 export const revalidate = 60;
@@ -97,8 +102,9 @@ export default async function NewsDetailPage({
     inLanguage: LOCALE_META[lang].tag,
     ...(coverUrl ? { image: [coverUrl] } : {}),
     ...(category ? { articleSection: category } : {}),
-    // Ties the article back to the parish entity the layout describes.
-    publisher: { "@id": `${absoluteUrl(ROUTES.home)}#church` },
+    // `publisher` ranges over Organization/Person, so it points at the parish
+    // as an institution — not at `#church`, which is the building (a Place).
+    publisher: { "@id": ENTITY_ID.organization },
     ...(news.author ? { author: { "@type": "Organization", name: news.author } } : {}),
   };
 

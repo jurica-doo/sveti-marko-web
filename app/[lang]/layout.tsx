@@ -10,7 +10,9 @@ import { MotionProvider } from "@/components/ui/MotionProvider";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LocaleProvider } from "@/lib/i18n/context";
 import { DEFAULT_LOCALE, hasLocale, LOCALES } from "@/lib/i18n/config";
-import { buildChurchJsonLd, seoRootDefaults, serializeJsonLd } from "@/lib/seo";
+import { buildSiteJsonLd, seoRootDefaults, serializeJsonLd } from "@/lib/seo";
+import { imageUrl } from "@/lib/media";
+import { toAbsoluteUrl } from "@/lib/site-url";
 import { getSiteChrome } from "@/lib/site";
 
 // Marcellus is cut from Roman inscriptional capitals — the same lettering that
@@ -63,19 +65,22 @@ export default async function RootLayout({
   const { settings, contact, schedule } = await getSiteChrome(lang, dict);
 
   /*
-   * The parish itself, described once for the whole site.
+   * The parish, its church building and this website — described once for
+   * the whole site.
    *
    * It lives in the layout rather than on the home page so every URL a
-   * searcher can land on — an article, the contact page — carries the entity
-   * that identifies whose article it is. The shared `@id` means all those
-   * copies are understood as one place, not several.
+   * searcher can land on carries the entity that identifies whose page it
+   * is. The stable `@id`s mean all those copies are understood as one graph,
+   * not a new set of entities per page.
    */
-  const churchJsonLd = buildChurchJsonLd({
+  const logo = imageUrl(settings.logo);
+  const siteJsonLd = buildSiteJsonLd({
     locale: lang,
     contact: contact?.contact,
     diocese: settings.diocese,
     social: settings.social,
     directionsUrl: contact?.map?.directionsUrl,
+    logoUrl: logo ? toAbsoluteUrl(logo) : null,
     officeHours: (schedule?.officeHours ?? []).map((row) => ({
       day: row.day,
       hours: row.hours,
@@ -97,7 +102,7 @@ export default async function RootLayout({
 
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: serializeJsonLd(churchJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(siteJsonLd) }}
         />
       </head>
       <body className="flex min-h-full flex-col antialiased">

@@ -250,7 +250,14 @@ export function parseDaysOfWeek(label: string): string[] | null {
   return WEEK.slice(from, to + 1) as unknown as string[];
 }
 
-export type ChurchJsonLdInput = {
+/** Stable identifiers, so every reference resolves to the same node. */
+export const ENTITY_ID = {
+  organization: `${SITE_ORIGIN}/#organization`,
+  church: `${SITE_ORIGIN}/#church`,
+  website: `${SITE_ORIGIN}/#website`,
+} as const;
+
+export type SiteJsonLdInput = {
   locale: Locale;
   contact?: {
     street?: string | null;
@@ -265,23 +272,43 @@ export type ChurchJsonLdInput = {
   social?: { url: string }[] | null;
   directionsUrl?: string | null;
   officeHours?: { day: string; hours: string }[];
+  /** Absolute URL of the parish logo, from `settings.logo`. */
+  logoUrl?: string | null;
+  /**
+   * Latitude/longitude of the church building. Omitted entirely unless both
+   * are supplied — a guessed coordinate sends people to the wrong place.
+   */
+  geo?: { latitude: number; longitude: number } | null;
 };
 
 /**
- * The parish as a `Church` rather than a `LocalBusiness`.
+ * The site's entity graph: the parish, the building, and the website.
  *
- * `Church` (a `PlaceOfWorship`) is what this actually is, and the more
- * specific type is a stronger signal to a search engine deciding whether
- * this page answers "mass times near me". The address is split into real
- * `PostalAddress` fields instead of one concatenated string, so the parish
- * can be matched against a place rather than a line of text.
+ * Modelled as three linked nodes rather than one, because `Church` sits under
+ * `Place` in the schema.org hierarchy (Thing → Place → CivicStructure →
+ * PlaceOfWorship → Church) and a place cannot carry the properties an
+ * institution has. Collapsing them put `parentOrganization` (defined on
+ * `Organization`), `email` (`Organization`/`Person`/`ContactPoint`) and
+ * `inLanguage` (`CreativeWork`/`Event`) on a `Place`, and left
+ * `NewsArticle.publisher` — which ranges over `Organization`/`Person` —
+ * pointing at one.
  *
- * `alternateName` carries the parish's name in the other three languages:
- * someone searching "Church of St Mark Split" in English should reach the
- * same entity as someone searching "Župa sv. Marka".
+ * So:
+ *   `#organization` is the parish as an institution: who it is, who it
+ *     belongs to, how to contact it, and what it publishes.
+ *   `#church` is the building: where it is, and when its doors are open.
+ *   `#website` is this site, and the languages it is published in.
+ *
+ * `location` ties the institution to its building; `publisher` ties the site
+ * (and every article) to the institution.
+ *
+ * `alternateName` carries the parish's name in the other three languages, so
+ * someone searching "Church of St Mark Split" reaches the same entity as
+ * someone searching "Župa sv. Marka".
  */
-export function buildChurchJsonLd(input: ChurchJsonLdInput) {
-  const { locale, contact, diocese, social, directionsUrl, officeHours } = input;
+export function buildSiteJsonLd(input: SiteJsonLdInput) {
+  const { locale, contact, diocese, social, directionsUrl, officeHours, logoUrl, geo } =
+    input;
   const { siteName, defaultDescription } = brand(locale);
 
   const alternateName = LOCALES.filter((l) => l !== locale).map((l) => brand(l).siteName);
@@ -289,56 +316,86 @@ export function buildChurchJsonLd(input: ChurchJsonLdInput) {
   // "Zatvoreno" / "Closed" has no dash to split on, and a row the office has
   // not filled in for this locale has nothing to read — both are skipped
   // rather than emitted as a half-built spec.
-  const hours = (officeHours ?? [])
-    .flatMap((row) => {
-      if (!row.day || !row.hours?.includes("–")) return [];
+  const hours = (officeHours ?? []).flatMap((row) => {
+    if (!row.day || !row.hours?.includes("–")) return [];
 
-      // A label naming no recognisable day cannot be expressed as a valid
-      // `dayOfWeek`, so the row is left out rather than emitted as one a
-      // validator would reject.
-      const dayOfWeek = parseDaysOfWeek(row.day);
-      if (!dayOfWeek) return [];
+    // A label naming no recognisable day cannot be expressed as a valid
+    // `dayOfWeek`, so the row is left out rather than emitting one a
+    // validator would reject.
+    const dayOfWeek = parseDaysOfWeek(row.day);
+    if (!dayOfWeek) return [];
 
-      const [opens, closes] = row.hours.split("–");
-      return [
-        {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek,
-          opens: opens?.trim() ?? "",
-          closes: closes?.trim() ?? "",
-        },
-      ];
-    });
+    const [opens, closes] = row.hours.split("–");
+    return [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek,
+        opens: opens?.trim() ?? "",
+        closes: closes?.trim() ?? "",
+      },
+    ];
+  });
 
   const sameAs = (social ?? []).map((item) => item.url).filter(Boolean);
+  const telephone = contact?.phone || contact?.mobile || undefined;
 
-  return {
-    "@context": "https://schema.org",
-    "@type": "Church",
-    "@id": `${SITE_ORIGIN}/#church`,
+  const address = {
+    "@type": "PostalAddress",
+    ...(contact?.street ? { streetAddress: contact.street } : {}),
+    ...(contact?.postalCode ? { postalCode: contact.postalCode } : {}),
+    ...(contact?.city ? { addressLocality: contact.city } : {}),
+    addressCountry: "HR",
+  };
+
+  const organization = {
+    "@type": "Organization",
+    "@id": ENTITY_ID.organization,
     name: siteName,
     alternateName,
     url: toAbsoluteSiteUrl(withLocale("/", locale)),
     description: defaultDescription,
-    image: toAbsoluteSiteUrl(DEFAULT_OG_IMAGE),
-    inLanguage: LOCALES.map((l) => LOCALE_META[l].tag),
-    address: {
-      "@type": "PostalAddress",
-      ...(contact?.street ? { streetAddress: contact.street } : {}),
-      ...(contact?.postalCode ? { postalCode: contact.postalCode } : {}),
-      ...(contact?.city ? { addressLocality: contact.city } : {}),
-      addressCountry: "HR",
-    },
-    ...(contact?.phone || contact?.mobile
-      ? { telephone: contact.phone || contact.mobile }
-      : {}),
+    address,
+    ...(logoUrl ? { logo: logoUrl, image: logoUrl } : { image: toAbsoluteSiteUrl(DEFAULT_OG_IMAGE) }),
+    ...(telephone ? { telephone } : {}),
     ...(contact?.email ? { email: contact.email } : {}),
-    ...(diocese
-      ? { parentOrganization: { "@type": "Organization", name: diocese } }
+    ...(diocese ? { parentOrganization: { "@type": "Organization", name: diocese } } : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+    location: { "@id": ENTITY_ID.church },
+  };
+
+  const church = {
+    "@type": "Church",
+    "@id": ENTITY_ID.church,
+    name: siteName,
+    address,
+    ...(telephone ? { telephone } : {}),
+    ...(geo
+      ? {
+          geo: {
+            "@type": "GeoCoordinates",
+            latitude: geo.latitude,
+            longitude: geo.longitude,
+          },
+        }
       : {}),
     ...(directionsUrl ? { hasMap: directionsUrl } : {}),
-    ...(sameAs.length ? { sameAs } : {}),
     ...(hours.length ? { openingHoursSpecification: hours } : {}),
+  };
+
+  const website = {
+    "@type": "WebSite",
+    "@id": ENTITY_ID.website,
+    url: toAbsoluteSiteUrl("/"),
+    name: siteName,
+    // Valid here and nowhere else in this graph: `inLanguage` is a
+    // `CreativeWork` property, and the website is the only CreativeWork.
+    inLanguage: LOCALES.map((l) => LOCALE_META[l].tag),
+    publisher: { "@id": ENTITY_ID.organization },
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [organization, church, website],
   };
 }
 
