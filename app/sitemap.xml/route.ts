@@ -1,13 +1,25 @@
 import { generateUrlSetXml, type SitemapAlternate, type SitemapUrlEntry } from "@/utils/sitemap";
-import { getNews } from "@/lib/api";
+import {
+  getAboutPage,
+  getContactPage,
+  getHomePage,
+  getNews,
+  getNewsPage,
+} from "@/lib/api";
 import { LOCALE_META, LOCALES } from "@/lib/i18n/config";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
+import { IS_INDEXABLE_DEPLOYMENT } from "@/lib/site-url";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
 
 export async function GET() {
+  // A preview deploy must not hand crawlers a map of itself.
+  if (!IS_INDEXABLE_DEPLOYMENT) {
+    return new Response("Not found", { status: 404 });
+  }
+
   try {
     const generatedPath = path.join(process.cwd(), ".generated", "sitemap.xml");
     const xml = await readFile(generatedPath, "utf8");
@@ -22,14 +34,25 @@ export async function GET() {
     // Fallback to dynamic generation below.
   }
 
-  const nowIso = new Date().toISOString();
+  /*
+   * `lastmod` is whatever the CMS says the backing document was last changed,
+   * or nothing at all. It is deliberately never `new Date()`: a timestamp that
+   * moves on every request claims the page changed when it did not, and Google
+   * discounts the signal once it stops correlating with real edits.
+   */
+  const [home, newsPage, about, contactPage] = await Promise.all([
+    getHomePage("hr").catch(() => null),
+    getNewsPage("hr").catch(() => null),
+    getAboutPage("hr").catch(() => null),
+    getContactPage("hr").catch(() => null),
+  ]);
 
   /** This same path, once per locale, each carrying the others as `<xhtml:link alternate>`. */
   function localizedEntries(
     path: string,
     changefreq: SitemapUrlEntry["changefreq"],
     priority: number,
-    lastmod = nowIso,
+    lastmod?: string,
   ): SitemapUrlEntry[] {
     const alternates: SitemapAlternate[] = LOCALES.map((locale) => ({
       hreflang: LOCALE_META[locale].tag,
@@ -48,10 +71,10 @@ export async function GET() {
   // `absoluteUrl()` runs every path through the trailing-slash normaliser, so
   // the sitemap advertises exactly the URLs the site serves — no 308s.
   const base: SitemapUrlEntry[] = [
-    ...localizedEntries(ROUTES.home, "weekly", 1),
-    ...localizedEntries(ROUTES.news, "weekly", 0.8),
-    ...localizedEntries(ROUTES.about, "monthly", 0.7),
-    ...localizedEntries(ROUTES.contact, "monthly", 0.7),
+    ...localizedEntries(ROUTES.home, "weekly", 1, home?.updatedAt),
+    ...localizedEntries(ROUTES.news, "weekly", 0.8, newsPage?.updatedAt),
+    ...localizedEntries(ROUTES.about, "monthly", 0.7, about?.updatedAt),
+    ...localizedEntries(ROUTES.contact, "monthly", 0.7, contactPage?.updatedAt),
   ];
 
   const news = await getNews("hr", { limit: 500 }).catch(() => []);

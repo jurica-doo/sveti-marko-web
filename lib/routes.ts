@@ -9,6 +9,7 @@
 
 import type { Locale } from "./i18n/config";
 import { withLocale } from "./i18n/routes";
+import { toAbsoluteUrl } from "./site-url";
 
 /**
  * The mass-times band on the home page. Kept here rather than inline because
@@ -97,15 +98,9 @@ function splitOnce(value: string, separator: string): [string, string] {
  * site) — omit it for a bare hr URL, pass it to point at that language's
  * copy of the page instead. See `lib/i18n/routes.ts#withLocale`.
  */
-export function absoluteUrl(
-  path: string,
-  locale?: Locale,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr",
-): string {
-  try {
-    const localizedPath = locale ? withLocale(internalHref(path), locale) : internalHref(path);
-    return new URL(localizedPath, siteUrl).toString();
-  } catch {
-    return siteUrl;
-  }
+export function absoluteUrl(path: string, locale?: Locale): string {
+  const localizedPath = locale
+    ? withLocale(internalHref(path), locale)
+    : internalHref(path);
+  return toAbsoluteUrl(localizedPath);
 }

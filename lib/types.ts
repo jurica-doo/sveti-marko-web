@@ -106,6 +106,8 @@ export interface SettingsType {
         id?: string;
       }[]
     | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
 }
 
 /** Adoration, rosary and the first-Friday devotions. */
@@ -156,6 +158,8 @@ export interface ScheduleType {
     | { day: string; hours: string; note?: string | null; id?: string }[]
     | null;
   officeNotes?: { title: string; text: string; id?: string }[] | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
 }
 
 export interface HomePageType {
@@ -198,6 +202,8 @@ export interface HomePageType {
   } | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
 }
 
 export interface NewsPageType {
@@ -209,6 +215,8 @@ export interface NewsPageType {
   emptyMessage?: string | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
 }
 
 export interface AboutPageType {
@@ -234,6 +242,8 @@ export interface AboutPageType {
   } | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
 }
 
 export interface ContactPageType {
@@ -259,6 +269,8 @@ export interface ContactPageType {
   } | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
 }
 
 /* ------------------------------------------------------------ collections */

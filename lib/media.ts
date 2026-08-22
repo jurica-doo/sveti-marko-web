@@ -7,6 +7,8 @@
  * `https://<site>/sv-marko/medija/slike/<filename>` instead of a raw storage URL.
  */
 
+import { toAbsoluteUrl } from "./site-url";
+
 export const IMAGE_BASE_PATH = "/sv-marko/medija/slike";
 export const VIDEO_BASE_PATH = "/sv-marko/medija/videa";
 
@@ -33,15 +35,8 @@ export function videoUrl(media: MediaLike | string): string | undefined {
 }
 
 /** Absolute variant, for sitemaps / OG tags where a full URL is required. */
-export function absoluteMediaUrl(
-  path: string | undefined,
-  siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-): string | undefined {
+export function absoluteMediaUrl(path: string | undefined): string | undefined {
   if (!path) return undefined;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  try {
-    return new URL(path, siteUrl).toString();
-  } catch {
-    return undefined;
-  }
+  return toAbsoluteUrl(path);
 }

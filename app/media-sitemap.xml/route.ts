@@ -1,33 +1,30 @@
-import { getAllImages, getAllVideos } from "@/lib/api";
-import { IMAGE_BASE_PATH, VIDEO_BASE_PATH } from "@/lib/media";
-import {
-  generateUrlSetXml,
-  resolveAbsoluteUrl,
-  type SitemapUrlEntry,
-} from "@/utils/sitemap";
+import { getNews } from "@/lib/api";
+import { LOCALES } from "@/lib/i18n/config";
+import { imageUrl } from "@/lib/media";
+import { absoluteUrl, ROUTES } from "@/lib/routes";
+import { IS_INDEXABLE_DEPLOYMENT, toAbsoluteUrl } from "@/lib/site-url";
+import { generateUrlSetXml, type SitemapUrlEntry } from "@/utils/sitemap";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 export const runtime = "nodejs";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr";
-
-/** Media is indexed under the site-local media paths, not the raw bucket URL. */
-function mediaEntry(
-  basePath: string,
-  filename?: string | null,
-  updatedAt?: string,
-): SitemapUrlEntry | null {
-  if (!filename) return null;
-  return {
-    loc: resolveAbsoluteUrl(`${basePath}/${filename}`, SITE_URL),
-    lastmod: updatedAt,
-    changefreq: "monthly",
-    priority: 0.3,
-  };
-}
-
+/**
+ * Image sitemap.
+ *
+ * Images are declared as `<image:image>` children of the page they appear on,
+ * which is the only shape the protocol defines. An earlier version listed the
+ * image files themselves as `<loc>` entries — that asks Google to crawl JPEGs
+ * as though they were pages, and they can never be indexed as such.
+ *
+ * News articles are the pages that carry galleries, so they are what this
+ * covers; the standing pages' artwork is already reachable from the HTML.
+ */
 export async function GET() {
+  if (!IS_INDEXABLE_DEPLOYMENT) {
+    return new Response("Not found", { status: 404 });
+  }
+
   try {
     const generatedPath = path.join(
       process.cwd(),
@@ -46,33 +43,32 @@ export async function GET() {
     // Fallback to dynamic generation below.
   }
 
-  // Locale doesn't matter here — only the (unlocalized) filenames are used.
-  const [images, videos] = await Promise.all([
-    getAllImages("hr").catch(() => []),
-    getAllVideos("hr").catch(() => []),
-  ]);
+  // Slugs and artwork are the same document in every language, so one read is
+  // enough — only the surrounding page URL changes per locale.
+  const news = await getNews("hr", { limit: 500 }).catch(() => []);
 
-  const imageEntries = images
-    .map((img) => mediaEntry(IMAGE_BASE_PATH, img.filename, img.updatedAt))
-    .filter((e): e is SitemapUrlEntry => e !== null);
+  const entries: SitemapUrlEntry[] = news
+    .filter((item) => item.slug)
+    .flatMap((item) => {
+      const images = [
+        imageUrl(item.coverImage),
+        ...(item.gallery ?? []).map((row) => imageUrl(row.image)),
+      ]
+        .filter((src): src is string => Boolean(src))
+        .map((src) => toAbsoluteUrl(src));
 
-  const videoEntries = videos
-    .map((vid) => mediaEntry(VIDEO_BASE_PATH, vid.filename, vid.updatedAt))
-    .filter((e): e is SitemapUrlEntry => e !== null);
+      // De-duplicated: the CMS gallery can repeat the same upload.
+      const unique = [...new Set(images)];
+      if (!unique.length) return [];
 
-  // Include the site root so the sitemap isn't "only" media.
-  const root: SitemapUrlEntry[] = [
-    {
-      loc: resolveAbsoluteUrl("/", SITE_URL),
-      lastmod: new Date().toISOString(),
-      changefreq: "weekly",
-      priority: 0.1,
-    },
-  ];
+      return LOCALES.map((locale) => ({
+        loc: absoluteUrl(ROUTES.newsDetail(item.slug as string), locale),
+        lastmod: item.updatedAt || item.publishedAt,
+        images: unique,
+      }));
+    });
 
-  const xml = generateUrlSetXml([...root, ...imageEntries, ...videoEntries]);
-
-  return new Response(xml, {
+  return new Response(generateUrlSetXml(entries), {
     status: 200,
     headers: {
       "content-type": "application/xml; charset=utf-8",

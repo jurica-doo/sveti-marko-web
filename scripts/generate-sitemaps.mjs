@@ -1,11 +1,45 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr";
+/**
+ * Mirrors `lib/site-url.ts`. Duplicated rather than imported because this is a
+ * plain Node script run by `prebuild`, before any TypeScript is compiled — but
+ * it must resolve the origin to exactly the same value, or the sitemap would
+ * advertise URLs on a different host than the pages' own canonicals.
+ */
+const PRODUCTION_ORIGIN = "https://sv-marko.hr";
+
+function resolveSiteUrl() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (!configured) return PRODUCTION_ORIGIN;
+
+  let origin;
+  try {
+    origin = new URL(configured).origin;
+  } catch {
+    return PRODUCTION_ORIGIN;
+  }
+
+  // On a real deploy, a localhost/preview origin is a misconfiguration — a
+  // sitemap full of *.vercel.app URLs is worse than no sitemap.
+  if (process.env.VERCEL_ENV) {
+    const host = new URL(origin).hostname.toLowerCase();
+    const nonPublic =
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "0.0.0.0" ||
+      host.endsWith(".local") ||
+      host.endsWith(".vercel.app");
+    if (nonPublic) return PRODUCTION_ORIGIN;
+  }
+
+  return origin;
+}
+
+const SITE_URL = resolveSiteUrl();
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL || "http://localhost:3001";
 
 const IMAGE_BASE_PATH = "/sv-marko/medija/slike";
-const VIDEO_BASE_PATH = "/sv-marko/medija/videa";
 
 /**
  * Mirrors `lib/i18n/config.ts` — hr is primary and unprefixed, en/it/pl are
@@ -16,6 +50,16 @@ const VIDEO_BASE_PATH = "/sv-marko/medija/videa";
 const LOCALES = ["hr", "en", "it", "pl"];
 const DEFAULT_LOCALE = "hr";
 const HREFLANG = { hr: "hr", en: "en", it: "it", pl: "pl" };
+
+/** A global's own `updatedAt`, or undefined — never a fabricated "now". */
+async function fetchGlobalUpdatedAt(slug) {
+  try {
+    const data = await fetchJson(`${CMS_URL}/api/globals/${slug}?depth=0`);
+    return data?.updatedAt || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /** Mirrors `lib/i18n/routes.ts#withLocale`. */
 function withLocale(pathname, locale) {
@@ -105,6 +149,14 @@ function generateUrlSetXml(entries) {
         )
         .join("\n");
 
+      const images = (e.images || [])
+        .filter(Boolean)
+        .map(
+          (src) =>
+            `    <image:image>\n      <image:loc>${escapeXml(src)}</image:loc>\n    </image:image>`,
+        )
+        .join("\n");
+
       const lines = [
         "  <url>",
         `    <loc>${loc}</loc>`,
@@ -116,6 +168,7 @@ function generateUrlSetXml(entries) {
           ? `    <priority>${priority.toFixed(1)}</priority>`
           : null,
         alternates || null,
+        images || null,
         "  </url>",
       ].filter(Boolean);
 
@@ -125,7 +178,9 @@ function generateUrlSetXml(entries) {
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' +
+      ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' +
+      ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
     urls,
     "</urlset>",
     "",
@@ -145,10 +200,10 @@ async function fetchJson(url) {
   return res.json();
 }
 
-async function fetchDocs(collection) {
+async function fetchDocs(collection, depth = 0) {
   try {
     const data = await fetchJson(
-      `${CMS_URL}/api/${collection}?limit=1000&depth=0`,
+      `${CMS_URL}/api/${collection}?limit=1000&depth=${depth}`,
     );
     return data?.docs || [];
   } catch (err) {
@@ -160,42 +215,64 @@ async function fetchDocs(collection) {
   }
 }
 
-async function fetchMediaEntries() {
-  const [images, videos] = await Promise.all([
-    fetchDocs("media-images"),
-    fetchDocs("media-videos"),
-  ]);
-
-  const toEntry = (basePath) => (doc) => {
-    const filename = doc?.filename;
+/**
+ * Image sitemap entries: one `<url>` per article page per locale, with the
+ * artwork on that page as `<image:image>` children.
+ *
+ * The protocol has no standalone image URL — an image is always declared
+ * against the page it appears on. Mirrors `app/media-sitemap.xml/route.ts`.
+ */
+function mediaEntriesFromNews(newsDocs) {
+  const fileOf = (media) => {
+    const filename = typeof media === "string" ? media : media?.filename;
     if (!filename) return null;
-    return {
-      loc: resolveAbsoluteUrl(`${basePath}/${filename}`, SITE_URL),
-      lastmod: doc?.updatedAt,
-      changefreq: "monthly",
-      priority: 0.3,
-    };
+    if (filename.startsWith("http://") || filename.startsWith("https://")) return filename;
+    return resolveAbsoluteUrl(`${IMAGE_BASE_PATH}/${filename}`, SITE_URL);
   };
 
-  return {
-    imageEntries: images.map(toEntry(IMAGE_BASE_PATH)).filter(Boolean),
-    videoEntries: videos.map(toEntry(VIDEO_BASE_PATH)).filter(Boolean),
-  };
+  return newsDocs
+    .filter((doc) => doc?.slug && doc?._status !== "draft")
+    .flatMap((doc) => {
+      const images = [
+        fileOf(doc.coverImage),
+        ...(doc.gallery || []).map((row) => fileOf(row?.image)),
+      ].filter(Boolean);
+
+      const unique = [...new Set(images)];
+      if (!unique.length) return [];
+
+      return LOCALES.map((locale) => ({
+        loc: resolveLocalizedUrl(`/vijesti/${doc.slug}/`, locale, SITE_URL),
+        lastmod: doc.updatedAt || doc.publishedAt,
+        images: unique,
+      }));
+    });
 }
 
 async function main() {
-  const nowIso = new Date().toISOString();
+  /*
+   * `lastmod` comes from the CMS document behind each page, never from the
+   * clock: stamping "now" on every build tells Google the whole site changed
+   * each time it is deployed, which is false and devalues the signal. A page
+   * whose global cannot be read simply ships without a `lastmod`.
+   */
+  const [homeAt, newsPageAt, aboutAt, contactAt] = await Promise.all([
+    fetchGlobalUpdatedAt("home-page"),
+    fetchGlobalUpdatedAt("news-page"),
+    fetchGlobalUpdatedAt("about-page"),
+    fetchGlobalUpdatedAt("contact-page"),
+  ]);
 
   const baseEntries = [
-    { path: "/", changefreq: "weekly", priority: 1.0 },
-    { path: "/vijesti/", changefreq: "weekly", priority: 0.8 },
-    { path: "/o-nama/", changefreq: "monthly", priority: 0.7 },
-    { path: "/kontakt/", changefreq: "monthly", priority: 0.7 },
+    { path: "/", changefreq: "weekly", priority: 1.0, lastmod: homeAt },
+    { path: "/vijesti/", changefreq: "weekly", priority: 0.8, lastmod: newsPageAt },
+    { path: "/o-nama/", changefreq: "monthly", priority: 0.7, lastmod: aboutAt },
+    { path: "/kontakt/", changefreq: "monthly", priority: 0.7, lastmod: contactAt },
   ].flatMap((entry) =>
-    localizedEntries(entry.path, entry.changefreq, entry.priority, nowIso),
+    localizedEntries(entry.path, entry.changefreq, entry.priority, entry.lastmod),
   );
 
-  const newsDocs = await fetchDocs("news");
+  const newsDocs = await fetchDocs("news", 1);
   const newsEntries = newsDocs
     .filter((doc) => doc?.slug && doc?._status !== "draft")
     .flatMap((doc) =>
@@ -207,19 +284,8 @@ async function main() {
       ),
     );
 
-  const media = await fetchMediaEntries();
-
   const sitemapXml = generateUrlSetXml([...baseEntries, ...newsEntries]);
-  const mediaSitemapXml = generateUrlSetXml([
-    {
-      loc: resolveAbsoluteUrl("/", SITE_URL),
-      lastmod: nowIso,
-      changefreq: "weekly",
-      priority: 0.1,
-    },
-    ...media.imageEntries,
-    ...media.videoEntries,
-  ]);
+  const mediaSitemapXml = generateUrlSetXml(mediaEntriesFromNews(newsDocs));
 
   const outDir = path.join(process.cwd(), ".generated");
   await mkdir(outDir, { recursive: true });

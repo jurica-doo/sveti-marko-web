@@ -64,7 +64,28 @@ const nextConfig: NextConfig = {
     remotePatterns: [cmsPattern],
   },
   async headers() {
+    /*
+     * Every Vercel deploy that is not production serves the whole site on its
+     * own hostname. Without this, a preview is a byte-for-byte duplicate of
+     * the live site that Google is free to index and rank against it — and
+     * because `robots.txt` on a preview disallows crawling, a `noindex` in
+     * the HTML alone might never be read. The header travels with the
+     * response itself, so it applies even to assets and non-HTML routes.
+     */
+    const previewNoIndex =
+      process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production"
+        ? [
+            {
+              source: "/(.*)",
+              headers: [
+                { key: "X-Robots-Tag", value: "noindex, nofollow" },
+              ],
+            },
+          ]
+        : [];
+
     return [
+      ...previewNoIndex,
       {
         source: "/(.*)",
         headers: [

@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { LOCALES, LOCALE_META, type Locale } from "./i18n/config";
 import { getDictionary } from "./i18n/dictionaries";
 import { withLocale } from "./i18n/routes";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sv-marko.hr";
+import { IS_INDEXABLE_DEPLOYMENT, SITE_ORIGIN, toAbsoluteUrl } from "./site-url";
 
 const DEFAULT_OG_IMAGE = "/og.png";
 /** `public/og.png`'s real dimensions — declaring them lets a card render before the file loads. */
@@ -20,13 +19,7 @@ function brand(locale: Locale) {
   return getDictionary(locale).seo;
 }
 
-function toAbsoluteSiteUrl(pathOrUrl: string): string {
-  try {
-    return new URL(pathOrUrl, SITE_URL).toString();
-  } catch {
-    return SITE_URL;
-  }
-}
+const toAbsoluteSiteUrl = toAbsoluteUrl;
 
 function cmsBaseUrl(): string {
   return process.env.NEXT_PUBLIC_CMS_URL || "http://localhost:3001";
@@ -101,17 +94,25 @@ export function buildSeoMetadata(input: SeoInput): Metadata {
       languages,
     },
     keywords: input.keywords,
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-        "max-video-preview": -1,
-      },
-    },
+    /*
+     * A preview deploy serves the whole site on its own *.vercel.app host.
+     * Left indexable that is a complete duplicate of production competing
+     * with it, so previews go `noindex` while still being followable for
+     * anyone reviewing them.
+     */
+    robots: IS_INDEXABLE_DEPLOYMENT
+      ? {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+          },
+        }
+      : { index: false, follow: true },
     openGraph: {
       siteName,
       locale: LOCALE_META[input.locale].ogLocale,
@@ -151,7 +152,7 @@ export function seoRootDefaults(locale: Locale): Metadata {
   const { siteName, shortName, defaultDescription } = brand(locale);
 
   return {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: new URL(SITE_ORIGIN),
     applicationName: shortName,
     title: {
       default: siteName,
@@ -314,7 +315,7 @@ export function buildChurchJsonLd(input: ChurchJsonLdInput) {
   return {
     "@context": "https://schema.org",
     "@type": "Church",
-    "@id": `${SITE_URL}/#church`,
+    "@id": `${SITE_ORIGIN}/#church`,
     name: siteName,
     alternateName,
     url: toAbsoluteSiteUrl(withLocale("/", locale)),
