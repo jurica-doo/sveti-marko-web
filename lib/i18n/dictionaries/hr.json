@@ -132,5 +132,11 @@
       "home": "Naslovnica",
       "news": "Vijesti"
     }
+  },
+  "seo": {
+    "siteName": "Župa sv. Marka Evanđelista",
+    "shortName": "Sv. Marko",
+    "defaultDescription": "Župa sv. Marka Evanđelista na splitskom Neslanovcu — raspored svetih misa i ispovijedi, radno vrijeme župnog ureda, župne vijesti i kontakt.",
+    "imageAlt": "Crkva sv. Marka Evanđelista, Neslanovac, Split"
   }
 }

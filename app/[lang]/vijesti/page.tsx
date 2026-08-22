@@ -24,6 +24,8 @@ export async function generateMetadata({
 
   return buildSeoMetadata({
     title: page?.metaTitle || page?.title || dict.news.archiveTitle,
+    // See the note in `kontakt/page.tsx` — a CMS SEO title is already complete.
+    absoluteTitle: Boolean(page?.metaTitle),
     description: page?.metaDescription || page?.intro || dict.news.archiveIntro,
     path: ROUTES.news,
     locale: lang,

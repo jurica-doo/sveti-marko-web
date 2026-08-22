@@ -132,5 +132,11 @@
       "home": "Home",
       "news": "Notizie"
     }
+  },
+  "seo": {
+    "siteName": "Parrocchia di San Marco Evangelista",
+    "shortName": "San Marco",
+    "defaultDescription": "Parrocchia cattolica di San Marco Evangelista a Neslanovac, Spalato (Croazia) — orari delle Sante Messe e delle confessioni, ufficio parrocchiale, notizie e contatti.",
+    "imageAlt": "Chiesa di San Marco Evangelista, Neslanovac, Spalato"
   }
 }

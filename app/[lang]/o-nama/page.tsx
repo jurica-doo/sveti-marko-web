@@ -37,6 +37,8 @@ export async function generateMetadata({
 
   return buildSeoMetadata({
     title: page?.metaTitle || page?.title || "O nama",
+    // See the note in `kontakt/page.tsx` — a CMS SEO title is already complete.
+    absoluteTitle: Boolean(page?.metaTitle),
     description:
       page?.metaDescription || page?.intro || richTextToPlain(page?.parish?.body),
     path: ROUTES.about,

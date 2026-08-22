@@ -8,12 +8,12 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SmartLink } from "@/components/ui/SmartLink";
 import { getNews, getNewsBySlug } from "@/lib/api";
 import { formatDateLong, isoDate } from "@/lib/format";
-import { hasLocale, LOCALES } from "@/lib/i18n/config";
+import { hasLocale, LOCALE_META, LOCALES } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { RichTextRenderer } from "@/lib/richtext";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
-import { buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
+import { buildSeoMetadata, resolveCmsImageUrl, serializeJsonLd } from "@/lib/seo";
 import type { NewsType } from "@/lib/types";
 
 export const revalidate = 60;
@@ -81,6 +81,8 @@ export default async function NewsDetailPage({
 
   const category = categoryTitle(news);
 
+  const coverUrl = resolveCmsImageUrl(news.coverImage);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -89,6 +91,14 @@ export default async function NewsDetailPage({
     datePublished: news.publishedAt,
     dateModified: news.updatedAt,
     mainEntityOfPage: absoluteUrl(ROUTES.newsDetail(slug), lang),
+    // Which language this particular article is written in — the same slug
+    // exists in four, so without this they read as duplicates rather than
+    // as translations of one another.
+    inLanguage: LOCALE_META[lang].tag,
+    ...(coverUrl ? { image: [coverUrl] } : {}),
+    ...(category ? { articleSection: category } : {}),
+    // Ties the article back to the parish entity the layout describes.
+    publisher: { "@id": `${absoluteUrl(ROUTES.home)}#church` },
     ...(news.author ? { author: { "@type": "Organization", name: news.author } } : {}),
   };
 

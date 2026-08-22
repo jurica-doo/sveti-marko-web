@@ -132,5 +132,11 @@
       "home": "Home",
       "news": "News"
     }
+  },
+  "seo": {
+    "siteName": "Parish of St Mark the Evangelist",
+    "shortName": "St Mark's",
+    "defaultDescription": "Catholic parish of St Mark the Evangelist in Neslanovac, Split, Croatia — Mass and confession times, parish office hours, news and contact details.",
+    "imageAlt": "Church of St Mark the Evangelist, Neslanovac, Split"
   }
 }

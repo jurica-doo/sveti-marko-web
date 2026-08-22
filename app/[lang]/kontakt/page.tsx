@@ -11,12 +11,7 @@ import { hasLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
-import {
-  buildBreadcrumbJsonLd,
-  buildBusinessJsonLd,
-  buildSeoMetadata,
-  serializeJsonLd,
-} from "@/lib/seo";
+import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -31,6 +26,10 @@ export async function generateMetadata({
 
   return buildSeoMetadata({
     title: page?.metaTitle || page?.title || "Kontakt",
+    // A CMS "SEO naslov" is the editor's complete search-result title and
+    // already names the parish, so it skips the layout's `%s — parish`
+    // template. Falling back to the page's own heading does not.
+    absoluteTitle: Boolean(page?.metaTitle),
     description: page?.metaDescription || page?.intro,
     path: ROUTES.contact,
     locale: lang,
@@ -55,24 +54,14 @@ export default async function ContactPage({
   const contact = page.contact;
   const map = page.map;
 
-  const jsonLd = [
-    buildBreadcrumbJsonLd(
-      [
-        { name: dict.breadcrumb.home, href: ROUTES.home },
-        { name: page.title, href: ROUTES.contact },
-      ],
-      lang,
-    ),
-    buildBusinessJsonLd({
-      phone: contact.phone ?? undefined,
-      email: contact.email ?? undefined,
-      address: `${contact.street}, ${contact.postalCode} ${contact.city}`,
-      workingHours: (schedule?.officeHours ?? []).map((row) => ({
-        day: row.day,
-        hours: row.hours,
-      })),
-    }),
-  ];
+  // Only the trail — the parish entity itself is emitted once, by the layout.
+  const jsonLd = buildBreadcrumbJsonLd(
+    [
+      { name: dict.breadcrumb.home, href: ROUTES.home },
+      { name: page.title, href: ROUTES.contact },
+    ],
+    lang,
+  );
 
   return (
     <>

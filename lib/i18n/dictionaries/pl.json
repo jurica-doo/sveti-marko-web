@@ -132,5 +132,11 @@
       "home": "Strona główna",
       "news": "Aktualności"
     }
+  },
+  "seo": {
+    "siteName": "Parafia św. Marka Ewangelisty",
+    "shortName": "Św. Marek",
+    "defaultDescription": "Katolicka parafia św. Marka Ewangelisty w Neslanovacu w Splicie (Chorwacja) — godziny Mszy Świętych i spowiedzi, biuro parafialne, aktualności i kontakt.",
+    "imageAlt": "Kościół św. Marka Ewangelisty, Neslanovac, Split"
   }
 }

@@ -9,8 +9,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LocaleProvider } from "@/lib/i18n/context";
-import { hasLocale, LOCALES } from "@/lib/i18n/config";
-import { seoRootDefaults } from "@/lib/seo";
+import { DEFAULT_LOCALE, hasLocale, LOCALES } from "@/lib/i18n/config";
+import { buildChurchJsonLd, seoRootDefaults, serializeJsonLd } from "@/lib/seo";
 import { getSiteChrome } from "@/lib/site";
 
 // Marcellus is cut from Roman inscriptional capitals — the same lettering that
@@ -28,9 +28,15 @@ const sourceSans = Source_Sans_3({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  ...seoRootDefaults,
-};
+/** Title template, description and brand names, in the language being served. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+  return seoRootDefaults(hasLocale(lang) ? lang : DEFAULT_LOCALE);
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -56,6 +62,26 @@ export default async function RootLayout({
   const dict = getDictionary(lang);
   const { settings, contact, schedule } = await getSiteChrome(lang, dict);
 
+  /*
+   * The parish itself, described once for the whole site.
+   *
+   * It lives in the layout rather than on the home page so every URL a
+   * searcher can land on — an article, the contact page — carries the entity
+   * that identifies whose article it is. The shared `@id` means all those
+   * copies are understood as one place, not several.
+   */
+  const churchJsonLd = buildChurchJsonLd({
+    locale: lang,
+    contact: contact?.contact,
+    diocese: settings.diocese,
+    social: settings.social,
+    directionsUrl: contact?.map?.directionsUrl,
+    officeHours: (schedule?.officeHours ?? []).map((row) => ({
+      day: row.day,
+      hours: row.hours,
+    })),
+  });
+
   return (
     <html
       lang={lang}
@@ -68,6 +94,11 @@ export default async function RootLayout({
         <noscript>
           <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>
         </noscript>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(churchJsonLd) }}
+        />
       </head>
       <body className="flex min-h-full flex-col antialiased">
         <LocaleProvider locale={lang}>
