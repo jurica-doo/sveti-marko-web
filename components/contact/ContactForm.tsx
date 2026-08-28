@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useState, type FormEvent, type ReactNode } from "react";
 
 import { buttonClasses } from "@/components/ui/Button";
@@ -7,12 +8,56 @@ import { Reveal } from "@/components/ui/Reveal";
 import { waHref } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { t } from "@/lib/i18n/interpolate";
+import { DURATION, EASE_PARISH_IN_OUT } from "@/lib/motion";
 
 type Channel = "whatsapp" | "email";
 type Status = "idle" | "sending" | "sent" | "error";
 
 const INPUT_CLASSES =
   "w-full border border-stone-200 bg-stone-50 px-4 py-3 text-[0.95rem] text-ink-900 transition-colors placeholder:text-ink-400/60 focus:border-brass-500 focus:outline-none";
+
+/** The rhythm between rows — see the note on the form's own spacing below. */
+const ROW_SPACING = "pb-5";
+
+/*
+ * Opening and closing the e-mail row.
+ *
+ * Height and opacity are deliberately out of step. Fading the field in while
+ * its box is still opening reads as one gesture — the field arrives together
+ * with the space being made for it — so the fade occupies the last stretch of
+ * the opening and the first stretch of the closing. Run in lockstep instead,
+ * the label and box look squashed against the moving edge.
+ *
+ * The two are exact mirrors: `HEIGHT - FADE` is the delay in, and the same
+ * span leading out, so opening and closing are one movement played each way.
+ *
+ * `EASE_PARISH_IN_OUT` rather than the default curve, for the reason given
+ * where it is defined: the default is front-loaded and snaps on anything that
+ * unfolds.
+ *
+ * Nothing here branches on reduced motion. `height` is one of Framer's
+ * positional keys, so the `MotionConfig` in the layout already cuts it to an
+ * instant change when the OS asks — while still crossfading the opacity, which
+ * is the part that keeps the swap legible.
+ */
+const ROW_HEIGHT_TRANSITION = { duration: DURATION.move, ease: EASE_PARISH_IN_OUT };
+const ROW_FADE_TRANSITION = { duration: DURATION.hover, ease: EASE_PARISH_IN_OUT };
+
+const ROW_COLLAPSED = { height: 0, opacity: 0 };
+
+const ROW_OPEN = {
+  height: "auto",
+  opacity: 1,
+  transition: {
+    height: ROW_HEIGHT_TRANSITION,
+    opacity: { ...ROW_FADE_TRANSITION, delay: DURATION.move - DURATION.hover },
+  },
+};
+
+const ROW_CLOSED = {
+  ...ROW_COLLAPSED,
+  transition: { height: ROW_HEIGHT_TRANSITION, opacity: ROW_FADE_TRANSITION },
+};
 
 /**
  * The contact form, offered as two ways to reach the parish office rather
@@ -117,27 +162,56 @@ export function ContactForm({
         </ChannelPill>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="mt-8 grid gap-5 sm:grid-cols-2">
+      {/*
+        * The gap between rows is `pb-5` on each row rather than the grid's own
+        * `gap-y`, because the e-mail row collapses.
+        *
+        * A grid track's gap is applied whether or not the track has any height,
+        * so a row animating down to `height: 0` still leaves its 1.25rem behind
+        * — the form would lose the height of the field but keep a double gap
+        * where it used to be, and the rows below would stop 20px short of where
+        * they belong. Carrying the spacing *inside* the collapsing box means it
+        * closes up with the box, and everything below travels exactly the
+        * distance the field occupied.
+        *
+        * `gap-x-5` stays: it is the column gutter, and nothing about it moves.
+        */}
+      <form onSubmit={handleSubmit} noValidate className="mt-8 grid gap-x-5 sm:grid-cols-2">
         <Field
           label={c.nameLabel}
           name="name"
           autoComplete="name"
           required
-          className="sm:col-span-2"
+          className={`${ROW_SPACING} sm:col-span-2`}
         />
 
-        {channel === "email" ? (
-          <Field
-            label={c.emailLabel}
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            className="sm:col-span-2"
-          />
-        ) : null}
+        {/*
+          * `initial={false}` so the row is simply *there* on first paint —
+          * e-mail is the default channel, and a form that unfolds itself as the
+          * page arrives would be animating at nobody.
+          */}
+        <AnimatePresence initial={false}>
+          {channel === "email" ? (
+            <motion.div
+              key="email"
+              initial={ROW_COLLAPSED}
+              animate={ROW_OPEN}
+              exit={ROW_CLOSED}
+              className="overflow-hidden sm:col-span-2"
+            >
+              <Field
+                label={c.emailLabel}
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className={ROW_SPACING}
+              />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
 
-        <label className="block sm:col-span-2">
+        <label className={`block ${ROW_SPACING} sm:col-span-2`}>
           <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-ink-400">
             {c.messageLabel}
           </span>
