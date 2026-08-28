@@ -89,9 +89,16 @@ export function scrollToDeferred(top: number | (() => number)) {
 }
 
 /*
- * A one-shot request to land the next navigation at the very top.
+ * A one-shot request to glide the next navigation up to the top.
  *
- * WHY THIS IS NEEDED
+ * WHAT IT IS FOR
+ *
+ * Clicking a link to another page swaps the content in at whatever offset the
+ * old page was left at, and the new page then glides up to the top — the same
+ * motion `SamePageLink` already makes when you click the page you are already
+ * reading, so a click means the same thing everywhere.
+ *
+ * WHY THE ROUTER CANNOT BE LEFT TO DO IT
  *
  * The App Router does not simply scroll to the top when the route changes. It
  * finds the DOM node of the segment that changed and, in `layout-router`, does:
@@ -100,39 +107,42 @@ export function scrollToDeferred(top: number | (() => number)) {
  *     htmlElement.scrollTop = 0
  *
  * ...where state 1 means "the node's top edge is between `scroll-padding-top`
- * and the bottom of the viewport". In other words, if the top of the new page's
- * content is already on screen, the router considers the job done and does not
- * scroll at all.
+ * and the bottom of the viewport". So if the top of the new page's content is
+ * already on screen, the router considers the job done and does not scroll.
  *
  * On this site the changed segment is `{children}` inside `<main>`, which sits
  * below the sticky header — so at rest its top edge is ~80px down. Scroll less
- * than the header's height and that edge is still on screen, the router returns
- * early, and the new page renders at whatever offset the old one was left at.
- * The home page escapes this only because its hero cancels the header with
- * `-mt-18 lg:-mt-20`, putting the segment's top edge at 0, where any scroll at
- * all pushes it out of view and the router's own reset kicks in.
+ * than the header's height and the router returns early and nothing moves at
+ * all; scroll further and its `scrollIntoView()` fallback parks the page at
+ * 80px rather than 0. Either way it lands somewhere that is not the top, and it
+ * gets there in one jump.
  *
- * WHY A FLAG RATHER THAN RESETTING ON EVERY PATHNAME CHANGE
+ * `SamePageLink` therefore passes `scroll={false}`, which switches the router's
+ * handling off entirely and leaves the incoming page at the outgoing page's
+ * offset — exactly the starting point this animation needs. `ScrollReset` takes
+ * it from there.
+ *
+ * WHY A FLAG RATHER THAN ANIMATING ON EVERY PATHNAME CHANGE
  *
  * Back and forward are pathname changes too, and there the browser restores the
- * position the viewer left — which is the correct behaviour and must not be
- * overridden. Only a click on a link should force the top, so only `SamePageLink`
- * sets this, and `ScrollReset` clears it as it consumes it.
+ * position the viewer left — which is correct and must not be overridden. Only
+ * a click on a link should glide, so only `SamePageLink` sets this, and
+ * `ScrollReset` clears it as it consumes it.
  *
- * Cross-page fragment links (`/o-nama/#raspored`) go through `HashLink`, never
- * set the flag, and are left to the router's own hash handling.
+ * Cross-page fragment links (`/#raspored`) go through `HashLink`, never set the
+ * flag, and keep the router's own hash handling.
  */
-let resetPending = false;
+let glidePending = false;
 
 /** Called from a link click that is about to navigate to a different page. */
-export function requestScrollReset() {
-  resetPending = true;
+export function requestScrollGlide() {
+  glidePending = true;
 }
 
-/** Reads and clears the request. True only once per `requestScrollReset()`. */
-export function consumeScrollReset(): boolean {
-  const pending = resetPending;
-  resetPending = false;
+/** Reads and clears the request. True only once per `requestScrollGlide()`. */
+export function consumeScrollGlide(): boolean {
+  const pending = glidePending;
+  glidePending = false;
   return pending;
 }
 

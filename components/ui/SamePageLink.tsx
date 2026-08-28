@@ -7,7 +7,7 @@ import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { isCurrentPage } from "@/lib/routes";
 import {
   isModifiedClick,
-  requestScrollReset,
+  requestScrollGlide,
   scrollToDeferred,
 } from "@/lib/scroll";
 
@@ -44,14 +44,12 @@ export function SamePageLink({
     if (isModifiedClick(event)) return;
 
     /*
-     * Going somewhere else. The router handles the navigation, but it will not
-     * reliably land at the top on its own — it skips scrolling whenever the top
-     * of the incoming page is already on screen, which a sticky header makes
-     * true for any small scroll. Flagging it here lets `ScrollReset` finish the
-     * job once the new route has rendered.
+     * Going somewhere else. The router does the navigating, but `scroll={false}`
+     * below leaves it to land at the outgoing page's offset; flagging it here
+     * lets `ScrollReset` glide the new page up to the top once it has rendered.
      */
     if (!isCurrentPage(pathname, href)) {
-      requestScrollReset();
+      requestScrollGlide();
       return;
     }
 
@@ -59,8 +57,20 @@ export function SamePageLink({
     scrollToDeferred(0);
   }
 
+  /*
+   * `scroll={false}` hands the landing position to `ScrollReset`.
+   *
+   * Left on, the router jumps the page itself — to 80px, or not at all — before
+   * anything of ours runs, and the glide would then start from there instead of
+   * from where the viewer actually was. Switching it off keeps the incoming page
+   * at the outgoing page's offset, which is where the animation has to begin.
+   *
+   * It also switches off the router's `domNode.focus()`, which costs nothing
+   * here: the segment it focuses is not a focusable element, so focus stays on
+   * the link that was clicked either way.
+   */
   return (
-    <Link href={href} onClick={handleClick} {...rest}>
+    <Link href={href} onClick={handleClick} scroll={false} {...rest}>
       {children}
     </Link>
   );

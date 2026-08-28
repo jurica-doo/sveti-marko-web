@@ -1,44 +1,36 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect } from "react";
 
-import { consumeScrollReset } from "@/lib/scroll";
-
-/*
- * `useLayoutEffect` so the correction happens before the browser paints: the
- * router has already committed the new page at the old scroll offset by the
- * time this runs, and doing it in a passive effect would let that offset show
- * for a frame. React warns when `useLayoutEffect` is called during SSR, where
- * it would do nothing anyway, so the passive hook stands in on the server.
- */
-const useIsomorphicLayoutEffect =
-  typeof window === "undefined" ? useEffect : useLayoutEffect;
+import { animateScrollTo, consumeScrollGlide } from "@/lib/scroll";
 
 /**
- * Lands link navigations at the very top of the page.
+ * Glides a link navigation up to the top of the new page.
  *
- * The App Router leaves the scroll position alone when the top of the incoming
- * segment is already on screen, which on every page but the home page means a
- * small scroll survives the navigation — see `requestScrollReset` in
- * `lib/scroll.ts` for why. `SamePageLink` flags the clicks that should reset,
- * and this consumes the flag once the new route has rendered.
+ * `SamePageLink` hands the router `scroll={false}`, so the incoming page is
+ * painted at whatever offset the outgoing one was left at. This picks it up
+ * from there and animates to the top on the site's curve — the same motion
+ * clicking the current page's own link already makes.
  *
- * Back and forward never set the flag, so the browser's restored position is
- * left untouched.
+ * See `requestScrollGlide` in `lib/scroll.ts` for why the router cannot be left
+ * to do this itself.
+ *
+ * A passive effect, deliberately: the new page is *meant* to be seen at the old
+ * offset for a frame before it starts moving, which is the whole point of the
+ * animation. `animateScrollTo` reads the position on its first frame, so it
+ * picks up wherever the browser settled — including the case where the incoming
+ * page is shorter and the offset was clamped.
+ *
+ * Back and forward never set the flag, so the position the browser restores for
+ * them is left alone.
  */
 export function ScrollReset() {
   const pathname = usePathname();
 
-  useIsomorphicLayoutEffect(() => {
-    if (!consumeScrollReset()) return;
-
-    /*
-     * `instant` because `scroll-behavior: smooth` is set globally on `<html>`:
-     * without it this correction would animate, arriving after the new page has
-     * already been painted at the wrong offset — the opposite of the point.
-     */
-    window.scrollTo({ top: 0, behavior: "instant" });
+  useEffect(() => {
+    if (!consumeScrollGlide()) return;
+    animateScrollTo(0);
   }, [pathname]);
 
   return null;
