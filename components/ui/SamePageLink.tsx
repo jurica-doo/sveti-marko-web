@@ -5,7 +5,11 @@ import { usePathname } from "next/navigation";
 import type { AnchorHTMLAttributes, MouseEvent, ReactNode } from "react";
 
 import { isCurrentPage } from "@/lib/routes";
-import { isModifiedClick, scrollToDeferred } from "@/lib/scroll";
+import {
+  isModifiedClick,
+  requestScrollReset,
+  scrollToDeferred,
+} from "@/lib/scroll";
 
 type SamePageLinkProps = {
   /** Already normalised by `internalHref`, and carries no fragment. */
@@ -39,8 +43,17 @@ export function SamePageLink({
     // Leave new-tab, new-window and middle clicks to the browser.
     if (isModifiedClick(event)) return;
 
-    // Going somewhere else — let the router navigate and land at the top.
-    if (!isCurrentPage(pathname, href)) return;
+    /*
+     * Going somewhere else. The router handles the navigation, but it will not
+     * reliably land at the top on its own — it skips scrolling whenever the top
+     * of the incoming page is already on screen, which a sticky header makes
+     * true for any small scroll. Flagging it here lets `ScrollReset` finish the
+     * job once the new route has rendered.
+     */
+    if (!isCurrentPage(pathname, href)) {
+      requestScrollReset();
+      return;
+    }
 
     event.preventDefault();
     scrollToDeferred(0);

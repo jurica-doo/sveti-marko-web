@@ -6,6 +6,7 @@ import "../globals.css";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
+import { ScrollReset } from "@/components/layout/ScrollReset";
 import { MotionProvider } from "@/components/ui/MotionProvider";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { LocaleProvider } from "@/lib/i18n/context";
@@ -108,6 +109,7 @@ export default async function RootLayout({
       <body className="flex min-h-full flex-col antialiased">
         <LocaleProvider locale={lang}>
           <MotionProvider>
+            <ScrollReset />
             <AnnouncementBar settings={settings} />
             <Navbar settings={settings} schedule={schedule} dict={dict} />
             <main className="flex-1">{children}</main>

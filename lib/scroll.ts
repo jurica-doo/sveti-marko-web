@@ -88,6 +88,54 @@ export function scrollToDeferred(top: number | (() => number)) {
   });
 }
 
+/*
+ * A one-shot request to land the next navigation at the very top.
+ *
+ * WHY THIS IS NEEDED
+ *
+ * The App Router does not simply scroll to the top when the route changes. It
+ * finds the DOM node of the segment that changed and, in `layout-router`, does:
+ *
+ *     if (getScrollTargetState(domNode, viewportHeight, ...) === 1) return
+ *     htmlElement.scrollTop = 0
+ *
+ * ...where state 1 means "the node's top edge is between `scroll-padding-top`
+ * and the bottom of the viewport". In other words, if the top of the new page's
+ * content is already on screen, the router considers the job done and does not
+ * scroll at all.
+ *
+ * On this site the changed segment is `{children}` inside `<main>`, which sits
+ * below the sticky header — so at rest its top edge is ~80px down. Scroll less
+ * than the header's height and that edge is still on screen, the router returns
+ * early, and the new page renders at whatever offset the old one was left at.
+ * The home page escapes this only because its hero cancels the header with
+ * `-mt-18 lg:-mt-20`, putting the segment's top edge at 0, where any scroll at
+ * all pushes it out of view and the router's own reset kicks in.
+ *
+ * WHY A FLAG RATHER THAN RESETTING ON EVERY PATHNAME CHANGE
+ *
+ * Back and forward are pathname changes too, and there the browser restores the
+ * position the viewer left — which is the correct behaviour and must not be
+ * overridden. Only a click on a link should force the top, so only `SamePageLink`
+ * sets this, and `ScrollReset` clears it as it consumes it.
+ *
+ * Cross-page fragment links (`/o-nama/#raspored`) go through `HashLink`, never
+ * set the flag, and are left to the router's own hash handling.
+ */
+let resetPending = false;
+
+/** Called from a link click that is about to navigate to a different page. */
+export function requestScrollReset() {
+  resetPending = true;
+}
+
+/** Reads and clears the request. True only once per `requestScrollReset()`. */
+export function consumeScrollReset(): boolean {
+  const pending = resetPending;
+  resetPending = false;
+  return pending;
+}
+
 /**
  * True for the clicks the browser owns: new tab, new window, middle button.
  * Handling those ourselves would swallow a navigation the viewer asked for.
