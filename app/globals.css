@@ -540,7 +540,10 @@ h4,
  * makes the mark inherit whatever colour the wordmark next to it is using, at
  * every point of that transition, for free.
  *
- * The source is pure alpha line art, which is exactly what a mask wants.
+ * The source is `brand/mark-dark.png`, whose transparency follows the pencil
+ * strokes — so its alpha channel is line art on its own, which is exactly what
+ * a mask wants. The light drawing cannot stand in: its walls are solid, so it
+ * masks down to a featureless blob.
  */
 .brand-mark {
   background-color: currentColor;

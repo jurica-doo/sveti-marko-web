@@ -1,21 +1,28 @@
 /**
- * Builds every icon and social image the site needs from one source file,
- * `public/sveti-marko-logo.png`.
+ * Builds every icon and social image the site and the CMS need, from the two
+ * source drawings in `brand/`.
  *
  *   npm run generate:icons
  *
- * The source is dark line art (rgb(21,21,21)) on transparency, and 98% of the
- * canvas is empty. Two things follow from that, and they are why this script
- * exists rather than a hand-exported set:
+ * The sources are the same church rendered twice — `mark-light.png` in white
+ * for dark grounds, `mark-dark.png` in near-black for light ones. Both are
+ * pencil drawings with real tonal range, not flat line art, and that is the
+ * fact the whole of this script is arranged around:
  *
- *   1. It has to be trimmed. The mark occupies a 454x381 box inside a 1536x1024
- *      canvas, so dropping the raw file into a 512px square would render the
- *      church at about a third of the space with the rest padding.
- *   2. It has to be recoloured and given a ground. Near-black on transparency
- *      disappears against the dark browser chrome, dark tab bars and the dark
- *      Slack/Discord embed backgrounds these images are most often seen on.
- *      Since the art is monochrome, its alpha channel can be lifted off and
- *      re-filled with the site's stone, then set on the site's ink.
+ *   - `mark-light.png` is used as a *picture*. Its shading is the mark, so it
+ *     is composited onto the ink ground with its own tones intact. Reducing it
+ *     to a silhouette would throw away everything that makes it the drawing it
+ *     is.
+ *
+ *   - `mark-dark.png` is used as a *stencil*. Its transparency follows the
+ *     pencil strokes, so its alpha channel is, on its own, clean line art —
+ *     which is exactly what a CSS mask needs. That is what `.brand-mark` on the
+ *     site and `.parish-icon` in the admin panel fill with `currentColor`, and
+ *     it is why one file covers both light and dark chrome.
+ *
+ * The light drawing's alpha is *not* line art — the walls are solid, so it
+ * masks down to a featureless blob. The two files are therefore not
+ * interchangeable, and neither can be dropped.
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -25,54 +32,82 @@ import sharp from "sharp";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-const SOURCE = path.join(root, "public", "sveti-marko-logo.png");
+/** White on transparency — for the ink ground. */
+const LIGHT_SOURCE = path.join(root, "brand", "mark-light.png");
+/** Near-black on transparency — the stencil the masks are cut from. */
+const DARK_SOURCE = path.join(root, "brand", "mark-dark.png");
+
+/**
+ * The admin panel is a separate app with its own `public/`, and its mark has to
+ * be the same file as the site's or the two drift apart the first time this is
+ * re-run. Skipped without complaint when the directory is not there — a CI or
+ * Vercel build of the site alone has no sibling checkout.
+ */
+const CMS_ROOT = path.resolve(root, "..", "sveti-marko-cms");
 
 /** Straight from `globals.css` — these must stay in step with the palette. */
 const INK = { r: 0x10, g: 0x1d, b: 0x26 };
-const STONE = { r: 0xfa, g: 0xf9, b: 0xf6 };
 const BRASS = { r: 0xa8, g: 0x81, b: 0x3c };
 
 /**
- * Lifts the mark off the source: trims to the drawn pixels, scales it to fit
- * `size`, and refills it with `colour` while keeping its own edges.
+ * Alpha below this counts as empty when finding the drawing's edges.
+ *
+ * Both sources carry a haze of near-zero alpha out to the full canvas — some
+ * 70-90k pixels of it — left over from how they were exported. Sharp's own
+ * `.trim()` sees that haze as content and trims nothing at all, which is why
+ * the bounds are measured here instead: without it the mark lands in an icon at
+ * roughly two thirds of its proper size, ringed by transparent padding.
  */
-async function renderMark(size, colour) {
-  const trimmed = await sharp(SOURCE)
-    .trim({ threshold: 10 })
+const ALPHA_FLOOR = 25;
+
+/** The box the actually-drawn pixels occupy, for `extract`. */
+async function drawnBounds(source) {
+  const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({
+    resolveWithObject: true,
+  });
+
+  const { width, height, channels } = info;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (data[(y * width + x) * channels + 3] < ALPHA_FLOOR) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+
+  if (maxX < 0) throw new Error(`${source} is empty`);
+
+  return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+/** The drawing, cropped to itself and scaled to fit a `size` square. */
+async function renderMark(source, size) {
+  return sharp(source)
+    .extract(await drawnBounds(source))
     .resize(size, size, {
       fit: "contain",
       background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .toBuffer();
-
-  const { data: alpha, info } = await sharp(trimmed)
-    .extractChannel("alpha")
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  return sharp({
-    create: {
-      width: info.width,
-      height: info.height,
-      channels: 3,
-      background: colour,
-    },
-  })
-    .joinChannel(alpha, {
-      raw: { width: info.width, height: info.height, channels: 1 },
     })
     .png()
     .toBuffer();
 }
 
 /**
- * A square tile: the mark on the ink ground, inset by `coverage` of the edge.
- * Icons are cropped by the platform far more often than they are shown whole,
- * so none of them run the art to the edge.
+ * A square tile: the light drawing on the ink ground, inset by `coverage` of
+ * the edge. Icons are cropped by the platform far more often than they are
+ * shown whole, so none of them run the art to the edge.
  */
 async function squareIcon(size, coverage) {
-  const mark = await renderMark(Math.round(size * coverage), STONE);
-  const inset = Math.round((size - Math.round(size * coverage)) / 2);
+  const markSize = Math.round(size * coverage);
+  const mark = await renderMark(LIGHT_SOURCE, markSize);
+  const inset = Math.round((size - markSize) / 2);
 
   return sharp({
     create: { width: size, height: size, channels: 4, background: INK },
@@ -88,10 +123,13 @@ async function squareIcon(size, coverage) {
  * anything set here would render in whatever serif the machine running this
  * script happens to have — which is not necessarily the machine that ships it.
  * The brass rule is the same device that heads the footer and the schedule band.
+ *
+ * Only a fallback these days: `getShareImage()` in `lib/seo.ts` serves the CMS
+ * hero, and this stands in when the CMS cannot be reached.
  */
 async function socialCard(width, height) {
-  const mark = await renderMark(Math.round(height * 0.52), STONE);
   const markSize = Math.round(height * 0.52);
+  const mark = await renderMark(LIGHT_SOURCE, markSize);
 
   const rule = await sharp({
     create: {
@@ -153,59 +191,72 @@ function buildIco(images) {
   return Buffer.concat([header, directory, ...images.map((i) => i.data)]);
 }
 
-async function write(target, data) {
-  const file = path.join(root, target);
+async function write(base, target, data) {
+  const file = path.join(base, target);
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, data);
-  console.log(`${target.padEnd(34)} ${(data.length / 1024).toFixed(1)} kB`);
+  console.log(`${path.relative(path.dirname(root), file).padEnd(46)} ${(data.length / 1024).toFixed(1)} kB`);
 }
 
 async function main() {
-  await fs.access(SOURCE);
-
-  // Browser tab and search results. Coverage is highest here because these are
-  // rendered at 16-32px, where any padding is most of the icon.
-  const ico = buildIco(
-    await Promise.all(
-      [16, 32, 48].map(async (size) => ({
-        size,
-        data: await squareIcon(size, 0.82),
-      })),
-    ),
-  );
-  await write("app/favicon.ico", ico);
-
-  await write("app/icon.png", await squareIcon(512, 0.72));
-  await write("app/apple-icon.png", await squareIcon(180, 0.66));
-
-  // Installed-app icons. `maskable` is inset further: Android crops it to a
-  // circle or squircle and only the central 80% is guaranteed to survive.
-  await write("public/icons/icon-192.png", await squareIcon(192, 0.72));
-  await write("public/icons/icon-512.png", await squareIcon(512, 0.72));
-  await write("public/icons/icon-maskable-512.png", await squareIcon(512, 0.52));
-
-  // `lib/seo.ts` already points every page at /og.png as its fallback.
-  await write("public/og.png", await socialCard(1200, 630));
+  await fs.access(LIGHT_SOURCE);
+  await fs.access(DARK_SOURCE);
 
   /*
-   * The mark for the navbar, trimmed and kept as bare alpha — no colour at all.
-   * `.brand-mark` in globals.css uses it as a CSS mask and fills it with
-   * `currentColor`, so it takes the header's own text colour: stone over the
-   * hero photograph, ink once the bar turns solid. A coloured file would need
-   * two variants and a swap, and would still be wrong during the cross-fade
-   * between the two states.
+   * Browser tab and search results. Coverage is highest here because these are
+   * rendered at 16-32px, where any padding is most of the icon — and a drawing
+   * with this much detail needs every pixel it can get. At 16px it resolves to
+   * a pale shape on ink rather than a readable church; that is the size, not
+   * the file, and the 32px entry is what most chrome actually picks.
    */
-  await write(
-    "public/icons/logo-mark.png",
-    await sharp(SOURCE)
-      .trim({ threshold: 10 })
-      .resize(256, 256, {
-        fit: "inside",
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      })
-      .png()
-      .toBuffer(),
+  const ico = buildIco(
+    await Promise.all(
+      [16, 32, 48].map(async (size) => ({ size, data: await squareIcon(size, 0.84) })),
+    ),
   );
+  await write(root, "app/favicon.ico", ico);
+
+  await write(root, "app/icon.png", await squareIcon(512, 0.74));
+  await write(root, "app/apple-icon.png", await squareIcon(180, 0.68));
+
+  /*
+   * Installed-app icons. The maskable one is inset much further: Android crops
+   * it to a circle or squircle whose safe zone is the middle 80% of the tile,
+   * and the largest square that fits inside that circle is 0.8 / √2 ≈ 0.566 of
+   * the edge. 0.54 sits just inside it.
+   */
+  await write(root, "public/icons/icon-192.png", await squareIcon(192, 0.74));
+  await write(root, "public/icons/icon-512.png", await squareIcon(512, 0.74));
+  await write(root, "public/icons/icon-maskable-512.png", await squareIcon(512, 0.54));
+
+  await write(root, "public/og.png", await socialCard(1200, 630));
+
+  /*
+   * The stencil, kept as the dark drawing with its own alpha. `.brand-mark` in
+   * `globals.css` and `.parish-icon` / `.parish-brand__mark` in the panel's
+   * `custom.scss` use it as a CSS mask and fill it with `currentColor`, so it
+   * takes whatever colour the text beside it has: stone over the hero
+   * photograph, ink once the header turns solid, either theme in the admin. A
+   * coloured file would need two variants and a swap, and would still be wrong
+   * during the cross-fade between the two states.
+   */
+  const stencil = await renderMark(DARK_SOURCE, 256);
+  await write(root, "public/icons/logo-mark.png", stencil);
+
+  const hasCms = await fs
+    .access(path.join(CMS_ROOT, "package.json"))
+    .then(() => true)
+    .catch(() => false);
+
+  if (!hasCms) {
+    console.log("\nsveti-marko-cms not found alongside — skipped its icons.");
+    return;
+  }
+
+  await write(CMS_ROOT, "public/icons/logo-mark.png", stencil);
+  await write(CMS_ROOT, "public/icons/favicon-32.png", await squareIcon(32, 0.84));
+  await write(CMS_ROOT, "public/icons/icon-192.png", await squareIcon(192, 0.74));
+  await write(CMS_ROOT, "public/icons/apple-icon.png", await squareIcon(180, 0.68));
 }
 
 await main();

@@ -26,7 +26,7 @@ export function StatusPage({
     <section className="shell flex min-h-[70vh] flex-col items-center justify-center py-24 text-center">
       <span
         aria-hidden="true"
-        className="brand-mark h-16 w-20 shrink-0 text-stone-300"
+        className="brand-mark h-16 w-16 shrink-0 text-stone-300"
       />
 
       <p className="eyebrow mt-8">{eyebrow}</p>

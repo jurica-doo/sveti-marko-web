@@ -105,7 +105,7 @@ export function Navbar({
           */}
             <span
               aria-hidden="true"
-              className={`brand-mark indicator h-8 w-10 shrink-0 transition-colors group-hover:scale-110 sm:h-9 sm:w-11 ${
+              className={`brand-mark indicator h-8 w-8 shrink-0 transition-colors group-hover:scale-110 sm:h-9 sm:w-9 ${
                 solid ? "text-ink-900" : "text-stone-50"
               }`}
             />
