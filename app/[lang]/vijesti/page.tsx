@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { getNewsPage, getNewsPaginated } from "@/lib/api";
 import { hasLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
 import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
 
@@ -29,10 +28,6 @@ export async function generateMetadata({
     description: page?.metaDescription || page?.intro || dict.news.archiveIntro,
     path: ROUTES.news,
     locale: lang,
-    imageUrl: imageUrl(page?.heroImage),
-    imageAlt: page?.heroImage?.alt,
-    imageWidth: page?.heroImage?.width,
-    imageHeight: page?.heroImage?.height,
   });
 }
 

@@ -1,16 +1,33 @@
 import type { Metadata } from "next";
 
-import { getHomePage } from "./api";
 import { LOCALES, LOCALE_META, type Locale } from "./i18n/config";
 import { getDictionary } from "./i18n/dictionaries";
 import { withLocale } from "./i18n/routes";
-import { imageUrl } from "./media";
 import { IS_INDEXABLE_DEPLOYMENT, SITE_ORIGIN, toAbsoluteUrl } from "./site-url";
 
-/** Last resort only — stands in when the CMS cannot be reached. See `getShareImage()`. */
-const DEFAULT_OG_IMAGE = "/og.png";
-/** `public/og.png`'s real dimensions — declaring them lets a card render before the file loads. */
-const OG_IMAGE_SIZE = { width: 1200, height: 630 };
+/**
+ * The picture every link to this site unfurls with, in WhatsApp, Messages,
+ * Facebook, Slack — anywhere a URL is pasted.
+ *
+ * One image for the whole site, deliberately: the parish mark on the ink
+ * ground, built by `npm run generate:icons` from `brand/mark-light.png`. A
+ * share preview is the parish introducing itself to someone who has not been
+ * here yet, and it should look the same whichever page the link happens to
+ * point at.
+ *
+ * A news article is the one exception, and it passes `SeoInput.image` to say
+ * so — see the note there.
+ *
+ * 1200x630 is the 1.91:1 that Facebook, LinkedIn and WhatsApp all crop toward.
+ * The mark itself occupies only the middle quarter of the width (x 446-752),
+ * so the platforms that crop to a square instead take the centre 630x630 and
+ * lose nothing but empty ground.
+ *
+ * Declaring the dimensions is not decoration: a scraper that knows the size
+ * can lay the card out before the file arrives, and WhatsApp is markedly more
+ * willing to render a large preview when the tags state one.
+ */
+const SHARE_IMAGE = { url: "/og.png", width: 1200, height: 630 } as const;
 
 /**
  * Where the church actually stands.
@@ -41,47 +58,6 @@ function brand(locale: Locale) {
 
 const toAbsoluteSiteUrl = toAbsoluteUrl;
 
-export type ShareImage = {
-  /** Site-relative or absolute; `buildSeoMetadata` absolutises it. */
-  url: string;
-  width?: number;
-  height?: number;
-  alt?: string;
-};
-
-/**
- * The picture a link to this site shows when it is pasted into WhatsApp,
- * Messages, Facebook, Slack — anywhere that unfurls a URL.
- *
- * It is the home page hero, read from the CMS rather than committed as a file
- * in `public/`, so swapping the hero in the admin swaps every share preview on
- * the site within the ISR window — no code change, no deploy.
- *
- * A page that carries its own picture (a news article's cover, a page hero)
- * still uses it; this is what every *other* URL falls back to, which today is
- * all of them. If the CMS is unreachable the packaged `og.png` stands in, so a
- * shared link never unfurls blank.
- *
- * The hero's own dimensions and alt text come along with it: a scraper that
- * knows the size can lay out the card before the image finishes loading, and
- * WhatsApp in particular is more willing to render a large preview when the
- * tags declare one.
- */
-export async function getShareImage(locale: Locale): Promise<ShareImage> {
-  const home = await getHomePage(locale).catch(() => null);
-  const hero = home?.hero?.image;
-  const url = imageUrl(hero);
-
-  if (!url) return { url: DEFAULT_OG_IMAGE, ...OG_IMAGE_SIZE };
-
-  return {
-    url,
-    ...(hero?.width ? { width: hero.width } : {}),
-    ...(hero?.height ? { height: hero.height } : {}),
-    ...(hero?.alt ? { alt: hero.alt } : {}),
-  };
-}
-
 export type SeoInput = {
   title: string;
   absoluteTitle?: boolean;
@@ -89,46 +65,46 @@ export type SeoInput = {
   /** Bare, un-prefixed path (e.g. `ROUTES.news`) — `locale` supplies the prefix. */
   path: string;
   locale: Locale;
-  imageUrl?: string | null;
-  imageAlt?: string | null;
-  imageWidth?: number | null;
-  imageHeight?: number | null;
+  /**
+   * A picture of the page's own, shown instead of `SHARE_IMAGE`.
+   *
+   * Only a news article passes one. Its cover *is* the story, and ten articles
+   * unfurling as ten copies of the same parish card tells a reader nothing
+   * about which one they were sent. Every other page is the parish itself, and
+   * takes the parish's card.
+   */
+  image?: {
+    url: string;
+    alt?: string | null;
+    width?: number | null;
+    height?: number | null;
+  } | null;
   type?: "website" | "article";
   keywords?: string[];
 };
 
-export async function buildSeoMetadata(input: SeoInput): Promise<Metadata> {
-  const { siteName, defaultDescription, imageAlt: defaultImageAlt } = brand(input.locale);
+export function buildSeoMetadata(input: SeoInput): Metadata {
+  const { siteName, defaultDescription, imageAlt } = brand(input.locale);
 
   const description = (input.description || defaultDescription).trim();
   const absolutePageUrl = toAbsoluteSiteUrl(withLocale(input.path, input.locale));
 
-  // The page's own picture if it has one, otherwise the site-wide share image
-  // (the home hero, straight from the CMS).
-  const share: ShareImage = input.imageUrl
-    ? {
-        url: input.imageUrl,
-        ...(input.imageWidth ? { width: input.imageWidth } : {}),
-        ...(input.imageHeight ? { height: input.imageHeight } : {}),
-        ...(input.imageAlt ? { alt: input.imageAlt } : {}),
-      }
-    : await getShareImage(input.locale);
-
+  const share = input.image ?? SHARE_IMAGE;
   const shareImageUrl = toAbsoluteSiteUrl(share.url);
-
-  const metadataTitle: Metadata["title"] = input.absoluteTitle
-    ? { absolute: input.title }
-    : input.title;
-
-  const imageAlt = (input.imageAlt || share.alt || defaultImageAlt).trim();
   const images = [
     {
       url: shareImageUrl,
       ...(share.width ? { width: share.width } : {}),
       ...(share.height ? { height: share.height } : {}),
-      alt: imageAlt,
+      // A cover with no alt of its own still gets the parish's description
+      // rather than nothing at all.
+      alt: (input.image?.alt || imageAlt).trim(),
     },
   ];
+
+  const metadataTitle: Metadata["title"] = input.absoluteTitle
+    ? { absolute: input.title }
+    : input.title;
 
   // Every language's copy of this same page, plus `x-default` pointing at the
   // hr URL — hr is what a visitor with no locale preference lands on.
@@ -201,19 +177,18 @@ export async function buildSeoMetadata(input: SeoInput): Promise<Metadata> {
  * one page whose title happens to name it. A page that already names the
  * parish (the home page) opts out with `absoluteTitle`.
  */
-export async function seoRootDefaults(locale: Locale): Promise<Metadata> {
+export function seoRootDefaults(locale: Locale): Metadata {
   const { siteName, shortName, defaultDescription, imageAlt } = brand(locale);
 
   // Also carried here, not only in `buildSeoMetadata`, so routes rendered
   // inside this layout that generate no metadata of their own — `not-found`,
   // `error` — still unfurl with a picture instead of a bare link.
-  const share = await getShareImage(locale);
   const images = [
     {
-      url: toAbsoluteSiteUrl(share.url),
-      ...(share.width ? { width: share.width } : {}),
-      ...(share.height ? { height: share.height } : {}),
-      alt: (share.alt || imageAlt).trim(),
+      url: toAbsoluteSiteUrl(SHARE_IMAGE.url),
+      width: SHARE_IMAGE.width,
+      height: SHARE_IMAGE.height,
+      alt: imageAlt.trim(),
     },
   ];
 
@@ -241,7 +216,7 @@ export async function seoRootDefaults(locale: Locale): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      images: [toAbsoluteSiteUrl(share.url)],
+      images: [toAbsoluteSiteUrl(SHARE_IMAGE.url)],
     },
   };
 }
@@ -442,7 +417,7 @@ export function buildSiteJsonLd(input: SiteJsonLdInput) {
     url: toAbsoluteSiteUrl(withLocale("/", locale)),
     description: defaultDescription,
     address,
-    ...(logoUrl ? { logo: logoUrl, image: logoUrl } : { image: toAbsoluteSiteUrl(DEFAULT_OG_IMAGE) }),
+    ...(logoUrl ? { logo: logoUrl, image: logoUrl } : { image: toAbsoluteSiteUrl(SHARE_IMAGE.url) }),
     ...(telephone ? { telephone } : {}),
     ...(contact?.email ? { email: contact.email } : {}),
     ...(diocese ? { parentOrganization: { "@type": "Organization", name: diocese } } : {}),

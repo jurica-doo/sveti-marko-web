@@ -9,7 +9,6 @@ import { getContactPage, getSchedule } from "@/lib/api";
 import { bindTimeRanges, telHref } from "@/lib/format";
 import { hasLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { imageUrl } from "@/lib/media";
 import { ROUTES } from "@/lib/routes";
 import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
 
@@ -33,10 +32,6 @@ export async function generateMetadata({
     description: page?.metaDescription || page?.intro,
     path: ROUTES.contact,
     locale: lang,
-    imageUrl: imageUrl(page?.heroImage),
-    imageAlt: page?.heroImage?.alt,
-    imageWidth: page?.heroImage?.width,
-    imageHeight: page?.heroImage?.height,
   });
 }
 

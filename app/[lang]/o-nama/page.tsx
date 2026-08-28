@@ -6,7 +6,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { getAboutPage } from "@/lib/api";
 import { hasLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { imageUrl } from "@/lib/media";
 import { richTextToPlain } from "@/lib/richtext";
 import { ROUTES } from "@/lib/routes";
 import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
@@ -43,10 +42,6 @@ export async function generateMetadata({
       page?.metaDescription || page?.intro || richTextToPlain(page?.parish?.body),
     path: ROUTES.about,
     locale: lang,
-    imageUrl: imageUrl(page?.heroImage),
-    imageAlt: page?.heroImage?.alt,
-    imageWidth: page?.heroImage?.width,
-    imageHeight: page?.heroImage?.height,
   });
 }
 

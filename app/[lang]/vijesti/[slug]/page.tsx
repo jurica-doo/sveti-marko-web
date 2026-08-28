@@ -52,15 +52,23 @@ export async function generateMetadata({
     });
   }
 
+  // The article's own cover, not the parish card: what someone is being sent
+  // here is this story, and the photograph says which one it is.
+  const cover = imageUrl(news.coverImage);
+
   return buildSeoMetadata({
     title: news.title,
     description: news.excerpt,
     path: ROUTES.newsDetail(slug),
     locale: lang,
-    imageUrl: imageUrl(news.coverImage),
-    imageAlt: news.coverImage?.alt,
-    imageWidth: news.coverImage?.width,
-    imageHeight: news.coverImage?.height,
+    image: cover
+      ? {
+          url: cover,
+          alt: news.coverImage?.alt,
+          width: news.coverImage?.width,
+          height: news.coverImage?.height,
+        }
+      : null,
     type: "article",
   });
 }
