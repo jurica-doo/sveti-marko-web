@@ -15,7 +15,6 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { hasLocale } from "@/lib/i18n/config";
 import { buildSeoMetadata } from "@/lib/seo";
 import { ROUTES } from "@/lib/routes";
-import { imageUrl } from "@/lib/media";
 import { notFound } from "next/navigation";
 
 export const revalidate = 60;
@@ -35,7 +34,9 @@ export async function generateMetadata({
     description: home?.metaDescription || home?.hero?.subtitle,
     path: ROUTES.home,
     locale: lang,
-    imageUrl: imageUrl(home?.hero?.image),
+    // No `imageUrl`: the site-wide share image is this very hero, read from
+    // the CMS by `getShareImage()`, so passing it again would only duplicate
+    // the lookup — and lose the hero's dimensions and alt text.
   });
 }
 

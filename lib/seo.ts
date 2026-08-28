@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 
+import { getHomePage } from "./api";
 import { LOCALES, LOCALE_META, type Locale } from "./i18n/config";
 import { getDictionary } from "./i18n/dictionaries";
 import { withLocale } from "./i18n/routes";
+import { imageUrl } from "./media";
 import { IS_INDEXABLE_DEPLOYMENT, SITE_ORIGIN, toAbsoluteUrl } from "./site-url";
 
+/** Last resort only — stands in when the CMS cannot be reached. See `getShareImage()`. */
 const DEFAULT_OG_IMAGE = "/og.png";
 /** `public/og.png`'s real dimensions — declaring them lets a card render before the file loads. */
 const OG_IMAGE_SIZE = { width: 1200, height: 630 };
@@ -56,6 +59,47 @@ export function resolveCmsImageUrl(
   return new URL(url, cmsBaseUrl()).toString();
 }
 
+export type ShareImage = {
+  /** Site-relative or absolute; `buildSeoMetadata` absolutises it. */
+  url: string;
+  width?: number;
+  height?: number;
+  alt?: string;
+};
+
+/**
+ * The picture a link to this site shows when it is pasted into WhatsApp,
+ * Messages, Facebook, Slack — anywhere that unfurls a URL.
+ *
+ * It is the home page hero, read from the CMS rather than committed as a file
+ * in `public/`, so swapping the hero in the admin swaps every share preview on
+ * the site within the ISR window — no code change, no deploy.
+ *
+ * A page that carries its own picture (a news article's cover, a page hero)
+ * still uses it; this is what every *other* URL falls back to, which today is
+ * all of them. If the CMS is unreachable the packaged `og.png` stands in, so a
+ * shared link never unfurls blank.
+ *
+ * The hero's own dimensions and alt text come along with it: a scraper that
+ * knows the size can lay out the card before the image finishes loading, and
+ * WhatsApp in particular is more willing to render a large preview when the
+ * tags declare one.
+ */
+export async function getShareImage(locale: Locale): Promise<ShareImage> {
+  const home = await getHomePage(locale).catch(() => null);
+  const hero = home?.hero?.image;
+  const url = imageUrl(hero);
+
+  if (!url) return { url: DEFAULT_OG_IMAGE, ...OG_IMAGE_SIZE };
+
+  return {
+    url,
+    ...(hero?.width ? { width: hero.width } : {}),
+    ...(hero?.height ? { height: hero.height } : {}),
+    ...(hero?.alt ? { alt: hero.alt } : {}),
+  };
+}
+
 export type SeoInput = {
   title: string;
   absoluteTitle?: boolean;
@@ -71,28 +115,38 @@ export type SeoInput = {
   keywords?: string[];
 };
 
-export function buildSeoMetadata(input: SeoInput): Metadata {
+export async function buildSeoMetadata(input: SeoInput): Promise<Metadata> {
   const { siteName, defaultDescription, imageAlt: defaultImageAlt } = brand(input.locale);
 
   const description = (input.description || defaultDescription).trim();
   const absolutePageUrl = toAbsoluteSiteUrl(withLocale(input.path, input.locale));
 
-  const usingDefaultImage = !input.imageUrl;
-  const imageUrl = toAbsoluteSiteUrl(input.imageUrl || DEFAULT_OG_IMAGE);
+  // The page's own picture if it has one, otherwise the site-wide share image
+  // (the home hero, straight from the CMS).
+  const share: ShareImage = input.imageUrl
+    ? {
+        url: input.imageUrl,
+        ...(input.imageWidth ? { width: input.imageWidth } : {}),
+        ...(input.imageHeight ? { height: input.imageHeight } : {}),
+        ...(input.imageAlt ? { alt: input.imageAlt } : {}),
+      }
+    : await getShareImage(input.locale);
+
+  const shareImageUrl = toAbsoluteSiteUrl(share.url);
 
   const metadataTitle: Metadata["title"] = input.absoluteTitle
     ? { absolute: input.title }
     : input.title;
 
-  const imageAlt = (input.imageAlt || defaultImageAlt).trim();
-  // A CMS upload carries its own dimensions; the packaged fallback's are known.
-  const imageSize = usingDefaultImage
-    ? OG_IMAGE_SIZE
-    : {
-        ...(input.imageWidth ? { width: input.imageWidth } : {}),
-        ...(input.imageHeight ? { height: input.imageHeight } : {}),
-      };
-  const images = [{ url: imageUrl, ...imageSize, alt: imageAlt }];
+  const imageAlt = (input.imageAlt || share.alt || defaultImageAlt).trim();
+  const images = [
+    {
+      url: shareImageUrl,
+      ...(share.width ? { width: share.width } : {}),
+      ...(share.height ? { height: share.height } : {}),
+      alt: imageAlt,
+    },
+  ];
 
   // Every language's copy of this same page, plus `x-default` pointing at the
   // hr URL — hr is what a visitor with no locale preference lands on.
@@ -148,7 +202,7 @@ export function buildSeoMetadata(input: SeoInput): Metadata {
       card: "summary_large_image",
       title: input.title,
       description,
-      images: [imageUrl],
+      images: [shareImageUrl],
     },
     other: {
       "content-language": input.locale,
@@ -165,8 +219,21 @@ export function buildSeoMetadata(input: SeoInput): Metadata {
  * one page whose title happens to name it. A page that already names the
  * parish (the home page) opts out with `absoluteTitle`.
  */
-export function seoRootDefaults(locale: Locale): Metadata {
-  const { siteName, shortName, defaultDescription } = brand(locale);
+export async function seoRootDefaults(locale: Locale): Promise<Metadata> {
+  const { siteName, shortName, defaultDescription, imageAlt } = brand(locale);
+
+  // Also carried here, not only in `buildSeoMetadata`, so routes rendered
+  // inside this layout that generate no metadata of their own — `not-found`,
+  // `error` — still unfurl with a picture instead of a bare link.
+  const share = await getShareImage(locale);
+  const images = [
+    {
+      url: toAbsoluteSiteUrl(share.url),
+      ...(share.width ? { width: share.width } : {}),
+      ...(share.height ? { height: share.height } : {}),
+      alt: (share.alt || imageAlt).trim(),
+    },
+  ];
 
   return {
     metadataBase: new URL(SITE_ORIGIN),
@@ -182,6 +249,17 @@ export function seoRootDefaults(locale: Locale): Metadata {
       telephone: true,
       email: true,
       address: true,
+    },
+    openGraph: {
+      siteName,
+      locale: LOCALE_META[locale].ogLocale,
+      type: "website",
+      url: toAbsoluteSiteUrl(withLocale("/", locale)),
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      images: [toAbsoluteSiteUrl(share.url)],
     },
   };
 }

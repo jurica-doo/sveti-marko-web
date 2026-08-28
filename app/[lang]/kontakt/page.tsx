@@ -34,6 +34,9 @@ export async function generateMetadata({
     path: ROUTES.contact,
     locale: lang,
     imageUrl: imageUrl(page?.heroImage),
+    imageAlt: page?.heroImage?.alt,
+    imageWidth: page?.heroImage?.width,
+    imageHeight: page?.heroImage?.height,
   });
 }
 

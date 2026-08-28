@@ -64,6 +64,8 @@ export async function generateMetadata({
     locale: lang,
     imageUrl: imageUrl(news.coverImage),
     imageAlt: news.coverImage?.alt,
+    imageWidth: news.coverImage?.width,
+    imageHeight: news.coverImage?.height,
     type: "article",
   });
 }
