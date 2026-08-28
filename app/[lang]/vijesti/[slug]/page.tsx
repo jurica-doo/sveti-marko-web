@@ -10,15 +10,10 @@ import { getNews, getNewsBySlug } from "@/lib/api";
 import { formatDateLong, isoDate } from "@/lib/format";
 import { hasLocale, LOCALE_META, LOCALES } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { imageUrl } from "@/lib/media";
+import { absoluteMediaUrl, imageUrl } from "@/lib/media";
 import { RichTextRenderer } from "@/lib/richtext";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
-import {
-  buildSeoMetadata,
-  ENTITY_ID,
-  resolveCmsImageUrl,
-  serializeJsonLd,
-} from "@/lib/seo";
+import { buildSeoMetadata, ENTITY_ID, serializeJsonLd } from "@/lib/seo";
 import type { NewsType } from "@/lib/types";
 
 export const revalidate = 60;
@@ -88,7 +83,14 @@ export default async function NewsDetailPage({
 
   const category = categoryTitle(news);
 
-  const coverUrl = resolveCmsImageUrl(news.coverImage);
+  /*
+   * Deliberately the site-origin media path, not the CMS's own file URL: the
+   * CMS is `Disallow: /` to every crawler, so an `image` pointing there is one
+   * Google is not allowed to fetch — and a NewsArticle whose image cannot be
+   * fetched loses its rich-result eligibility. This is the same URL `og:image`
+   * carries, served through the bucket rewrite on a host that permits crawling.
+   */
+  const coverUrl = absoluteMediaUrl(imageUrl(news.coverImage));
 
   const jsonLd = {
     "@context": "https://schema.org",

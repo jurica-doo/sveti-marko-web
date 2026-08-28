@@ -41,24 +41,6 @@ function brand(locale: Locale) {
 
 const toAbsoluteSiteUrl = toAbsoluteUrl;
 
-function cmsBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_CMS_URL || "http://localhost:3001";
-}
-
-/**
- * Absolute URL for a CMS asset. Prefer `imageUrl()` from `lib/media.ts` for
- * anything rendered on the page — this is for metadata/OG tags, which require a
- * fully-qualified URL.
- */
-export function resolveCmsImageUrl(
-  image?: { url?: string | null } | null,
-): string | undefined {
-  const url = image?.url;
-  if (!url) return undefined;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return new URL(url, cmsBaseUrl()).toString();
-}
-
 export type ShareImage = {
   /** Site-relative or absolute; `buildSeoMetadata` absolutises it. */
   url: string;
