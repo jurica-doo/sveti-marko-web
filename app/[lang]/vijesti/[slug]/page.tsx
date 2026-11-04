@@ -82,13 +82,17 @@ export default async function NewsDetailPage({
   if (!hasLocale(lang)) notFound();
   const dict = getDictionary(lang);
 
-  const news = await getNewsBySlug(slug, lang).catch(() => null);
+  // Both at once — the related list does not depend on the article, only on
+  // which one to leave out, which is a filter applied afterwards.
+  // The three newest other articles: four are fetched so that, when the one
+  // being read is itself among the newest, the fourth steps in to fill its place.
+  const [news, all] = await Promise.all([
+    getNewsBySlug(slug, lang).catch(() => null),
+    getNews(lang, { limit: 4 }).catch(() => []),
+  ]);
 
   if (!news) notFound();
 
-  // The three newest other articles. Four are fetched so that, when the one
-  // being read is itself among the newest, the fourth steps in to fill its place.
-  const all = await getNews(lang, { limit: 4 }).catch(() => []);
   const related = all.filter((item) => item.id !== news.id).slice(0, 3);
 
   const category = categoryTitle(news);

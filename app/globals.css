@@ -19,7 +19,6 @@
 
   --color-sea-800: #12475a;
   --color-sea-700: #175a70;
-  --color-sea-600: #1d6f89;
 
   --color-brass-600: #8f6c2c;
   --color-brass-500: #a8813c;
@@ -28,8 +27,6 @@
 
   --font-display: var(--font-marcellus), "Times New Roman", serif;
   --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
-
-  --breakpoint-xs: 26rem;
 
   /*
    * Motion system — see the duration tokens under `:root` below. Setting the
@@ -83,11 +80,6 @@
  * are set because `transition-*` reads `--tw-duration` while a plain
  * `transition-duration` is what any non-Tailwind rule sees.
  */
-@utility duration-press {
-  --tw-duration: var(--duration-press);
-  transition-duration: var(--duration-press);
-}
-
 @utility duration-hover {
   --tw-duration: var(--duration-hover);
   transition-duration: var(--duration-hover);
@@ -96,16 +88,6 @@
 @utility duration-move {
   --tw-duration: var(--duration-move);
   transition-duration: var(--duration-move);
-}
-
-@utility duration-reveal {
-  --tw-duration: var(--duration-reveal);
-  transition-duration: var(--duration-reveal);
-}
-
-@utility duration-zoom {
-  --tw-duration: var(--duration-zoom);
-  transition-duration: var(--duration-zoom);
 }
 
 @media (min-width: 48rem) {

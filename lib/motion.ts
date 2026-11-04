@@ -56,11 +56,6 @@ export function transition(name: DurationName, delay = 0) {
   return { duration: DURATION[name], delay, ease: EASE_PARISH };
 }
 
-/** As `transition`, on the symmetrical curve — for panels that open and shut. */
-export function transitionInOut(name: DurationName, delay = 0) {
-  return { duration: DURATION[name], delay, ease: EASE_PARISH_IN_OUT };
-}
-
 /**
  * `--ease-parish` as a plain function of progress, for animations the browser
  * runs for us but the platform will not ease — scrolling, chiefly, where every

@@ -58,15 +58,6 @@ export function formatDateLong(value?: string | null, locale: Locale = "hr"): st
   }).format(date);
 }
 
-/** `12.09.1994.` — the numeric form is the same shape in every locale here. */
-export function formatDateShort(value?: string | null): string {
-  const date = parse(value);
-  if (!date) return "";
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}.${month}.${date.getFullYear()}.`;
-}
-
 /** Day / month / year parts for the carved date block on news cards. */
 export function dateParts(
   value?: string | null,

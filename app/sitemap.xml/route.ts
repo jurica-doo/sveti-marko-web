@@ -43,12 +43,13 @@ export async function GET() {
    */
   // The Raspored page's content is the `schedule` global, so its `lastmod`
   // follows that rather than the page's own (rarely edited) wording.
-  const [home, schedule, newsPage, about, contactPage] = await Promise.all([
+  const [home, schedule, newsPage, about, contactPage, news] = await Promise.all([
     getHomePage("hr").catch(() => null),
     getSchedule("hr").catch(() => null),
     getNewsPage("hr").catch(() => null),
     getAboutPage("hr").catch(() => null),
     getContactPage("hr").catch(() => null),
+    getNews("hr", { limit: 500 }).catch(() => []),
   ]);
 
   /** This same path, once per locale, each carrying the others as `<xhtml:link alternate>`. */
@@ -82,7 +83,6 @@ export async function GET() {
     ...localizedEntries(ROUTES.contact, "monthly", 0.7, contactPage?.updatedAt),
   ];
 
-  const news = await getNews("hr", { limit: 500 }).catch(() => []);
   const newsEntries: SitemapUrlEntry[] = news
     .filter((item) => Boolean(item.slug))
     .flatMap((item) =>

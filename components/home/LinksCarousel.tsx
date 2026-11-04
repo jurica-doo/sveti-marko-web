@@ -35,15 +35,25 @@ export function LinksCarousel({
   useEffect(() => {
     const row = rowRef.current;
     if (!row) return;
-    const onScroll = () => {
+    // Measured at most once a frame: a swipe fires scroll events far faster
+    // than the screen repaints, and each read below forces a layout.
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
       const first = row.firstElementChild as HTMLElement | null;
       const step = first ? first.offsetWidth + parseFloat(getComputedStyle(row).columnGap || "0") : 1;
       const atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 2;
       setIndex(atEnd ? count - 1 : Math.round(row.scrollLeft / step));
     };
-    onScroll();
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
     row.addEventListener("scroll", onScroll, { passive: true });
-    return () => row.removeEventListener("scroll", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      row.removeEventListener("scroll", onScroll);
+    };
   }, [count]);
 
   function go(direction: 1 | -1) {
@@ -62,7 +72,7 @@ export function LinksCarousel({
     <div className="mt-12">
       <ul
         ref={rowRef}
-        className="no-scrollbar mx-[calc(var(--shell-pad)*-1)] flex snap-x snap-mandatory scroll-px-[var(--shell-pad)] gap-3 overflow-x-auto px-[var(--shell-pad)] pb-1 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-px sm:overflow-visible sm:bg-stone-200 sm:px-0 sm:pb-0 lg:grid-cols-3"
+        className="no-scrollbar -mx-(--shell-pad) flex snap-x snap-mandatory scroll-px-(--shell-pad) gap-3 overflow-x-auto px-(--shell-pad) pb-1 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-px sm:overflow-visible sm:bg-stone-200 sm:px-0 sm:pb-0 lg:grid-cols-3"
       >
         {children}
       </ul>

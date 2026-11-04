@@ -3,8 +3,6 @@ import {
   AboutPageType,
   ContactPageType,
   HomePageType,
-  MediaImageType,
-  MediaVideoType,
   NewsPageType,
   NewsType,
   PaginatedDocs,
@@ -80,70 +78,6 @@ export async function getCollection<T>(
     { label: `collection ${slug}`, revalidate },
   );
   return data.docs ?? [];
-}
-
-/** `GET /api/<slug>?where[slug][equals]=<value>` — first match only. */
-export async function getBySlug<T>(
-  collection: string,
-  slug: string,
-  locale: Locale,
-  { depth = 3, revalidate }: { depth?: number; revalidate?: number } = {},
-): Promise<T> {
-  const data = await cmsFetch<PaginatedDocs<T>>(
-    withLocale(
-      `/api/${collection}?where[slug][equals]=${encodeURIComponent(
-        slug,
-      )}&depth=${depth}&limit=1&draft=false`,
-      locale,
-    ),
-    { label: `${collection} by slug`, revalidate },
-  );
-
-  if (!data.docs?.length) {
-    throw new Error(`${collection} not found: ${slug}`);
-  }
-
-  return data.docs[0];
-}
-
-/** `GET /api/<slug>/<id>` */
-export async function getById<T>(
-  collection: string,
-  id: number | string,
-  locale: Locale,
-  { depth = 3, revalidate }: { depth?: number; revalidate?: number } = {},
-): Promise<T> {
-  return cmsFetch<T>(withLocale(`/api/${collection}/${id}?depth=${depth}`, locale), {
-    label: `${collection} by id`,
-    revalidate,
-  });
-}
-
-/** Cheap liveness probe — used by the root layout to render an offline state. */
-export async function checkCmsHealth(): Promise<boolean> {
-  try {
-    const res = await fetch(`${CMS_URL}/api/media-images?depth=0&limit=0`, {
-      next: { revalidate: 30 },
-      signal: AbortSignal.timeout(5000),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-export async function getAllImages(locale: Locale): Promise<MediaImageType[]> {
-  return getCollection<MediaImageType>("media-images", locale, {
-    depth: 0,
-    limit: 1000,
-  });
-}
-
-export async function getAllVideos(locale: Locale): Promise<MediaVideoType[]> {
-  return getCollection<MediaVideoType>("media-videos", locale, {
-    depth: 0,
-    limit: 1000,
-  });
 }
 
 /* --------------------------------------------------------------- globals */

@@ -10,7 +10,6 @@
 import { toAbsoluteUrl } from "./site-url";
 
 export const IMAGE_BASE_PATH = "/sv-marko/medija/slike";
-export const VIDEO_BASE_PATH = "/sv-marko/medija/videa";
 
 type MediaLike = { filename?: string | null; url?: string | null } | null | undefined;
 
@@ -24,14 +23,6 @@ export function imageUrl(media: MediaLike | string): string | undefined {
   if (!filename) return undefined;
   if (filename.startsWith("http://") || filename.startsWith("https://")) return filename;
   return joinMediaPath(IMAGE_BASE_PATH, filename);
-}
-
-/** `/sv-marko/medija/videa/<filename>` for a `media-videos` doc (or a bare filename). */
-export function videoUrl(media: MediaLike | string): string | undefined {
-  const filename = typeof media === "string" ? media : media?.filename;
-  if (!filename) return undefined;
-  if (filename.startsWith("http://") || filename.startsWith("https://")) return filename;
-  return joinMediaPath(VIDEO_BASE_PATH, filename);
 }
 
 /** Absolute variant, for sitemaps / OG tags where a full URL is required. */
