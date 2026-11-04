@@ -419,7 +419,8 @@ function ChannelPill({
       }`}
     >
       {icon}
-      {children}
+      {/* Icon-only on phones; the label stays as the radio's accessible name. */}
+      <span className="sr-only sm:not-sr-only">{children}</span>
     </button>
   );
 }
