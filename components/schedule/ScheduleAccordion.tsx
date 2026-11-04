@@ -1,9 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import {
   createContext,
-  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -14,7 +12,6 @@ import {
 } from "react";
 
 import { HASH_JUMP_EVENT } from "@/components/ui/HashLink";
-import { QUERY_JUMP_EVENT } from "@/components/ui/SamePageLink";
 import { DURATION } from "@/lib/motion";
 
 type AccordionState = {
@@ -55,10 +52,8 @@ export function useScheduleAccordion(): AccordionState {
  * wheel, touch or key from the reader cancels the pinning at once — their
  * scroll always wins.
  *
- * A link straight to a section opens that one section on arrival: either as a
- * fragment (`/raspored/#vjeronauk`, as the footer uses), which also scrolls to
- * it, or as `?otvori=liturgija` (the header button), which leaves the page at
- * the top — see `OpenFromQuery`.
+ * A link straight to a section (`/raspored/#vjeronauk`, as the footer uses)
+ * opens that one section on arrival.
  */
 export function ScheduleAccordion({ children }: { children: ReactNode }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -71,29 +66,18 @@ export function ScheduleAccordion({ children }: { children: ReactNode }) {
       ? requestAnimationFrame(() => setOpenId(decodeURIComponent(target)))
       : undefined;
 
-    // Already on the page and sent to a section again — the header's
-    // "Raspored misa" button, a footer link: open it.
+    // Already on the page and sent to a section again by a footer link: open it.
     const onJump = (event: Event) =>
       setOpenId(decodeURIComponent((event as CustomEvent<string>).detail));
     window.addEventListener(HASH_JUMP_EVENT, onJump);
 
-    // The header button pressed while already here: `?otvori=liturgija` again.
-    const onQuery = (event: Event) => {
-      const id = new URLSearchParams((event as CustomEvent<string>).detail).get(OPEN_PARAM);
-      if (id) setOpenId(id);
-    };
-    window.addEventListener(QUERY_JUMP_EVENT, onQuery);
-
     return () => {
       if (frame !== undefined) cancelAnimationFrame(frame);
       window.removeEventListener(HASH_JUMP_EVENT, onJump);
-      window.removeEventListener(QUERY_JUMP_EVENT, onQuery);
     };
   }, []);
 
   useEffect(() => () => cancelPin.current?.(), []);
-
-  const openFromQuery = useCallback((id: string) => setOpenId(id), []);
 
   const pin = useCallback((anchor: HTMLElement) => {
     cancelPin.current?.();
@@ -138,37 +122,7 @@ export function ScheduleAccordion({ children }: { children: ReactNode }) {
 
   return (
     <AccordionContext.Provider value={value}>
-      {/* `useSearchParams` needs a Suspense boundary to keep the page static. */}
-      <Suspense fallback={null}>
-        <OpenFromQuery onOpen={openFromQuery} />
-      </Suspense>
       <div className="[overflow-anchor:none]">{children}</div>
     </AccordionContext.Provider>
   );
-}
-
-/** The query parameter that opens a section without scrolling to it. */
-export const OPEN_PARAM = "otvori";
-
-/**
- * Opens the section named by `?otvori=liturgija`.
- *
- * The sibling of the `#liturgija` fragment, for links that want the section
- * open but the page left at the top: a fragment always scrolls to its target,
- * a query parameter scrolls nowhere. The header's "Raspored misa" button uses
- * this, so a visitor lands on the page header with the mass times already
- * unfolded beneath it, rather than partway down the page.
- *
- * Read through `useSearchParams` (not `window.location`) so it also fires when
- * the button is pressed on the Raspored page itself — the router changes the
- * query without remounting anything.
- */
-function OpenFromQuery({ onOpen }: { onOpen: (id: string) => void }) {
-  const target = useSearchParams().get(OPEN_PARAM);
-
-  useEffect(() => {
-    if (target) onOpen(target);
-  }, [target, onOpen]);
-
-  return null;
 }
