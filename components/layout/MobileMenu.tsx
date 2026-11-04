@@ -30,6 +30,7 @@ export function MobileMenu({
   open,
   onClose,
   items,
+  isActive,
   cta,
   masses = [],
   dict,
@@ -37,6 +38,8 @@ export function MobileMenu({
   open: boolean;
   onClose: () => void;
   items: NavItem[];
+  /** The bar's own test, so the sheet and the desktop links always agree. */
+  isActive: (href: string) => boolean;
   cta?: LinkItem | null;
   masses?: ScheduleRow[];
   dict: Dictionary;
@@ -147,24 +150,43 @@ export function MobileMenu({
           className="scroll-slim flex-1 overflow-y-auto overscroll-contain"
         >
           <nav aria-label={dict.nav.ariaLabel} className="shell pt-2 pb-10">
-            {items.map((item, index) => (
-              <SmartLink
-                key={`${item.href}-${index}`}
-                href={item.href}
-                onClick={onClose}
-                tabIndex={open ? undefined : -1}
-                style={revealDelay(index)}
-                className={`menu-reveal group flex items-baseline border-b border-stone-200 py-5 ${
-                  open
-                    ? "translate-y-0 opacity-100"
-                    : "-translate-y-3 opacity-0"
-                }`}
-              >
-                <span className="font-display text-[1.65rem] leading-none text-ink-900 transition-colors group-hover:text-brass-600 sm:text-[2rem]">
-                  {item.label}
-                </span>
-              </SmartLink>
-            ))}
+            {items.map((item, index) => {
+              const active = isActive(item.href);
+              return (
+                <SmartLink
+                  key={`${item.href}-${index}`}
+                  href={item.href}
+                  onClick={onClose}
+                  tabIndex={open ? undefined : -1}
+                  aria-current={active ? "page" : undefined}
+                  style={revealDelay(index)}
+                  className={`menu-reveal group flex items-center border-b border-stone-200 py-5 ${
+                    open
+                      ? "translate-y-0 opacity-100"
+                      : "-translate-y-3 opacity-0"
+                  }`}
+                >
+                  {/*
+                    The current page: brass, like the desktop bar, led by the
+                    short brass rule the site's eyebrow labels already use — a
+                    mark that reads as "here" without boxing the row in.
+                  */}
+                  <span
+                    aria-hidden="true"
+                    className={`h-px shrink-0 bg-brass-500 transition-[width,margin] duration-move ${
+                      active ? "mr-4 w-7" : "mr-0 w-0"
+                    }`}
+                  />
+                  <span
+                    className={`font-display text-[1.65rem] leading-none transition-colors group-hover:text-brass-600 sm:text-[2rem] ${
+                      active ? "text-brass-600" : "text-ink-900"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </SmartLink>
+              );
+            })}
 
             {cta?.label && cta.href ? (
               <div

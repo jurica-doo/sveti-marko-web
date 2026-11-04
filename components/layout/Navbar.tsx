@@ -33,6 +33,7 @@ export function Navbar({
 
   const fallbackNav = [
     { label: dict.nav.fallback.home, href: ROUTES.home },
+    { label: dict.nav.fallback.schedule, href: ROUTES.schedulePage },
     { label: dict.nav.fallback.news, href: ROUTES.news },
     { label: dict.nav.fallback.about, href: ROUTES.about },
     { label: dict.nav.fallback.contact, href: ROUTES.contact },
@@ -50,8 +51,26 @@ export function Navbar({
    */
   const localePath = stripLocale(pathname);
 
-  // The home hero sits under the header, so the bar starts transparent there.
-  const overlay = localePath === ROUTES.home;
+  /*
+   * The home hero sits under the header, so the bar starts transparent there —
+   * but only while the hero is actually on the page. If the home page fails
+   * and the error boundary replaces it, the light type would sit on the stone
+   * background and vanish, so the bar falls back to solid. Watched rather than
+   * checked once, because the boundary's `reset()` can bring the hero back
+   * without a navigation.
+   */
+  const [heroPresent, setHeroPresent] = useState(true);
+
+  useEffect(() => {
+    const check = () =>
+      setHeroPresent(Boolean(document.querySelector("[data-header-overlay]")));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [pathname]);
+
+  const overlay = localePath === ROUTES.home && heroPresent;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -212,6 +231,7 @@ export function Navbar({
         open={open}
         onClose={() => setOpen(false)}
         items={navItems}
+        isActive={isActive}
         cta={settings.headerCta}
         masses={(schedule?.masses ?? []).filter(
           (row) => row.highlight !== false,

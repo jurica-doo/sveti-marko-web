@@ -1,3 +1,4 @@
+import { LinksCarousel } from "@/components/home/LinksCarousel";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SmartLink } from "@/components/ui/SmartLink";
@@ -34,12 +35,22 @@ export function LinksSection({
         intro={section?.intro}
       />
 
-      <ul className="mt-12 grid gap-px bg-stone-200 sm:grid-cols-2 lg:grid-cols-3">
+      <LinksCarousel
+        count={visible.length}
+        labels={{ prev: dict.home.linksPrev, next: dict.home.linksNext }}
+      >
         {visible.map((link, index) => (
-          <Reveal key={link.id} as="li" delay={index * 0.05}>
+          <Reveal
+            key={link.id}
+            as="li"
+            delay={index * 0.05}
+            className="w-[82%] shrink-0 snap-start sm:w-auto"
+          >
             <SmartLink
               href={link.url}
-              className="card-hover group flex h-full flex-col bg-stone-50 p-7 hover:bg-stone-100"
+              // A real border in the phone row, not a ring: a ring is a box-shadow,
+              // and the card's hover shadow would replace it. See `.card-in-row`.
+              className="card-hover card-in-row group flex h-full flex-col border border-stone-200 bg-stone-50 p-7 hover:border-brass-500/60 hover:bg-stone-100 sm:border-0"
             >
               <span className="text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-brass-600">
                 {groupLabels[link.group ?? "crkva"] ?? dict.home.linkFallbackLabel}
@@ -69,7 +80,7 @@ export function LinksSection({
             </SmartLink>
           </Reveal>
         ))}
-      </ul>
+      </LinksCarousel>
     </section>
   );
 }

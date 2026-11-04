@@ -8,6 +8,7 @@ import {
   NewsPageType,
   NewsType,
   PaginatedDocs,
+  SchedulePageType,
   ScheduleType,
   SettingsType,
   UsefulLinkType,
@@ -159,6 +160,10 @@ export async function getHomePage(locale: Locale): Promise<HomePageType> {
   return getGlobal<HomePageType>("home-page", locale, { depth: 1 });
 }
 
+export async function getSchedulePage(locale: Locale): Promise<SchedulePageType> {
+  return getGlobal<SchedulePageType>("schedule-page", locale, { depth: 1 });
+}
+
 export async function getNewsPage(locale: Locale): Promise<NewsPageType> {
   return getGlobal<NewsPageType>("news-page", locale, { depth: 1 });
 }
@@ -173,18 +178,14 @@ export async function getContactPage(locale: Locale): Promise<ContactPageType> {
 
 /* ----------------------------------------------------------- collections */
 
-/**
- * Published news, newest first. `featured` is sorted ahead of the rest so the
- * home page teaser can reuse the same ordering as the archive.
- */
+/** Published news, newest first — the same ordering as the archive. */
 export async function getNews(
   locale: Locale,
-  { limit = 100, featuredFirst = false }: { limit?: number; featuredFirst?: boolean } = {},
+  { limit = 100 }: { limit?: number } = {},
 ): Promise<NewsType[]> {
-  const sort = featuredFirst ? "-featured,-publishedAt" : "-publishedAt";
   const data = await cmsFetch<PaginatedDocs<NewsType>>(
     withLocale(
-      `/api/news?limit=${limit}&depth=2&sort=${encodeURIComponent(sort)}&where[_status][equals]=published`,
+      `/api/news?limit=${limit}&depth=2&sort=-publishedAt&where[_status][equals]=published`,
       locale,
     ),
     { label: "news" },

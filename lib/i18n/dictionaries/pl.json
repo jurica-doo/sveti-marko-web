@@ -9,6 +9,7 @@
     "scheduleHeading": "Harmonogram Mszy Świętych",
     "fallback": {
       "home": "Strona główna",
+      "schedule": "Harmonogram",
       "news": "Aktualności",
       "about": "O nas",
       "contact": "Kontakt"
@@ -38,11 +39,12 @@
     "sendMessage": "Wyślij wiadomość",
     "sentWhatsapp": "WhatsApp otwiera się w nowej karcie.",
     "sentEmail": "Wiadomość została wysłana. Wkrótce się odezwiemy.",
-    "errorRequiredWithEmail": "Imię, e-mail i wiadomość są wymagane.",
-    "errorRequired": "Imię i wiadomość są wymagane.",
+    "errorFieldRequired": "Wypełnij to pole.",
+    "errorEmailInvalid": "Wpisz poprawny adres e-mail.",
+    "requiredLabel": "pole wymagane",
     "errorWhatsappUnavailable": "WhatsApp jest obecnie niedostępny — wyślij wiadomość e-mail.",
     "errorGeneric": "Coś poszło nie tak.",
-    "whatsappGreeting": "Dzień dobry, nazywam się {name}."
+    "whatsappSignoff": "Pozdrawiam serdecznie,\n{name}"
   },
   "apiContact": {
     "emailUnavailable": "Wysyłanie e-maili jest obecnie niedostępne. Spróbuj przez WhatsApp.",
@@ -90,7 +92,10 @@
     "mobileLabel": "Komórka",
     "emailLabel": "E-mail",
     "ibanLabel": "IBAN",
-    "oibLabel": "NIP chorwacki (OIB)"
+    "oibLabel": "NIP chorwacki (OIB)",
+    "scheduleCardTitle": "Porządek Mszy i życie parafii",
+    "scheduleCardText": "Msze święte, spowiedź, katecheza, próby chórów i spotkania wspólnot parafialnych — wszystko w jednym miejscu.",
+    "scheduleCardLink": "Zobacz harmonogram"
   },
   "schedulePlaque": {
     "confessionsFallback": "Spowiedź",
@@ -111,7 +116,10 @@
       "crkva": "Kościół w Chorwacji",
       "duhovnost": "Duchowość i media",
       "zajednica": "Wspólnota i okolica"
-    }
+    },
+    "officeCallLabel": "Zadzwoń do kancelarii",
+    "linksPrev": "Poprzedni link",
+    "linksNext": "Następny link"
   },
   "status": {
     "error": {
@@ -138,5 +146,16 @@
     "shortName": "Św. Marek",
     "defaultDescription": "Katolicka parafia św. Marka Ewangelisty w Neslanovacu w Splicie (Chorwacja) — godziny Mszy Świętych i spowiedzi, biuro parafialne, aktualności i kontakt.",
     "imageAlt": "Kościół św. Marka Ewangelisty, Neslanovac, Split"
+  },
+  "schedulePage": {
+    "breadcrumbTitle": "Harmonogram",
+    "liturgyFallback": "Liturgia",
+    "groups": {
+      "vjeronauk": "Katecheza",
+      "zborovi": "Chóry i muzyka",
+      "zajednice": "Wspólnoty parafialne"
+    },
+    "showTimes": "Pokaż terminy",
+    "hideTimes": "Ukryj terminy"
   }
 }

@@ -9,6 +9,7 @@
     "scheduleHeading": "Orario delle Sante Messe",
     "fallback": {
       "home": "Home",
+      "schedule": "Orari",
       "news": "Notizie",
       "about": "Chi siamo",
       "contact": "Contatti"
@@ -38,11 +39,12 @@
     "sendMessage": "Invia messaggio",
     "sentWhatsapp": "WhatsApp si apre in una nuova scheda.",
     "sentEmail": "Messaggio inviato. Ti risponderemo al più presto.",
-    "errorRequiredWithEmail": "Nome, e-mail e messaggio sono obbligatori.",
-    "errorRequired": "Nome e messaggio sono obbligatori.",
+    "errorFieldRequired": "Compila questo campo.",
+    "errorEmailInvalid": "Inserisci un indirizzo e-mail valido.",
+    "requiredLabel": "campo obbligatorio",
     "errorWhatsappUnavailable": "WhatsApp non è al momento disponibile — invia un'e-mail.",
     "errorGeneric": "Qualcosa è andato storto.",
-    "whatsappGreeting": "Salve, sono {name}."
+    "whatsappSignoff": "Cordiali saluti,\n{name}"
   },
   "apiContact": {
     "emailUnavailable": "L'invio via e-mail non è al momento disponibile. Prova con WhatsApp.",
@@ -90,7 +92,10 @@
     "mobileLabel": "Cellulare",
     "emailLabel": "E-mail",
     "ibanLabel": "IBAN",
-    "oibLabel": "Codice fiscale (OIB)"
+    "oibLabel": "Codice fiscale (OIB)",
+    "scheduleCardTitle": "Orari delle Messe e attività",
+    "scheduleCardText": "Sante Messe, confessioni, catechesi, prove dei cori e incontri dei gruppi parrocchiali — tutto in un unico posto.",
+    "scheduleCardLink": "Vedi gli orari"
   },
   "schedulePlaque": {
     "confessionsFallback": "Confessioni",
@@ -111,7 +116,10 @@
       "crkva": "La Chiesa in Croazia",
       "duhovnost": "Spiritualità e media",
       "zajednica": "Comunità e territorio"
-    }
+    },
+    "officeCallLabel": "Chiama l'ufficio parrocchiale",
+    "linksPrev": "Link precedente",
+    "linksNext": "Link successivo"
   },
   "status": {
     "error": {
@@ -138,5 +146,16 @@
     "shortName": "San Marco",
     "defaultDescription": "Parrocchia cattolica di San Marco Evangelista a Neslanovac, Spalato (Croazia) — orari delle Sante Messe e delle confessioni, ufficio parrocchiale, notizie e contatti.",
     "imageAlt": "Chiesa di San Marco Evangelista, Neslanovac, Spalato"
+  },
+  "schedulePage": {
+    "breadcrumbTitle": "Orari",
+    "liturgyFallback": "Liturgia",
+    "groups": {
+      "vjeronauk": "Catechesi",
+      "zborovi": "Cori e musica",
+      "zajednice": "Gruppi parrocchiali"
+    },
+    "showTimes": "Mostra gli orari",
+    "hideTimes": "Nascondi gli orari"
   }
 }

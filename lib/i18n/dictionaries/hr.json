@@ -9,6 +9,7 @@
     "scheduleHeading": "Raspored misa",
     "fallback": {
       "home": "Naslovnica",
+      "schedule": "Raspored",
       "news": "Vijesti",
       "about": "O nama",
       "contact": "Kontakt"
@@ -38,11 +39,12 @@
     "sendMessage": "Pošalji poruku",
     "sentWhatsapp": "WhatsApp se otvara u novoj kartici.",
     "sentEmail": "Poruka je poslana. Javit ćemo vam se uskoro.",
-    "errorRequiredWithEmail": "Ime, e-mail i poruka su obavezni.",
-    "errorRequired": "Ime i poruka su obavezni.",
+    "errorFieldRequired": "Molimo ispunite ovo polje.",
+    "errorEmailInvalid": "Upišite ispravnu e-mail adresu.",
+    "requiredLabel": "obavezno polje",
     "errorWhatsappUnavailable": "WhatsApp trenutno nije dostupan — pošaljite e-mail poruku.",
     "errorGeneric": "Nešto je pošlo po krivu.",
-    "whatsappGreeting": "Pozdrav, ja sam {name}."
+    "whatsappSignoff": "Lijep pozdrav,\n{name}"
   },
   "apiContact": {
     "emailUnavailable": "Slanje e-maila trenutno nije dostupno. Pokušajte putem WhatsAppa.",
@@ -90,7 +92,10 @@
     "mobileLabel": "Mobitel",
     "emailLabel": "E-mail",
     "ibanLabel": "IBAN",
-    "oibLabel": "OIB"
+    "oibLabel": "OIB",
+    "scheduleCardTitle": "Raspored misa i aktivnosti",
+    "scheduleCardText": "Svete mise, ispovijed, vjeronauk, probe zborova i susreti župnih zajednica — sve na jednom mjestu.",
+    "scheduleCardLink": "Pogledaj raspored"
   },
   "schedulePlaque": {
     "confessionsFallback": "Ispovijed",
@@ -111,7 +116,10 @@
       "crkva": "Crkva u Hrvatskoj",
       "duhovnost": "Duhovnost i mediji",
       "zajednica": "Zajednica i mjesto"
-    }
+    },
+    "officeCallLabel": "Nazovite župni ured",
+    "linksPrev": "Prethodna poveznica",
+    "linksNext": "Sljedeća poveznica"
   },
   "status": {
     "error": {
@@ -138,5 +146,16 @@
     "shortName": "Sv. Marko",
     "defaultDescription": "Župa sv. Marka Evanđelista na splitskom Neslanovcu — raspored svetih misa i ispovijedi, radno vrijeme župnog ureda, župne vijesti i kontakt.",
     "imageAlt": "Crkva sv. Marka Evanđelista, Neslanovac, Split"
+  },
+  "schedulePage": {
+    "breadcrumbTitle": "Raspored",
+    "liturgyFallback": "Liturgija",
+    "groups": {
+      "vjeronauk": "Vjeronauk",
+      "zborovi": "Zborovi i glazba",
+      "zajednice": "Župne zajednice"
+    },
+    "showTimes": "Prikaži termine",
+    "hideTimes": "Sakrij termine"
   }
 }

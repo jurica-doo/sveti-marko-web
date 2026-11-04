@@ -6,6 +6,7 @@ import { NewsSection } from "@/components/home/NewsSection";
 import { OfficeSection } from "@/components/home/OfficeSection";
 import { QuoteBand } from "@/components/home/QuoteBand";
 import {
+  getContactPage,
   getHomePage,
   getNews,
   getSchedule,
@@ -51,11 +52,13 @@ export default async function Home({
 
   // The parish's own structured data is emitted once by the layout, so this
   // page only fetches what it renders.
-  const [home, schedule, news, links] = await Promise.all([
+  const [home, schedule, news, links, contact] = await Promise.all([
     getHomePage(lang),
     getSchedule(lang).catch(() => null),
-    getNews(lang, { limit: 12, featuredFirst: true }).catch(() => []),
+    getNews(lang, { limit: 12 }).catch(() => []),
     getUsefulLinks(lang).catch(() => []),
+    // Only for the office phone number in the office section.
+    getContactPage(lang).catch(() => null),
   ]);
 
   const newsCount = home.newsSection?.count ?? 3;
@@ -63,7 +66,12 @@ export default async function Home({
   return (
     <>
       <Hero home={home} schedule={schedule} dict={dict} />
-      <OfficeSection section={home.officeSection} schedule={schedule} dict={dict} />
+      <OfficeSection
+        section={home.officeSection}
+        schedule={schedule}
+        phone={contact?.contact?.phone}
+        dict={dict}
+      />
       <NewsSection
         section={home.newsSection}
         news={news.slice(0, newsCount)}

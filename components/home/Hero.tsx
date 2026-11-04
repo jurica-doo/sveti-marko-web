@@ -37,7 +37,8 @@ export function Hero({
   return (
     // Pulled up by exactly the header height (`h-18 lg:h-20` in Navbar) so the
     // hero runs behind the transparent bar. Keep the two in step.
-    <section className="relative -mt-18 lg:-mt-20">
+    // `data-header-overlay` is what tells Navbar there is a hero under it.
+    <section data-header-overlay className="relative -mt-18 lg:-mt-20">
       {/*
         Exactly one screen. The section is pulled up under the transparent
         header, so it starts at the very top of the viewport and `100dvh` lands

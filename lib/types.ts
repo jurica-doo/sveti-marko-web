@@ -83,11 +83,6 @@ export interface SettingsType {
   tagline?: string | null;
   logo?: MediaImageType | null;
   diocese?: string | null;
-  announcement?: {
-    enabled?: boolean | null;
-    text?: string | null;
-    href?: string | null;
-  } | null;
   navigation?: ({ label: string; href: string; id?: string } | null)[] | null;
   headerCta?: LinkItem | null;
   footerIntro?: string | null;
@@ -158,6 +153,42 @@ export interface ScheduleType {
     | { day: string; hours: string; note?: string | null; id?: string }[]
     | null;
   officeNotes?: { title: string; text: string; id?: string }[] | null;
+  activities?: ActivityRow[] | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
+}
+
+/** The sections of the Raspored page, in the order they appear. */
+export const ACTIVITY_GROUPS = ["vjeronauk", "zborovi", "zajednice"] as const;
+export type ActivityGroup = (typeof ACTIVITY_GROUPS)[number];
+
+/** A term-time parish activity: catechesis, a choir rehearsal, a group meeting. */
+export interface ActivityRow {
+  id?: string;
+  group: ActivityGroup;
+  title: string;
+  day?: string | null;
+  times?: string | null;
+  place?: string | null;
+  note?: string | null;
+  active?: boolean | null;
+}
+
+export interface SchedulePageType {
+  eyebrow?: string | null;
+  title: string;
+  intro?: string | null;
+  heroImage?: MediaImageType | null;
+  liturgy?: {
+    eyebrow?: string | null;
+    title?: string | null;
+    intro?: string | null;
+  } | null;
+  groups?: Partial<
+    Record<ActivityGroup, { title?: string | null; intro?: string | null } | null>
+  > | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
   /** Payload's own document timestamp — used for sitemap `lastmod`. */
   updatedAt?: string;
 }

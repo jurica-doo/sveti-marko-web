@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ContactForm } from "@/components/contact/ContactForm";
-import { SchedulePlaque } from "@/components/home/SchedulePlaque";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Reveal } from "@/components/ui/Reveal";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { getContactPage, getSchedule } from "@/lib/api";
 import { bindTimeRanges, telHref } from "@/lib/format";
 import { hasLocale } from "@/lib/i18n/config";
@@ -159,13 +159,10 @@ export default async function ContactPage({
               full-width section below only repeated the address directly above
               it.
 
-              From `lg` up it can also absorb slack. Which column is taller is
-              not fixed — it depends on how many office hours, devotions and
-              contact rows the office has entered — so both columns are flex
-              stacks with one element allowed to grow (this map, and the
-              Pobožnosti card opposite). The grid stretches both to the taller
-              one, the shorter one's filler takes up the difference, and the two
-              bottom edges land on the same line whichever way round it is.
+              From `lg` up it can also absorb slack: the column is a flex stack
+              and the map is the one element allowed to grow, so when the form
+              opposite is the taller of the two the map stretches to meet it and
+              both bottom edges land on the same line.
 
               Below `lg` they stack with nothing to line up against, so the
               fixed ratio stays and neither grows.
@@ -207,31 +204,36 @@ export default async function ContactPage({
           </Reveal>
 
           {/*
-            One block, three sections — the same object the hero band shows.
-            Devotions used to sit in a card of their own here purely because
-            they were not wired into the plaque yet, which left the page drawing
-            two different kinds of divider for the same job: a rule between
-            masses and confessions, a gap before devotions. The labelled
-            sections and the rules between them already say where one list ends
-            and the next begins.
+            The full schedule lives on its own page now, so this column carries
+            the form instead — beside the address it belongs with — and a short
+            pointer to Raspored for anyone who came here looking for times.
           */}
-          <Reveal delay={0.1} className="flex flex-col lg:col-span-7">
-            <SchedulePlaque
-              massesTitle={dict.footer.masses}
-              masses={schedule?.masses ?? []}
-              confessionsTitle={dict.schedulePlaque.confessionsFallback}
-              confessions={schedule?.confessions ?? []}
-              devotions={schedule?.devotions ?? []}
-              special={schedule?.specialSchedule ?? []}
-              tone="light"
-              className="lg:flex-1"
-              dict={dict}
-            />
-          </Reveal>
-        </div>
+          <div className="flex flex-col gap-8 lg:col-span-7">
+            <Reveal delay={0.1}>
+              <SmartLink
+                href={ROUTES.schedulePage}
+                className="group block border border-brass-500/35 bg-brass-100/50 px-6 py-7 transition-colors hover:border-brass-500/70 lg:px-8"
+              >
+                <p className="text-[0.68rem] font-semibold tracking-[0.22em] text-brass-600 uppercase">
+                  {dict.schedulePage.breadcrumbTitle}
+                </p>
+                <p className="mt-3 font-display text-[1.45rem] leading-tight text-ink-900">
+                  {dict.contactPage.scheduleCardTitle}
+                </p>
+                <p className="mt-2 max-w-lg text-[0.95rem] leading-relaxed text-ink-500">
+                  {dict.contactPage.scheduleCardText}
+                </p>
+                <span className="mt-5 inline-flex items-center gap-2 text-[0.78rem] font-semibold tracking-[0.16em] text-sea-800 uppercase transition-colors group-hover:text-brass-600">
+                  {dict.contactPage.scheduleCardLink}
+                  <span aria-hidden="true" className="indicator group-hover:translate-x-1">
+                    →
+                  </span>
+                </span>
+              </SmartLink>
+            </Reveal>
 
-        <div className="mt-10 lg:mt-14">
-          <ContactForm whatsappNumber={contact.mobile || contact.phone} dict={dict} />
+            <ContactForm whatsappNumber={contact.mobile || contact.phone} dict={dict} />
+          </div>
         </div>
       </section>
     </>

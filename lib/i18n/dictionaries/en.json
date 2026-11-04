@@ -9,6 +9,7 @@
     "scheduleHeading": "Mass schedule",
     "fallback": {
       "home": "Home",
+      "schedule": "Schedule",
       "news": "News",
       "about": "About",
       "contact": "Contact"
@@ -38,11 +39,12 @@
     "sendMessage": "Send message",
     "sentWhatsapp": "WhatsApp is opening in a new tab.",
     "sentEmail": "Your message has been sent. We'll get back to you soon.",
-    "errorRequiredWithEmail": "Name, e-mail and message are required.",
-    "errorRequired": "Name and message are required.",
+    "errorFieldRequired": "Please fill in this field.",
+    "errorEmailInvalid": "Please enter a valid e-mail address.",
+    "requiredLabel": "required field",
     "errorWhatsappUnavailable": "WhatsApp isn't available right now — please send an e-mail instead.",
     "errorGeneric": "Something went wrong.",
-    "whatsappGreeting": "Hello, I'm {name}."
+    "whatsappSignoff": "Kind regards,\n{name}"
   },
   "apiContact": {
     "emailUnavailable": "E-mail isn't available right now. Please try WhatsApp instead.",
@@ -90,7 +92,10 @@
     "mobileLabel": "Mobile",
     "emailLabel": "E-mail",
     "ibanLabel": "IBAN",
-    "oibLabel": "Tax ID (OIB)"
+    "oibLabel": "Tax ID (OIB)",
+    "scheduleCardTitle": "Mass times and activities",
+    "scheduleCardText": "Holy Mass, confession, catechesis, choir rehearsals and parish group meetings — all in one place.",
+    "scheduleCardLink": "See the schedule"
   },
   "schedulePlaque": {
     "confessionsFallback": "Confession",
@@ -111,7 +116,10 @@
       "crkva": "The Church in Croatia",
       "duhovnost": "Spirituality and media",
       "zajednica": "Community and place"
-    }
+    },
+    "officeCallLabel": "Call the parish office",
+    "linksPrev": "Previous link",
+    "linksNext": "Next link"
   },
   "status": {
     "error": {
@@ -138,5 +146,16 @@
     "shortName": "St Mark's",
     "defaultDescription": "Catholic parish of St Mark the Evangelist in Neslanovac, Split, Croatia — Mass and confession times, parish office hours, news and contact details.",
     "imageAlt": "Church of St Mark the Evangelist, Neslanovac, Split"
+  },
+  "schedulePage": {
+    "breadcrumbTitle": "Schedule",
+    "liturgyFallback": "Liturgy",
+    "groups": {
+      "vjeronauk": "Catechesis",
+      "zborovi": "Choirs and music",
+      "zajednice": "Parish groups"
+    },
+    "showTimes": "Show times",
+    "hideTimes": "Hide times"
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from "react";
 
 import { buttonClasses } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
@@ -12,9 +12,25 @@ import { DURATION, EASE_PARISH_IN_OUT } from "@/lib/motion";
 
 type Channel = "whatsapp" | "email";
 type Status = "idle" | "sending" | "sent" | "error";
+type FieldName = "name" | "email" | "message";
+type FieldErrors = Partial<Record<FieldName, string>>;
 
 const INPUT_CLASSES =
-  "w-full border border-stone-200 bg-stone-50 px-4 py-3 text-[0.95rem] text-ink-900 transition-colors placeholder:text-ink-400/60 focus:border-brass-500 focus:outline-none";
+  "w-full border px-4 py-3 text-[0.95rem] text-ink-900 transition-colors placeholder:text-ink-400/60 focus:outline-none";
+
+const INPUT_OK = "border-stone-200 bg-stone-50 focus:border-brass-500";
+const INPUT_INVALID = "border-red-300 bg-red-50 focus:border-red-400";
+
+// Deliberately loose: it only catches the obvious slips (no `@`, no domain).
+// Whether the address really exists is for the reply to find out.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/*
+ * The per-field message under an input. It opens the same way the e-mail row
+ * does — height and fade together on the parish in-out curve — just quicker,
+ * since it is a note on a field rather than a field of its own.
+ */
+const HINT_TRANSITION = { duration: DURATION.hover, ease: EASE_PARISH_IN_OUT };
 
 /** The rhythm between rows — see the note on the form's own spacing below. */
 const ROW_SPACING = "pb-5";
@@ -43,15 +59,26 @@ const ROW_SPACING = "pb-5";
 const ROW_HEIGHT_TRANSITION = { duration: DURATION.move, ease: EASE_PARISH_IN_OUT };
 const ROW_FADE_TRANSITION = { duration: DURATION.hover, ease: EASE_PARISH_IN_OUT };
 
-const ROW_COLLAPSED = { height: 0, opacity: 0 };
+/*
+ * The row clips its content only while it is moving. Clipping is what lets the
+ * field appear to unfold rather than spill out, but left on once the row is
+ * open it also cuts off the input's focus ring, which `:focus-visible` draws
+ * 3px *outside* the box — the row is exactly the input's width, so the ring's
+ * left and right edges vanished. `transitionEnd` lifts the clip once the row
+ * has finished opening, and the collapsed/closed states put it back before
+ * anything starts to shrink.
+ */
+const ROW_COLLAPSED = { height: 0, opacity: 0, overflow: "hidden" };
 
 const ROW_OPEN = {
   height: "auto",
   opacity: 1,
+  overflow: "hidden",
   transition: {
     height: ROW_HEIGHT_TRANSITION,
     opacity: { ...ROW_FADE_TRANSITION, delay: DURATION.move - DURATION.hover },
   },
+  transitionEnd: { overflow: "visible" },
 };
 
 const ROW_CLOSED = {
@@ -75,12 +102,25 @@ export function ContactForm({
   const [channel, setChannel] = useState<Channel>("email");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const c = dict.contact;
 
   function selectChannel(next: Channel) {
     setChannel(next);
     setStatus("idle");
     setError(null);
+    setFieldErrors({});
+  }
+
+  // Typing into a flagged field clears its flag straight away, so the red
+  // never outstays the problem it pointed at.
+  function clearFieldError(field: FieldName) {
+    setFieldErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -91,22 +131,48 @@ export function ContactForm({
     const email = String(data.get("email") ?? "").trim();
     const message = String(data.get("message") ?? "").trim();
 
-    if (!name || !message || (channel === "email" && !email)) {
-      setStatus("error");
-      setError(channel === "email" ? c.errorRequiredWithEmail : c.errorRequired);
+    const errors: FieldErrors = {};
+    if (!name) errors.name = c.errorFieldRequired;
+    if (channel === "email") {
+      if (!email) errors.email = c.errorFieldRequired;
+      else if (!EMAIL_PATTERN.test(email)) errors.email = c.errorEmailInvalid;
+    }
+    if (!message) errors.message = c.errorFieldRequired;
+
+    setFieldErrors(errors);
+    const firstInvalid = (["name", "email", "message"] as const).find((field) => errors[field]);
+    if (firstInvalid) {
+      setStatus("idle");
+      setError(null);
+      form.querySelector<HTMLElement>(`[name="${firstInvalid}"]`)?.focus();
       return;
     }
 
     if (channel === "whatsapp") {
-      const href = waHref(whatsappNumber, t(c.whatsappGreeting, { name }) + `\n\n${message}`);
+      // The visitor's own words first, signed off with their name at the end.
+      const href = waHref(whatsappNumber, `${message.trim()}\n\n${t(c.whatsappSignoff, { name })}`);
       if (!href) {
         setStatus("error");
         setError(c.errorWhatsappUnavailable);
         return;
       }
-      window.open(href, "_blank", "noopener,noreferrer");
-      setStatus("sent");
-      form.reset();
+      /*
+       * Opened without the `noopener` feature on purpose: with it,
+       * `window.open` always returns null, so a tab stopped by a popup or
+       * ad blocker (uBlock and similar often catch wa.me) was indistinguishable
+       * from one that opened — the visitor saw "opening in a new tab" and
+       * nothing happened. Now a blocked tab is detected and WhatsApp opens in
+       * this tab instead, which no blocker intercepts. The opener link is cut
+       * by hand, which is all `noopener` was for.
+       */
+      const tab = window.open(href, "_blank");
+      if (tab) {
+        tab.opener = null;
+        setStatus("sent");
+        form.reset();
+      } else {
+        window.location.href = href;
+      }
       return;
     }
 
@@ -179,11 +245,19 @@ export function ContactForm({
       <form onSubmit={handleSubmit} noValidate className="mt-8 grid gap-x-5 sm:grid-cols-2">
         <Field
           label={c.nameLabel}
-          name="name"
-          autoComplete="name"
-          required
+          requiredLabel={c.requiredLabel}
+          error={fieldErrors.name}
           className={`${ROW_SPACING} sm:col-span-2`}
-        />
+        >
+          {(control) => (
+            <input
+              {...control}
+              name="name"
+              autoComplete="name"
+              onChange={() => clearFieldError("name")}
+            />
+          )}
+        </Field>
 
         {/*
           * `initial={false}` so the row is simply *there* on first paint —
@@ -197,31 +271,44 @@ export function ContactForm({
               initial={ROW_COLLAPSED}
               animate={ROW_OPEN}
               exit={ROW_CLOSED}
-              className="overflow-hidden sm:col-span-2"
+              className="sm:col-span-2"
             >
               <Field
                 label={c.emailLabel}
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
+                requiredLabel={c.requiredLabel}
+                error={fieldErrors.email}
                 className={ROW_SPACING}
-              />
+              >
+                {(control) => (
+                  <input
+                    {...control}
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    onChange={() => clearFieldError("email")}
+                  />
+                )}
+              </Field>
             </motion.div>
           ) : null}
         </AnimatePresence>
 
-        <label className={`block ${ROW_SPACING} sm:col-span-2`}>
-          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-ink-400">
-            {c.messageLabel}
-          </span>
-          <textarea
-            name="message"
-            required
-            rows={5}
-            className={`${INPUT_CLASSES} mt-2 resize-none`}
-          />
-        </label>
+        <Field
+          label={c.messageLabel}
+          requiredLabel={c.requiredLabel}
+          error={fieldErrors.message}
+          className={`${ROW_SPACING} sm:col-span-2`}
+        >
+          {(control) => (
+            <textarea
+              {...control}
+              name="message"
+              rows={5}
+              className={`${control.className} resize-none`}
+              onChange={() => clearFieldError("message")}
+            />
+          )}
+        </Field>
 
         <div className="flex flex-wrap items-center gap-5 sm:col-span-2">
           <button
@@ -278,21 +365,82 @@ function ChannelPill({
   );
 }
 
+type ControlProps = {
+  id: string;
+  required: true;
+  "aria-invalid": boolean;
+  "aria-describedby"?: string;
+  className: string;
+};
+
+/**
+ * A labelled, required form control with its own error line.
+ *
+ * The control itself comes from `children` so the same shell serves both the
+ * `<input>`s and the message `<textarea>`; the shell owns everything the two
+ * share — the label and its asterisk, the invalid styling, and the message
+ * that slides open underneath.
+ *
+ * The asterisk is decoration only: screen readers get `required` on the
+ * control plus a visually hidden "required field" in the label, which reads
+ * better than "star".
+ */
 function Field({
   label,
+  requiredLabel,
+  error,
   className = "",
-  ...rest
+  children,
 }: {
   label: string;
+  requiredLabel: string;
+  error?: string;
   className?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
+  children: (control: ControlProps) => ReactNode;
+}) {
+  const id = useId();
+  const errorId = `${id}-error`;
+
   return (
-    <label className={`block ${className}`}>
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-ink-400">
+    <div className={className}>
+      <label
+        htmlFor={id}
+        className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-ink-400"
+      >
         {label}
-      </span>
-      <input {...rest} className={`${INPUT_CLASSES} mt-2`} />
-    </label>
+        <span aria-hidden="true" className="ml-1 text-red-700">
+          *
+        </span>
+        <span className="sr-only"> ({requiredLabel})</span>
+      </label>
+
+      <div className="mt-2">
+        {children({
+          id,
+          required: true,
+          "aria-invalid": Boolean(error),
+          "aria-describedby": error ? errorId : undefined,
+          className: `${INPUT_CLASSES} ${error ? INPUT_INVALID : INPUT_OK}`,
+        })}
+      </div>
+
+      <AnimatePresence initial={false}>
+        {error ? (
+          <motion.p
+            key="error"
+            id={errorId}
+            role="alert"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={HINT_TRANSITION}
+            className="overflow-hidden"
+          >
+            <span className="block pt-2 text-[0.82rem] text-red-700">{error}</span>
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
+    </div>
   );
 }
 

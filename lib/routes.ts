@@ -21,6 +21,8 @@ export const SCHEDULE_ANCHOR = "raspored";
 export const ROUTES = {
   home: "/",
   schedule: `/#${SCHEDULE_ANCHOR}`,
+  /** The full Raspored page — masses plus catechesis, choirs and groups. */
+  schedulePage: "/raspored/",
   news: "/vijesti/",
   newsDetail: (slug: string) => `/vijesti/${slug}/`,
   about: "/o-nama/",

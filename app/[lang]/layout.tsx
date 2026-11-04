@@ -3,7 +3,6 @@ import { Marcellus, Source_Sans_3 } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
 
-import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { ScrollReset } from "@/components/layout/ScrollReset";
@@ -110,7 +109,6 @@ export default async function RootLayout({
         <LocaleProvider locale={lang}>
           <MotionProvider>
             <ScrollReset />
-            <AnnouncementBar settings={settings} />
             <Navbar settings={settings} schedule={schedule} dict={dict} />
             <main className="flex-1">{children}</main>
             <Footer settings={settings} contact={contact} schedule={schedule} dict={dict} />

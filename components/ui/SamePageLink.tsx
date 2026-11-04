@@ -11,6 +11,9 @@ import {
   scrollToDeferred,
 } from "@/lib/scroll";
 
+/** Fired on `window` when a link changes only this page's query; `detail` is the query. */
+export const QUERY_JUMP_EVENT = "samepagelink:query";
+
 type SamePageLinkProps = {
   /** Already normalised by `internalHref`, and carries no fragment. */
   href: string;
@@ -48,6 +51,22 @@ export function SamePageLink({
      * below leaves it to land at the outgoing page's offset; flagging it here
      * lets `ScrollReset` glide the new page up to the top once it has rendered.
      */
+    /*
+     * Same page, new query (`/raspored/` → `/raspored/?otvori=liturgija`). The
+     * router updates the address without scrolling or remounting, so glide to
+     * the top here and announce the query for the page to act on — that also
+     * covers pressing the same link twice, when the address does not change
+     * at all and nothing else would notice.
+     */
+    const queryAt = href.indexOf("?");
+    if (queryAt !== -1 && isCurrentPage(pathname, href.slice(0, queryAt))) {
+      scrollToDeferred(0);
+      window.dispatchEvent(
+        new CustomEvent(QUERY_JUMP_EVENT, { detail: href.slice(queryAt + 1).split("#")[0] }),
+      );
+      return;
+    }
+
     if (!isCurrentPage(pathname, href)) {
       requestScrollGlide();
       return;

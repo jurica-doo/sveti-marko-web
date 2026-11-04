@@ -86,7 +86,9 @@ export default async function NewsDetailPage({
 
   if (!news) notFound();
 
-  const all = await getNews(lang, { limit: 12 }).catch(() => []);
+  // The three newest other articles. Four are fetched so that, when the one
+  // being read is itself among the newest, the fourth steps in to fill its place.
+  const all = await getNews(lang, { limit: 4 }).catch(() => []);
   const related = all.filter((item) => item.id !== news.id).slice(0, 3);
 
   const category = categoryTitle(news);

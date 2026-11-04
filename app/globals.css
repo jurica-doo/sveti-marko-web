@@ -236,6 +236,25 @@ h4,
   box-shadow: 0 18px 40px -28px rgb(16 29 38 / 0.55);
 }
 
+/*
+ * Cards that sit in a sideways-scrolling row stay put. The row is a scroll
+ * container, so it clips whatever crosses its edges — the lift and its shadow
+ * came out as a hard-cut rectangle. These cards answer the pointer with their
+ * border and ground instead, which never leave the card's own box. Only below
+ * `sm`, where the row exists; from `sm` up the same cards are a grid and lift
+ * as usual.
+ */
+@media (max-width: 39.999rem) {
+  .card-hover.card-in-row:hover {
+    transform: none;
+    box-shadow: revert-layer;
+  }
+
+  .card-hover.card-in-row:hover::after {
+    transform: none;
+  }
+}
+
 /* Buttons and icon tiles rise a little less than a whole card. */
 .hover-lift {
   --lift: 2px;
@@ -272,6 +291,34 @@ h4,
   bottom: 0;
   left: 0;
   width: var(--nudge);
+}
+
+/*
+ * Touch screens never lift or nudge. A tap leaves the element in `:hover` until
+ * the next tap elsewhere, so a card stayed raised — shadow and all — long after
+ * the finger had gone. The tap's own feedback (`press`, colour) is enough.
+ *
+ * Placed after every hover rule above so it wins on equal specificity. The
+ * shadow goes back with `revert-layer` rather than `none`: several of these
+ * elements draw their border as a `ring-*` utility, which is a box-shadow, and
+ * `none` would erase that border along with the lift's shadow.
+ */
+@media (hover: none) {
+  .card-hover:hover,
+  .hover-lift:hover,
+  .hover-nudge:hover {
+    transform: none;
+  }
+
+  .card-hover:hover {
+    box-shadow: revert-layer;
+  }
+
+  .card-hover:hover::after,
+  .hover-lift:hover::after,
+  .hover-nudge:hover::after {
+    transform: none;
+  }
 }
 
 .hover-nudge:hover::after {
@@ -732,5 +779,18 @@ h4,
    */
   .scroll-cue {
     animation: scroll-cue 2.4s var(--ease-parish-in-out) infinite !important;
+  }
+}
+
+/*
+ * Sideways rows that are swiped rather than dragged by a bar — the Raspored
+ * shortcuts and the links carousel on phones. The scroll stays fully usable by
+ * touch, trackpad and keyboard; only the bar itself is hidden.
+ */
+@utility no-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

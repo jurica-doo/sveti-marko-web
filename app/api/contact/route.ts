@@ -38,13 +38,21 @@ export async function POST(req: Request) {
 
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    await resend.emails.send({
+    // Resend reports a rejected send (bad key, unverified sender, …) in the
+    // result rather than by throwing, so it has to be checked explicitly —
+    // otherwise the visitor would be told the message went out when it didn't.
+    const { error } = await resend.emails.send({
       from: "Kontakt forma <onboarding@resend.dev>",
       to: process.env.RESEND_EMAIL,
       subject: `${apiContact.subjectPrefix} ${name}`,
       replyTo: email,
       text: [`Ime: ${name}`, `E-mail: ${email}`, ``, `Poruka:`, message].join("\n"),
     });
+
+    if (error) {
+      console.error("Contact form error (Resend):", error);
+      return Response.json({ error: apiContact.genericError }, { status: 502 });
+    }
 
     return Response.json({ success: true });
   } catch (error) {

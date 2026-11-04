@@ -5,6 +5,7 @@ import {
   getHomePage,
   getNews,
   getNewsPage,
+  getSchedule,
 } from "@/lib/api";
 import { LOCALE_META, LOCALES } from "@/lib/i18n/config";
 import { absoluteUrl, ROUTES } from "@/lib/routes";
@@ -40,8 +41,11 @@ export async function GET() {
    * moves on every request claims the page changed when it did not, and Google
    * discounts the signal once it stops correlating with real edits.
    */
-  const [home, newsPage, about, contactPage] = await Promise.all([
+  // The Raspored page's content is the `schedule` global, so its `lastmod`
+  // follows that rather than the page's own (rarely edited) wording.
+  const [home, schedule, newsPage, about, contactPage] = await Promise.all([
     getHomePage("hr").catch(() => null),
+    getSchedule("hr").catch(() => null),
     getNewsPage("hr").catch(() => null),
     getAboutPage("hr").catch(() => null),
     getContactPage("hr").catch(() => null),
@@ -72,6 +76,7 @@ export async function GET() {
   // the sitemap advertises exactly the URLs the site serves — no 308s.
   const base: SitemapUrlEntry[] = [
     ...localizedEntries(ROUTES.home, "weekly", 1, home?.updatedAt),
+    ...localizedEntries(ROUTES.schedulePage, "weekly", 0.9, schedule?.updatedAt),
     ...localizedEntries(ROUTES.news, "weekly", 0.8, newsPage?.updatedAt),
     ...localizedEntries(ROUTES.about, "monthly", 0.7, about?.updatedAt),
     ...localizedEntries(ROUTES.contact, "monthly", 0.7, contactPage?.updatedAt),
