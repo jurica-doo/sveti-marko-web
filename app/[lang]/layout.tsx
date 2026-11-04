@@ -109,8 +109,20 @@ export default async function RootLayout({
         <LocaleProvider locale={lang}>
           <MotionProvider>
             <ScrollReset />
+            {/*
+              First thing in the tab order and invisible until focused: lets a
+              keyboard user jump past the header's links on every page.
+            */}
+            <a
+              href="#main"
+              className="sr-only z-60 bg-sea-800 px-5 py-3 text-[0.8rem] font-semibold tracking-[0.12em] text-stone-50 uppercase focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+            >
+              {dict.nav.skipToContent}
+            </a>
             <Navbar settings={settings} schedule={schedule} dict={dict} />
-            <main className="flex-1">{children}</main>
+            <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
+              {children}
+            </main>
             <Footer settings={settings} contact={contact} schedule={schedule} dict={dict} />
           </MotionProvider>
         </LocaleProvider>

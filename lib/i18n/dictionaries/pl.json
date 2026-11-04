@@ -13,7 +13,8 @@
       "news": "Aktualności",
       "about": "O nas",
       "contact": "Kontakt"
-    }
+    },
+    "skipToContent": "Przejdź do treści"
   },
   "breadcrumb": {
     "trailAriaLabel": "Ścieżka",
@@ -44,13 +45,16 @@
     "requiredLabel": "pole wymagane",
     "errorWhatsappUnavailable": "WhatsApp jest obecnie niedostępny — wyślij wiadomość e-mail.",
     "errorGeneric": "Coś poszło nie tak.",
-    "whatsappSignoff": "Pozdrawiam serdecznie,\n{name}"
+    "whatsappSignoff": "Pozdrawiam serdecznie,\n{name}",
+    "privacyNote": "Twoje dane wykorzystujemy wyłącznie do odpowiedzi na wiadomość."
   },
   "apiContact": {
     "emailUnavailable": "Wysyłanie e-maili jest obecnie niedostępne. Spróbuj przez WhatsApp.",
     "requiredFields": "Imię, e-mail i wiadomość są wymagane.",
     "genericError": "Coś poszło nie tak. Spróbuj ponownie.",
-    "subjectPrefix": "Nowa wiadomość od"
+    "subjectPrefix": "Nowa wiadomość od",
+    "invalidFields": "Sprawdź wpisane dane — adres e-mail jest nieprawidłowy lub któreś pole jest za długie.",
+    "rateLimited": "Wysłano zbyt wiele wiadomości w krótkim czasie. Spróbuj ponownie za kilka minut."
   },
   "news": {
     "readMore": "Czytaj więcej",
@@ -95,11 +99,14 @@
     "oibLabel": "NIP chorwacki (OIB)",
     "scheduleCardTitle": "Porządek Mszy i życie parafii",
     "scheduleCardText": "Msze święte, spowiedź, katecheza, próby chórów i spotkania wspólnot parafialnych — wszystko w jednym miejscu.",
-    "scheduleCardLink": "Zobacz harmonogram"
+    "scheduleCardLink": "Zobacz harmonogram",
+    "mapNotice": "Mapa ładuje się z Map Google dopiero, gdy zdecydujesz się ją wyświetlić; Google otrzymuje wtedy Twój adres IP.",
+    "mapShow": "Pokaż mapę"
   },
   "schedulePlaque": {
     "confessionsFallback": "Spowiedź",
-    "devotions": "Nabożeństwa"
+    "devotions": "Nabożeństwa",
+    "special": "Porządek okolicznościowy"
   },
   "home": {
     "officeEyebrow": "Biuro parafialne",
@@ -157,5 +164,10 @@
     },
     "showTimes": "Pokaż terminy",
     "hideTimes": "Ukryj terminy"
+  },
+  "privacy": {
+    "linkLabel": "Ochrona danych osobowych",
+    "breadcrumbTitle": "Prywatność",
+    "updatedLabel": "Ostatnia zmiana:"
   }
 }

@@ -32,6 +32,7 @@ export function fallbackSettings(dict: Dictionary): SettingsType {
     ...FALLBACK_SETTINGS,
     navigation: [
       { label: dict.nav.fallback.home, href: ROUTES.home },
+      { label: dict.nav.fallback.schedule, href: ROUTES.schedulePage },
       { label: dict.nav.fallback.news, href: ROUTES.news },
       { label: dict.nav.fallback.about, href: ROUTES.about },
       { label: dict.nav.fallback.contact, href: ROUTES.contact },

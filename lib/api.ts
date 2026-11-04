@@ -6,6 +6,7 @@ import {
   NewsPageType,
   NewsType,
   PaginatedDocs,
+  PrivacyPageType,
   SchedulePageType,
   ScheduleType,
   SettingsType,
@@ -13,6 +14,9 @@ import {
 } from "./types";
 
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL || "http://localhost:3001";
+
+/** Generous for a cold serverless CMS; short enough that a dead one is noticed. */
+const CMS_TIMEOUT_MS = 10_000;
 
 /** Default ISR window for every CMS read. */
 const REVALIDATE = 60;
@@ -30,6 +34,11 @@ async function cmsFetch<T>(
 
   const res = await fetch(url, {
     next: { revalidate },
+    // A CMS that hangs rather than failing must not hang the page with it.
+    // Timed out, the read fails like any other error: a page being refreshed
+    // in the background keeps its last good version, so a CMS outage costs
+    // freshness rather than the site.
+    signal: AbortSignal.timeout(CMS_TIMEOUT_MS),
   });
 
   if (!res.ok) {
@@ -57,10 +66,13 @@ export async function getGlobal<T>(
   locale: Locale,
   { depth = 3, revalidate }: { depth?: number; revalidate?: number } = {},
 ): Promise<T> {
-  return cmsFetch<T>(withLocale(`/api/globals/${slug}?depth=${depth}`, locale), {
-    label: `global ${slug}`,
-    revalidate,
-  });
+  return cmsFetch<T>(
+    withLocale(`/api/globals/${slug}?depth=${depth}`, locale),
+    {
+      label: `global ${slug}`,
+      revalidate,
+    },
+  );
 }
 
 /** `GET /api/<slug>` — returns `docs`. */
@@ -94,8 +106,14 @@ export async function getHomePage(locale: Locale): Promise<HomePageType> {
   return getGlobal<HomePageType>("home-page", locale, { depth: 1 });
 }
 
-export async function getSchedulePage(locale: Locale): Promise<SchedulePageType> {
+export async function getSchedulePage(
+  locale: Locale,
+): Promise<SchedulePageType> {
   return getGlobal<SchedulePageType>("schedule-page", locale, { depth: 1 });
+}
+
+export async function getPrivacyPage(locale: Locale): Promise<PrivacyPageType> {
+  return getGlobal<PrivacyPageType>("privacy-page", locale, { depth: 0 });
 }
 
 export async function getNewsPage(locale: Locale): Promise<NewsPageType> {
@@ -156,7 +174,10 @@ export async function getNewsPaginated(
   );
 }
 
-export async function getNewsBySlug(slug: string, locale: Locale): Promise<NewsType | null> {
+export async function getNewsBySlug(
+  slug: string,
+  locale: Locale,
+): Promise<NewsType | null> {
   const data = await cmsFetch<PaginatedDocs<NewsType>>(
     withLocale(
       `/api/news?where[slug][equals]=${encodeURIComponent(
@@ -169,7 +190,9 @@ export async function getNewsBySlug(slug: string, locale: Locale): Promise<NewsT
   return data.docs?.[0] ?? null;
 }
 
-export async function getUsefulLinks(locale: Locale): Promise<UsefulLinkType[]> {
+export async function getUsefulLinks(
+  locale: Locale,
+): Promise<UsefulLinkType[]> {
   return getCollection<UsefulLinkType>("useful-links", locale, {
     depth: 0,
     limit: 100,

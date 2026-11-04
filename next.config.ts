@@ -1,5 +1,22 @@
 import type { NextConfig } from "next";
 
+/*
+ * On Vercel these must be set — the localhost fallbacks below exist for local
+ * development only. Without this check a deploy missing them would still build
+ * and go live pointing at `localhost`: no content, no images, no error. Failing
+ * the build says exactly what is missing instead.
+ */
+if (process.env.VERCEL) {
+  const missing = ["NEXT_PUBLIC_CMS_URL", "NEXT_PUBLIC_BUCKET_URL"].filter(
+    (name) => !process.env[name],
+  );
+  if (missing.length) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(", ")}`,
+    );
+  }
+}
+
 const BUCKET_URL =
   process.env.NEXT_PUBLIC_BUCKET_URL || "http://localhost:3001";
 
@@ -34,6 +51,60 @@ function isPrivateImageHost(hostname: string): boolean {
   return (
     h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "0.0.0.0"
   );
+}
+
+/** Origin of a URL, or `null` when it does not parse. */
+function originOf(url?: string): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Content-Security-Policy, built from what the site actually loads:
+ *
+ *   - scripts, styles, fonts and images are all served from the site itself —
+ *     `next/font` downloads the Google fonts at build time, and media goes
+ *     through the `/sv-marko/medija/*` rewrites — so `'self'` covers them
+ *   - `'unsafe-inline'` for scripts and styles because the pages are statically
+ *     generated: per-request nonces would force every page to render on demand.
+ *     Inline styles are also how Framer Motion animates. `'unsafe-eval'` is only
+ *     added in development, where React's dev tooling needs it.
+ *   - `connect-src` adds the CMS: the news archive's "load more" fetches the
+ *     next page from it in the browser
+ *   - `frame-src` allows only Google Maps, for the contact page map
+ *   - `frame-ancestors 'self'` — the modern form of the X-Frame-Options header
+ *     above, which stays for older browsers
+ *
+ * `wa.me` is opened as a navigation, which CSP does not govern.
+ */
+function contentSecurityPolicy(): string {
+  const isDev = process.env.NODE_ENV === "development";
+  const cmsOrigin =
+    originOf(process.env.NEXT_PUBLIC_CMS_URL) ?? "http://localhost:3001";
+
+  const directives = [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    `connect-src 'self' ${cmsOrigin}${isDev ? " ws: wss:" : ""}`,
+    "frame-src https://www.google.com https://maps.google.com",
+    "media-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    // Only where the site is served over HTTPS; locally it would rewrite the
+    // http:// CMS calls into https:// ones that nothing answers.
+    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ];
+
+  return directives.join("; ");
 }
 
 const cmsPattern = getCmsRemotePattern();
@@ -77,9 +148,7 @@ const nextConfig: NextConfig = {
         ? [
             {
               source: "/(.*)",
-              headers: [
-                { key: "X-Robots-Tag", value: "noindex, nofollow" },
-              ],
+              headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
             },
           ]
         : [];
@@ -104,6 +173,17 @@ const nextConfig: NextConfig = {
           {
             key: "Referrer-Policy",
             value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: contentSecurityPolicy(),
+          },
+          {
+            // Nothing on the site uses these; denying them means an injected
+            // script or embedded frame cannot ask for them either.
+            key: "Permissions-Policy",
+            value:
+              "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
           },
         ],
       },

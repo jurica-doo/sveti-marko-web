@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ContactForm } from "@/components/contact/ContactForm";
+import { MapEmbed } from "@/components/contact/MapEmbed";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Reveal } from "@/components/ui/Reveal";
 import { SmartLink } from "@/components/ui/SmartLink";
@@ -9,7 +10,7 @@ import { getContactPage, getSchedule } from "@/lib/api";
 import { bindTimeRanges, telHref } from "@/lib/format";
 import { hasLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES, safeHttpUrl } from "@/lib/routes";
 import { buildBreadcrumbJsonLd, buildSeoMetadata, serializeJsonLd } from "@/lib/seo";
 
 export const revalidate = 60;
@@ -50,7 +51,10 @@ export default async function ContactPage({
   ]);
 
   const contact = page.contact;
-  const map = page.map;
+  // Both go straight into the page — an iframe and a raw link — so only
+  // http(s) URLs are rendered; anything else from the CMS is dropped.
+  const mapEmbedUrl = safeHttpUrl(page.map?.embedUrl);
+  const mapDirectionsUrl = safeHttpUrl(page.map?.directionsUrl);
 
   // Only the trail — the parish entity itself is emitted once, by the layout.
   const jsonLd = buildBreadcrumbJsonLd(
@@ -167,25 +171,25 @@ export default async function ContactPage({
               Below `lg` they stack with nothing to line up against, so the
               fixed ratio stays and neither grows.
             */}
-            {map?.embedUrl ? (
+            {mapEmbedUrl ? (
               <div className="mt-10 flex flex-col lg:flex-1">
                 <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-brass-600">
                   {dict.contactPage.directionsLabel}
                 </p>
 
-                <div className="mt-5 aspect-4/3 w-full overflow-hidden bg-stone-200 ring-1 ring-stone-200 lg:aspect-auto lg:min-h-64 lg:flex-1">
-                  <iframe
-                    src={map.embedUrl}
-                    title={dict.contactPage.mapTitle}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="h-full w-full border-0"
-                  />
-                </div>
+                <MapEmbed
+                  src={mapEmbedUrl}
+                  title={dict.contactPage.mapTitle}
+                  labels={{
+                    notice: dict.contactPage.mapNotice,
+                    show: dict.contactPage.mapShow,
+                    privacy: dict.privacy.linkLabel,
+                  }}
+                />
 
-                {map.directionsUrl ? (
+                {mapDirectionsUrl ? (
                   <a
-                    href={map.directionsUrl}
+                    href={mapDirectionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group mt-4 inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-sea-800 transition-colors hover:text-brass-600"

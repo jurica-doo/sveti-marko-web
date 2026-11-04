@@ -15,12 +15,15 @@
   --color-ink-800: #162934;
   --color-ink-700: #1d3542;
   --color-ink-500: #465a67;
-  --color-ink-400: #6a7883;
+  /* Darkened a step from #6a7883 so small muted text clears WCAG AA (4.5:1)
+     on both the page ground and the stone-100 cards. */
+  --color-ink-400: #606d77;
 
   --color-sea-800: #12475a;
   --color-sea-700: #175a70;
 
-  --color-brass-600: #8f6c2c;
+  /* From #8f6c2c, for the same reason: the small-caps labels sit on cards. */
+  --color-brass-600: #87662a;
   --color-brass-500: #a8813c;
   --color-brass-300: #c9a55f;
   --color-brass-100: #ebdcbb;
@@ -126,6 +129,14 @@ h4,
 ::selection {
   background: var(--color-brass-100);
   color: var(--color-ink-900);
+}
+
+/*
+ * The skip link's target. It takes focus only so the next Tab continues from
+ * the page content; a ring around the whole of <main> would just be noise.
+ */
+#main:focus-visible {
+  outline: none;
 }
 
 :focus-visible {

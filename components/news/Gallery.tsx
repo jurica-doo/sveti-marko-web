@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useIsMounted } from "@/hooks/useIsMounted";
@@ -57,6 +57,13 @@ export function Gallery({ items, dict }: { items: GalleryItem[]; dict: Dictionar
 
   const close = useCallback(() => setIndex(null), []);
 
+  // Keyboard focus: into the lightbox when it opens, held there while it is
+  // open, and back to the photo that opened it when it closes.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const isOpen = index !== null;
+
   const step = useCallback(
     (delta: number) =>
       setIndex((current) =>
@@ -68,12 +75,42 @@ export function Gallery({ items, dict }: { items: GalleryItem[]; dict: Dictionar
   );
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    const frame = requestAnimationFrame(() => closeButtonRef.current?.focus());
+
+    return () => {
+      cancelAnimationFrame(frame);
+      returnFocusRef.current?.focus();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
     if (index === null) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
       if (event.key === "ArrowRight") step(1);
       if (event.key === "ArrowLeft") step(-1);
+
+      // Tab cycles through the lightbox's own controls instead of wandering
+      // into the page hidden behind it.
+      if (event.key === "Tab" && dialogRef.current) {
+        const controls = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>("button:not([tabindex='-1'])"),
+        );
+        if (!controls.length) return;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
 
     const previousOverflow = document.body.style.overflow;
@@ -168,6 +205,7 @@ export function Gallery({ items, dict }: { items: GalleryItem[]; dict: Dictionar
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={transition("hover")}
+                  ref={dialogRef}
                   role="dialog"
                   aria-modal="true"
                   aria-label={dict.gallery.dialogLabel}
@@ -180,9 +218,10 @@ export function Gallery({ items, dict }: { items: GalleryItem[]; dict: Dictionar
                   */}
                   <button
                     type="button"
+                    tabIndex={-1}
+                    aria-hidden="true"
                     className="absolute inset-0 h-full w-full cursor-default"
                     onClick={close}
-                    aria-label={dict.gallery.close}
                   />
 
                   {/*
@@ -254,6 +293,7 @@ export function Gallery({ items, dict }: { items: GalleryItem[]; dict: Dictionar
                   ) : null}
 
                   <button
+                    ref={closeButtonRef}
                     type="button"
                     onClick={close}
                     aria-label={dict.gallery.close}

@@ -256,18 +256,23 @@ async function main() {
    * each time it is deployed, which is false and devalues the signal. A page
    * whose global cannot be read simply ships without a `lastmod`.
    */
-  const [homeAt, newsPageAt, aboutAt, contactAt] = await Promise.all([
+  const [homeAt, scheduleAt, newsPageAt, aboutAt, contactAt, privacyAt] = await Promise.all([
     fetchGlobalUpdatedAt("home-page"),
+    // Raspored's content is the `schedule` global, not its page wording.
+    fetchGlobalUpdatedAt("schedule"),
     fetchGlobalUpdatedAt("news-page"),
     fetchGlobalUpdatedAt("about-page"),
     fetchGlobalUpdatedAt("contact-page"),
+    fetchGlobalUpdatedAt("privacy-page"),
   ]);
 
   const baseEntries = [
     { path: "/", changefreq: "weekly", priority: 1.0, lastmod: homeAt },
+    { path: "/raspored/", changefreq: "weekly", priority: 0.9, lastmod: scheduleAt },
     { path: "/vijesti/", changefreq: "weekly", priority: 0.8, lastmod: newsPageAt },
     { path: "/o-nama/", changefreq: "monthly", priority: 0.7, lastmod: aboutAt },
     { path: "/kontakt/", changefreq: "monthly", priority: 0.7, lastmod: contactAt },
+    { path: "/privatnost/", changefreq: "yearly", priority: 0.2, lastmod: privacyAt },
   ].flatMap((entry) =>
     localizedEntries(entry.path, entry.changefreq, entry.priority, entry.lastmod),
   );

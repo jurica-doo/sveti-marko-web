@@ -222,7 +222,6 @@ function Panel({
     <motion.div
       id={id}
       role="region"
-      aria-live="polite"
       animate={{ height }}
       transition={GLIDE}
       className="mt-10 overflow-hidden"

@@ -136,6 +136,18 @@ export interface ScheduleType {
   updatedAt?: string;
 }
 
+export interface PrivacyPageType {
+  eyebrow?: string | null;
+  title: string;
+  intro?: string | null;
+  body?: RichText | null;
+  updatedAtLabel?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  /** Payload's own document timestamp — used for sitemap `lastmod`. */
+  updatedAt?: string;
+}
+
 /** The sections of the Raspored page, in the order they appear. */
 export const ACTIVITY_GROUPS = ["vjeronauk", "zborovi", "zajednice"] as const;
 export type ActivityGroup = (typeof ACTIVITY_GROUPS)[number];

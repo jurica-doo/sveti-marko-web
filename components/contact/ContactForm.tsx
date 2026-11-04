@@ -5,10 +5,12 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 
 import { buttonClasses } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { waHref } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { t } from "@/lib/i18n/interpolate";
 import { DURATION, EASE_PARISH_IN_OUT } from "@/lib/motion";
+import { ROUTES } from "@/lib/routes";
 
 type Channel = "whatsapp" | "email";
 type Status = "idle" | "sending" | "sent" | "error";
@@ -125,6 +127,9 @@ export function ContactForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // One message in flight at a time. The button is disabled while sending,
+    // but a fast double Enter or a re-render can still reach this twice.
+    if (status === "sending") return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
@@ -183,19 +188,35 @@ export function ContactForm({
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message, locale: dict.locale }),
+        // A provider that never answers must not leave the button spinning
+        // forever: after this the visitor gets the error, with their text kept.
+        signal: AbortSignal.timeout(15_000),
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          locale: dict.locale,
+          website: String(data.get("website") ?? ""),
+        }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error || c.errorGeneric);
+        setStatus("error");
+        // The server's own message is already written for the visitor, in
+        // their language; anything else gets the generic one.
+        setError(typeof body?.error === "string" ? body.error : c.errorGeneric);
+        return;
       }
 
       setStatus("sent");
       form.reset();
-    } catch (err) {
+    } catch {
+      // Timeout, offline, or a connection dropped mid-request. The browser's
+      // own wording for those ("signal timed out", "Failed to fetch") is not
+      // something to show a visitor, so they all get the localized message.
       setStatus("error");
-      setError(err instanceof Error ? err.message : c.errorGeneric);
+      setError(c.errorGeneric);
     }
   }
 
@@ -242,7 +263,31 @@ export function ContactForm({
         *
         * `gap-x-5` stays: it is the column gutter, and nothing about it moves.
         */}
-      <form onSubmit={handleSubmit} noValidate className="mt-8 grid gap-x-5 sm:grid-cols-2">
+      {/*
+        `method="post"` matters only before hydration: a form submitted then has
+        no handler yet and falls back to the browser's default, which for a
+        method-less form is a GET — the visitor's name, e-mail and message would
+        land in the URL, the history and the server logs. As a POST they stay in
+        the request body.
+      */}
+      <form
+        method="post"
+        onSubmit={handleSubmit}
+        noValidate
+        className="mt-8 grid gap-x-5 sm:grid-cols-2"
+      >
+        {/*
+          Honeypot. Off-screen rather than `display: none` (which some bots
+          skip), out of the tab order and hidden from assistive technology, so
+          no person ever fills it. The server treats a filled one as a bot.
+        */}
+        <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+          <label>
+            Website
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
+
         <Field
           label={c.nameLabel}
           requiredLabel={c.requiredLabel}
@@ -253,6 +298,7 @@ export function ContactForm({
             <input
               {...control}
               name="name"
+              maxLength={120}
               autoComplete="name"
               onChange={() => clearFieldError("name")}
             />
@@ -283,6 +329,7 @@ export function ContactForm({
                   <input
                     {...control}
                     name="email"
+                    maxLength={254}
                     type="email"
                     autoComplete="email"
                     onChange={() => clearFieldError("email")}
@@ -303,6 +350,7 @@ export function ContactForm({
             <textarea
               {...control}
               name="message"
+              maxLength={5000}
               rows={5}
               className={`${control.className} resize-none`}
               onChange={() => clearFieldError("message")}
@@ -333,6 +381,17 @@ export function ContactForm({
             <p className="text-[0.85rem] text-red-700">{error}</p>
           ) : null}
         </div>
+
+        {/* What happens to what they type, said where they type it. */}
+        <p className="mt-6 text-[0.8rem] leading-relaxed text-ink-400 sm:col-span-2">
+          {c.privacyNote}{" "}
+          <SmartLink
+            href={ROUTES.privacy}
+            className="text-sea-800 underline underline-offset-2 transition-colors hover:text-brass-600"
+          >
+            {dict.privacy.linkLabel}
+          </SmartLink>
+        </p>
       </form>
     </Reveal>
   );

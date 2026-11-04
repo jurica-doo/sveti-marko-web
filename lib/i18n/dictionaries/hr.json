@@ -13,7 +13,8 @@
       "news": "Vijesti",
       "about": "O nama",
       "contact": "Kontakt"
-    }
+    },
+    "skipToContent": "Preskoči na sadržaj"
   },
   "breadcrumb": {
     "trailAriaLabel": "Staza",
@@ -44,13 +45,16 @@
     "requiredLabel": "obavezno polje",
     "errorWhatsappUnavailable": "WhatsApp trenutno nije dostupan — pošaljite e-mail poruku.",
     "errorGeneric": "Nešto je pošlo po krivu.",
-    "whatsappSignoff": "Lijep pozdrav,\n{name}"
+    "whatsappSignoff": "Lijep pozdrav,\n{name}",
+    "privacyNote": "Vaše podatke koristimo isključivo za odgovor na poruku."
   },
   "apiContact": {
     "emailUnavailable": "Slanje e-maila trenutno nije dostupno. Pokušajte putem WhatsAppa.",
     "requiredFields": "Ime, e-mail i poruka su obavezni.",
     "genericError": "Nešto je pošlo po krivu. Pokušajte ponovo.",
-    "subjectPrefix": "Nova poruka od"
+    "subjectPrefix": "Nova poruka od",
+    "invalidFields": "Provjerite unesene podatke — e-mail adresa nije ispravna ili je neko polje predugo.",
+    "rateLimited": "Poslali ste previše poruka u kratkom vremenu. Pokušajte ponovo za nekoliko minuta."
   },
   "news": {
     "readMore": "Pročitaj više",
@@ -95,11 +99,14 @@
     "oibLabel": "OIB",
     "scheduleCardTitle": "Raspored misa i aktivnosti",
     "scheduleCardText": "Svete mise, ispovijed, vjeronauk, probe zborova i susreti župnih zajednica — sve na jednom mjestu.",
-    "scheduleCardLink": "Pogledaj raspored"
+    "scheduleCardLink": "Pogledaj raspored",
+    "mapNotice": "Karta se učitava s usluge Google Maps tek kad je odaberete prikazati; tada Google prima vašu IP adresu.",
+    "mapShow": "Prikaži kartu"
   },
   "schedulePlaque": {
     "confessionsFallback": "Ispovijed",
-    "devotions": "Pobožnosti"
+    "devotions": "Pobožnosti",
+    "special": "Prigodni raspored"
   },
   "home": {
     "officeEyebrow": "Župni ured",
@@ -157,5 +164,10 @@
     },
     "showTimes": "Prikaži termine",
     "hideTimes": "Sakrij termine"
+  },
+  "privacy": {
+    "linkLabel": "Zaštita osobnih podataka",
+    "breadcrumbTitle": "Privatnost",
+    "updatedLabel": "Zadnja izmjena:"
   }
 }

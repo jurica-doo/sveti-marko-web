@@ -13,7 +13,8 @@
       "news": "News",
       "about": "About",
       "contact": "Contact"
-    }
+    },
+    "skipToContent": "Skip to content"
   },
   "breadcrumb": {
     "trailAriaLabel": "Breadcrumb",
@@ -44,13 +45,16 @@
     "requiredLabel": "required field",
     "errorWhatsappUnavailable": "WhatsApp isn't available right now — please send an e-mail instead.",
     "errorGeneric": "Something went wrong.",
-    "whatsappSignoff": "Kind regards,\n{name}"
+    "whatsappSignoff": "Kind regards,\n{name}",
+    "privacyNote": "We use your details only to reply to your message."
   },
   "apiContact": {
     "emailUnavailable": "E-mail isn't available right now. Please try WhatsApp instead.",
     "requiredFields": "Name, e-mail and message are required.",
     "genericError": "Something went wrong. Please try again.",
-    "subjectPrefix": "New message from"
+    "subjectPrefix": "New message from",
+    "invalidFields": "Please check your details — the e-mail address isn't valid or a field is too long.",
+    "rateLimited": "You've sent too many messages in a short time. Please try again in a few minutes."
   },
   "news": {
     "readMore": "Read more",
@@ -95,11 +99,14 @@
     "oibLabel": "Tax ID (OIB)",
     "scheduleCardTitle": "Mass times and activities",
     "scheduleCardText": "Holy Mass, confession, catechesis, choir rehearsals and parish group meetings — all in one place.",
-    "scheduleCardLink": "See the schedule"
+    "scheduleCardLink": "See the schedule",
+    "mapNotice": "The map is loaded from Google Maps only when you choose to show it; Google then receives your IP address.",
+    "mapShow": "Show map"
   },
   "schedulePlaque": {
     "confessionsFallback": "Confession",
-    "devotions": "Devotions"
+    "devotions": "Devotions",
+    "special": "Seasonal schedule"
   },
   "home": {
     "officeEyebrow": "Parish office",
@@ -157,5 +164,10 @@
     },
     "showTimes": "Show times",
     "hideTimes": "Hide times"
+  },
+  "privacy": {
+    "linkLabel": "Privacy notice",
+    "breadcrumbTitle": "Privacy",
+    "updatedLabel": "Last updated:"
   }
 }

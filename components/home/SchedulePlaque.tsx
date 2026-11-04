@@ -133,7 +133,9 @@ export function SchedulePlaque({
               : ""
           }`}
         >
-          <SectionLabel className={label}>Prigodni raspored</SectionLabel>
+          <SectionLabel className={label}>
+            {dict.schedulePlaque.special}
+          </SectionLabel>
 
           <div
             className={`mt-5 grid gap-4 @3xl/plaque:gap-5 ${
@@ -171,7 +173,7 @@ export function SchedulePlaque({
       {masses.length ? (
         <div className={padY}>
           <SectionLabel className={label}>
-            {massesTitle || "Svete mise"}
+            {massesTitle || dict.footer.masses}
           </SectionLabel>
 
           {/*

@@ -1,4 +1,5 @@
 import { SmartLink } from "@/components/ui/SmartLink";
+import { ROUTES, safeHttpUrl } from "@/lib/routes";
 import { bindTimeRanges, telHref } from "@/lib/format";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { ContactPageType, ScheduleType, SettingsType } from "@/lib/types";
@@ -80,19 +81,24 @@ export function Footer({
           ) : null}
           {settings.social?.length ? (
             <ul className="mt-7 flex items-center gap-3">
-              {settings.social.map((item) => (
-                <li key={item.url}>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={SOCIAL_LABELS[item.platform] ?? item.platform}
-                    className="hover-lift flex h-10 w-10 items-center justify-center border border-stone-50/15 text-stone-200/80 hover:border-brass-500 hover:text-brass-300"
-                  >
-                    <SocialIcon platform={item.platform} />
-                  </a>
-                </li>
-              ))}
+              {settings.social.map((item) => {
+                // Raw link to an outside profile: http(s) only, see `safeHttpUrl`.
+                const href = safeHttpUrl(item.url);
+                if (!href) return null;
+                return (
+                  <li key={item.url}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={SOCIAL_LABELS[item.platform] ?? item.platform}
+                      className="hover-lift flex h-10 w-10 items-center justify-center border border-stone-50/15 text-stone-200/80 hover:border-brass-500 hover:text-brass-300"
+                    >
+                      <SocialIcon platform={item.platform} />
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </div>
@@ -192,6 +198,15 @@ export function Footer({
         <div className="shell flex flex-col gap-3 py-6 text-[0.8rem] text-stone-200/55 sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {year} {settings.copyright || settings.siteName}
+            <span aria-hidden="true" className="mx-2 text-stone-200/30">
+              ·
+            </span>
+            <SmartLink
+              href={ROUTES.privacy}
+              className="text-stone-200/80 transition-colors hover:text-brass-300"
+            >
+              {dict.privacy.linkLabel}
+            </SmartLink>
           </p>
           {/*
             Kontakt and O nama sat here as well as in the footer columns above

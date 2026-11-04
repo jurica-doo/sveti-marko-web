@@ -13,7 +13,8 @@
       "news": "Notizie",
       "about": "Chi siamo",
       "contact": "Contatti"
-    }
+    },
+    "skipToContent": "Vai al contenuto"
   },
   "breadcrumb": {
     "trailAriaLabel": "Percorso",
@@ -44,13 +45,16 @@
     "requiredLabel": "campo obbligatorio",
     "errorWhatsappUnavailable": "WhatsApp non è al momento disponibile — invia un'e-mail.",
     "errorGeneric": "Qualcosa è andato storto.",
-    "whatsappSignoff": "Cordiali saluti,\n{name}"
+    "whatsappSignoff": "Cordiali saluti,\n{name}",
+    "privacyNote": "Usiamo i vostri dati solo per rispondere al messaggio."
   },
   "apiContact": {
     "emailUnavailable": "L'invio via e-mail non è al momento disponibile. Prova con WhatsApp.",
     "requiredFields": "Nome, e-mail e messaggio sono obbligatori.",
     "genericError": "Qualcosa è andato storto. Riprova.",
-    "subjectPrefix": "Nuovo messaggio da"
+    "subjectPrefix": "Nuovo messaggio da",
+    "invalidFields": "Controlla i dati inseriti: l'indirizzo e-mail non è valido o un campo è troppo lungo.",
+    "rateLimited": "Hai inviato troppi messaggi in poco tempo. Riprova tra qualche minuto."
   },
   "news": {
     "readMore": "Leggi di più",
@@ -95,11 +99,14 @@
     "oibLabel": "Codice fiscale (OIB)",
     "scheduleCardTitle": "Orari delle Messe e attività",
     "scheduleCardText": "Sante Messe, confessioni, catechesi, prove dei cori e incontri dei gruppi parrocchiali — tutto in un unico posto.",
-    "scheduleCardLink": "Vedi gli orari"
+    "scheduleCardLink": "Vedi gli orari",
+    "mapNotice": "La mappa viene caricata da Google Maps solo quando scegliete di visualizzarla; Google riceve allora il vostro indirizzo IP.",
+    "mapShow": "Mostra la mappa"
   },
   "schedulePlaque": {
     "confessionsFallback": "Confessioni",
-    "devotions": "Devozioni"
+    "devotions": "Devozioni",
+    "special": "Orario speciale"
   },
   "home": {
     "officeEyebrow": "Ufficio parrocchiale",
@@ -157,5 +164,10 @@
     },
     "showTimes": "Mostra gli orari",
     "hideTimes": "Nascondi gli orari"
+  },
+  "privacy": {
+    "linkLabel": "Informativa sulla privacy",
+    "breadcrumbTitle": "Privacy",
+    "updatedLabel": "Ultimo aggiornamento:"
   }
 }

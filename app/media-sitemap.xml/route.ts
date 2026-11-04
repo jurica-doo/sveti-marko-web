@@ -25,29 +25,20 @@ export async function GET() {
     return new Response("Not found", { status: 404 });
   }
 
-  try {
-    const generatedPath = path.join(
-      process.cwd(),
-      ".generated",
-      "media-sitemap.xml",
-    );
-    const xml = await readFile(generatedPath, "utf8");
-    return new Response(xml, {
-      status: 200,
-      headers: {
-        "content-type": "application/xml; charset=utf-8",
-        "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
-      },
-    });
-  } catch {
-    // Fallback to dynamic generation below.
-  }
-
   // Slugs and artwork are the same document in every language, so one read is
   // enough — only the surrounding page URL changes per locale.
-  const news = await getNews("hr", { limit: 500 }).catch(() => []);
+  // Built live, like `sitemap.xml`; the build-time copy only covers a CMS
+  // outage, so new articles' photos appear without waiting for a deploy.
+  const news = await getNews("hr", { limit: 500 }).catch(() => null);
+  if (!news) {
+    const generated = await readFile(
+      path.join(process.cwd(), ".generated", "media-sitemap.xml"),
+      "utf8",
+    ).catch(() => null);
+    if (generated) return xmlResponse(generated);
+  }
 
-  const entries: SitemapUrlEntry[] = news
+  const entries: SitemapUrlEntry[] = (news ?? [])
     .filter((item) => item.slug)
     .flatMap((item) => {
       const images = [
@@ -68,7 +59,11 @@ export async function GET() {
       }));
     });
 
-  return new Response(generateUrlSetXml(entries), {
+  return xmlResponse(generateUrlSetXml(entries));
+}
+
+function xmlResponse(xml: string): Response {
+  return new Response(xml, {
     status: 200,
     headers: {
       "content-type": "application/xml; charset=utf-8",

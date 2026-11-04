@@ -302,6 +302,39 @@ export function parseDaysOfWeek(label: string): string[] | null {
   return WEEK.slice(from, to + 1) as unknown as string[];
 }
 
+/** `9:00` / `09.00` → `09:00`; anything that is not a time of day → null. */
+function isoTime(value: string): string | null {
+  const match = value.trim().match(/^(\d{1,2})[:.](\d{2})$/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return `${String(hours).padStart(2, "0")}:${match[2]}`;
+}
+
+/**
+ * A Croatian number as written by the office, in international form:
+ * `(021) 367-422` → `+385 21 367 422`. A leading `0` is the domestic trunk
+ * prefix and gives way to `+385`; `00…` and `+…` are already international.
+ */
+function internationalPhone(value?: string | null): string | undefined {
+  if (!value) return undefined;
+  const plus = value.trim().startsWith("+");
+  let digits = value.replace(/\D/g, "");
+  if (!digits) return undefined;
+  if (!plus) {
+    if (digits.startsWith("00")) digits = digits.slice(2);
+    else if (digits.startsWith("0")) digits = `385${digits.slice(1)}`;
+  }
+  if (!digits.startsWith("385")) return `+${digits}`;
+  const national = digits.slice(3);
+  // Split (021) numbers are area code 21 + six digits; anything else is
+  // grouped by threes, which reads fine for mobiles (09x xxx xxxx).
+  const area = national.startsWith("1") ? national.slice(0, 1) : national.slice(0, 2);
+  const rest = national.slice(area.length).replace(/(\d{3})(?=\d)/g, "$1 ");
+  return `+385 ${area} ${rest}`;
+}
+
 /** Stable identifiers, so every reference resolves to the same node. */
 export const ENTITY_ID = {
   organization: `${SITE_ORIGIN}/#organization`,
@@ -379,7 +412,10 @@ export function buildSiteJsonLd(input: SiteJsonLdInput) {
   // not filled in for this locale has nothing to read — both are skipped
   // rather than emitted as a half-built spec.
   const hours = (officeHours ?? []).flatMap((row) => {
-    if (!row.day || !row.hours?.includes("–")) return [];
+    // Split on an en dash or a plain hyphen — the CMS field's own hint shows
+    // `09:00 - 11:00`, so office copy arrives either way.
+    const [from, to, ...rest] = (row.hours ?? "").split(/\s*[–-]\s*/);
+    if (!row.day || rest.length || !from || !to) return [];
 
     // A label naming no recognisable day cannot be expressed as a valid
     // `dayOfWeek`, so the row is left out rather than emitting one a
@@ -387,19 +423,18 @@ export function buildSiteJsonLd(input: SiteJsonLdInput) {
     const dayOfWeek = parseDaysOfWeek(row.day);
     if (!dayOfWeek) return [];
 
-    const [opens, closes] = row.hours.split("–");
-    return [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek,
-        opens: opens?.trim() ?? "",
-        closes: closes?.trim() ?? "",
-      },
-    ];
+    // schema.org wants `HH:MM`; office copy says `9:00`.
+    const opens = isoTime(from);
+    const closes = isoTime(to);
+    if (!opens || !closes) return [];
+
+    return [{ "@type": "OpeningHoursSpecification", dayOfWeek, opens, closes }];
   });
 
   const sameAs = (social ?? []).map((item) => item.url).filter(Boolean);
-  const telephone = contact?.phone || contact?.mobile || undefined;
+  // International form (`+385 21 367 422`): the local `(021) 367-422` the
+  // office writes is ambiguous to anyone outside Croatia, a crawler included.
+  const telephone = internationalPhone(contact?.phone || contact?.mobile);
 
   const address = {
     "@type": "PostalAddress",

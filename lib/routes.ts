@@ -27,6 +27,7 @@ export const ROUTES = {
   newsDetail: (slug: string) => `/vijesti/${slug}/`,
   about: "/o-nama/",
   contact: "/kontakt/",
+  privacy: "/privatnost/",
 } as const;
 
 const EXTERNAL_PREFIXES = [
@@ -37,6 +38,28 @@ const EXTERNAL_PREFIXES = [
   "//",
   "#",
 ];
+
+/**
+ * `url` if it is an absolute `http(s)` URL, otherwise `undefined`.
+ *
+ * For CMS values that go straight into an `href` or an `<iframe src>` without
+ * passing through `SmartLink` — social profiles, the map embed and its
+ * directions link. A `javascript:` or `data:` URL in either place would run in
+ * the site's own origin, so anything that does not parse as `http:`/`https:`
+ * is dropped and the link or embed is simply not rendered. Parsed with `URL`
+ * rather than matched by prefix, so case and whitespace tricks fail too.
+ */
+export function safeHttpUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed.toString()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export function isExternalHref(href: string): boolean {
   const value = href.trim();

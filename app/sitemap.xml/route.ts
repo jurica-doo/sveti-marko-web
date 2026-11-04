@@ -5,6 +5,7 @@ import {
   getHomePage,
   getNews,
   getNewsPage,
+  getPrivacyPage,
   getSchedule,
 } from "@/lib/api";
 import { LOCALE_META, LOCALES } from "@/lib/i18n/config";
@@ -21,20 +22,6 @@ export async function GET() {
     return new Response("Not found", { status: 404 });
   }
 
-  try {
-    const generatedPath = path.join(process.cwd(), ".generated", "sitemap.xml");
-    const xml = await readFile(generatedPath, "utf8");
-    return new Response(xml, {
-      status: 200,
-      headers: {
-        "content-type": "application/xml; charset=utf-8",
-        "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
-      },
-    });
-  } catch {
-    // Fallback to dynamic generation below.
-  }
-
   /*
    * `lastmod` is whatever the CMS says the backing document was last changed,
    * or nothing at all. It is deliberately never `new Date()`: a timestamp that
@@ -43,14 +30,27 @@ export async function GET() {
    */
   // The Raspored page's content is the `schedule` global, so its `lastmod`
   // follows that rather than the page's own (rarely edited) wording.
-  const [home, schedule, newsPage, about, contactPage, news] = await Promise.all([
+  const [home, schedule, newsPage, about, contactPage, privacy, news] = await Promise.all([
     getHomePage("hr").catch(() => null),
     getSchedule("hr").catch(() => null),
     getNewsPage("hr").catch(() => null),
     getAboutPage("hr").catch(() => null),
     getContactPage("hr").catch(() => null),
-    getNews("hr", { limit: 500 }).catch(() => []),
+    getPrivacyPage("hr").catch(() => null),
+    getNews("hr", { limit: 500 }).catch(() => null),
   ]);
+
+  /*
+   * Built live from the CMS, so an article published after a deploy is in the
+   * sitemap within the hour rather than at the next build. The copy written by
+   * `scripts/generate-sitemaps.mjs` at build time is only the fallback for when
+   * the CMS cannot be reached — better a slightly stale map than none, or one
+   * missing every article.
+   */
+  if (!home && !news) {
+    const generated = await readGenerated("sitemap.xml");
+    if (generated) return xmlResponse(generated);
+  }
 
   /** This same path, once per locale, each carrying the others as `<xhtml:link alternate>`. */
   function localizedEntries(
@@ -81,9 +81,10 @@ export async function GET() {
     ...localizedEntries(ROUTES.news, "weekly", 0.8, newsPage?.updatedAt),
     ...localizedEntries(ROUTES.about, "monthly", 0.7, about?.updatedAt),
     ...localizedEntries(ROUTES.contact, "monthly", 0.7, contactPage?.updatedAt),
+    ...localizedEntries(ROUTES.privacy, "yearly", 0.2, privacy?.updatedAt),
   ];
 
-  const newsEntries: SitemapUrlEntry[] = news
+  const newsEntries: SitemapUrlEntry[] = (news ?? [])
     .filter((item) => Boolean(item.slug))
     .flatMap((item) =>
       localizedEntries(
@@ -94,8 +95,10 @@ export async function GET() {
       ),
     );
 
-  const xml = generateUrlSetXml([...base, ...newsEntries]);
+  return xmlResponse(generateUrlSetXml([...base, ...newsEntries]));
+}
 
+function xmlResponse(xml: string): Response {
   return new Response(xml, {
     status: 200,
     headers: {
@@ -103,4 +106,13 @@ export async function GET() {
       "cache-control": "public, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
+}
+
+/** The build-time copy from `scripts/generate-sitemaps.mjs`, if there is one. */
+async function readGenerated(name: string): Promise<string | null> {
+  try {
+    return await readFile(path.join(process.cwd(), ".generated", name), "utf8");
+  } catch {
+    return null;
+  }
 }

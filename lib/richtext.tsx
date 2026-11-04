@@ -9,6 +9,9 @@ import type { RichText, RichTextNode } from "./types";
  * package would be dead weight.
  */
 
+type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+const HEADING_TAGS = new Set<string>(["h1", "h2", "h3", "h4", "h5", "h6"]);
+
 const FORMAT_BOLD = 1;
 const FORMAT_ITALIC = 1 << 1;
 const FORMAT_UNDERLINE = 1 << 3;
@@ -39,7 +42,10 @@ function renderNode(node: RichTextNode, key: string): ReactNode {
       return <br key={key} />;
 
     case "heading": {
-      const Tag = (node.tag as "h2" | "h3" | "h4") || "h3";
+      // The tag name comes from the stored document, so it is checked against
+      // the headings Lexical can produce: a tampered `"tag": "script"` would
+      // otherwise render a live <script> into the server HTML.
+      const Tag = HEADING_TAGS.has(node.tag as string) ? (node.tag as HeadingTag) : "h3";
       return <Tag key={key}>{renderChildren(node, key)}</Tag>;
     }
 
