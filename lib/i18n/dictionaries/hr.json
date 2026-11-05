@@ -54,7 +54,14 @@
     "genericError": "Nešto je pošlo po krivu. Pokušajte ponovo.",
     "subjectPrefix": "Nova poruka od",
     "invalidFields": "Provjerite unesene podatke — e-mail adresa nije ispravna ili je neko polje predugo.",
-    "rateLimited": "Poslali ste previše poruka u kratkom vremenu. Pokušajte ponovo za nekoliko minuta."
+    "rateLimited": "Poslali ste previše poruka u kratkom vremenu. Pokušajte ponovo za nekoliko minuta.",
+    "confirmSubject": "Primili smo vašu poruku",
+    "confirmGreeting": "Poštovani/a {name},",
+    "confirmBody": "hvala vam što ste nam se javili. Vaša poruka stigla je u župni ured i odgovorit ćemo vam u najkraćem mogućem roku.",
+    "confirmCopyLabel": "Vaša poruka",
+    "confirmSignoff": "Srdačan pozdrav i Božji blagoslov,",
+    "confirmNoReply": "Ovo je automatska poruka — molimo ne odgovarajte na nju. Za sve upite pišite nam putem obrasca na stranici ili nas nazovite.",
+    "confirmVisit": "Posjetite našu stranicu"
   },
   "news": {
     "readMore": "Pročitaj više",
@@ -84,7 +91,61 @@
     "parishEyebrow": "Župna zajednica",
     "patronEyebrow": "Nebeski zaštitnik",
     "feastLabel": "Blagdan",
-    "breadcrumbTitle": "O nama"
+    "breadcrumbTitle": "O nama",
+    "mapEyebrow": "Područje župe",
+    "mapTitle": "Ulice naše župe",
+    "mapIntro": "Župi sv. Marka pripadaju ulice označene na karti. Zadržite pokazivač ili dodirnite ulicu na popisu da je istaknete.",
+    "mapChurch": "Crkva sv. Marka",
+    "mapAriaLabel": "Karta područja Župe sv. Marka s označenim ulicama",
+    "mapAttribution": "Podaci karte © OpenStreetMap suradnici",
+    "mapStreetsLabel": "Popis ulica",
+    "mapNote": "Niste sigurni pripadate li župi? Javite nam se.",
+    "parishStreets": [
+      {
+        "name": "Hercegovačka",
+        "range": "neparni od 125 do kraja, parni od 128 do kraja"
+      },
+      {
+        "name": "Kupreška",
+        "range": "cijela ulica"
+      },
+      {
+        "name": "Ljubuška",
+        "range": "cijela ulica"
+      },
+      {
+        "name": "Magistrala Solin",
+        "range": "neparni od 3 do 67"
+      },
+      {
+        "name": "Mostarska",
+        "range": "neparni od 101 do kraja, parni od 72 do kraja"
+      },
+      {
+        "name": "Neslanovac",
+        "range": "cijela ulica"
+      },
+      {
+        "name": "Put Mostina",
+        "range": "brojevi 14, 18 i 20"
+      },
+      {
+        "name": "Put Smokovika",
+        "range": "cijela ulica"
+      },
+      {
+        "name": "Sarajevska",
+        "range": "parni do 46"
+      },
+      {
+        "name": "Solinska",
+        "range": "samo broj 76"
+      },
+      {
+        "name": "Zagorski put",
+        "range": "parni i neparni od 4 do 22"
+      }
+    ]
   },
   "contactPage": {
     "breadcrumbTitle": "Kontakt",

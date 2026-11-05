@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ParishMap } from "@/components/about/ParishMap";
 import { StorySection } from "@/components/about/StorySection";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getAboutPage } from "@/lib/api";
@@ -101,6 +102,8 @@ export default async function AboutPage({
         flip
         tone="muted"
       />
+
+      <ParishMap dict={dict} />
     </>
   );
 }

@@ -1,8 +1,18 @@
 import { Resend } from "resend";
 
-import { hasLocale } from "@/lib/i18n/config";
+import { getContactPage } from "@/lib/api";
+import { EMAIL_LOGO_BASE64 } from "@/lib/email/logo";
+import {
+  LOGO_CID,
+  confirmationEmail,
+  officeEmail,
+  type ParishDetails,
+} from "@/lib/email/contact-templates";
+import { hasLocale, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { FALLBACK_SETTINGS } from "@/lib/site";
+import { SITE_ORIGIN } from "@/lib/site-url";
 
 /**
  * Backs the "E-mail poruka" option on the contact form. The WhatsApp option
@@ -27,9 +37,21 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
  *   - a per-client rate limit (see `lib/rate-limit` for its reach)
  *   - a honeypot field: filled means a bot, answered as if it worked
  *   - strict server-side validation of every field, with length limits
- *   - a fixed recipient from the environment and a plain-text body, so the
- *     sender controls neither who receives the mail nor any markup in it
+ *   - a fixed recipient from the environment, and every visitor-typed value
+ *     HTML-escaped in the templates, so the sender controls neither who
+ *     receives the office mail nor any markup in it
  *   - line breaks stripped from the name before it enters the subject header
+ *
+ * Two e-mails go out, in order:
+ *   1. "UPIT S WEB STRANICE" to the parish office (`RESEND_EMAIL`). Only if
+ *      Resend accepts this one does the visitor get the success banner.
+ *   2. A styled "thank you" confirmation to the visitor, from the no-reply
+ *      sender (`RESEND_NOREPLY_FROM`). Sent only after (1) succeeded, so nobody
+ *      is told "we received it" for a message that never arrived. A failure
+ *      here is logged but does not turn the visitor's banner red — their
+ *      message did reach the office. Skipped while `RESEND_NOREPLY_FROM` is
+ *      unset: Resend can only send to arbitrary addresses from a verified
+ *      domain, which the parish does not have yet.
  */
 
 const MAX_BODY_BYTES = 16 * 1024;
@@ -122,6 +144,23 @@ export async function POST(req: Request) {
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const parish = await parishDetails(locale);
+    const logo = [{ filename: "logo.png", content: EMAIL_LOGO_BASE64, contentId: LOGO_CID }];
+
+    const office = officeEmail({
+      name,
+      email,
+      message,
+      // Which language the visitor wrote from — the language to answer in.
+      localeName: LOCALE_NAMES[locale],
+      sentAt: new Intl.DateTimeFormat("hr-HR", {
+        dateStyle: "long",
+        timeStyle: "short",
+        timeZone: "Europe/Zagreb",
+      }).format(new Date()),
+      parish,
+      confirmsToSender: Boolean(process.env.RESEND_NOREPLY_FROM),
+    });
 
     // Resend reports a rejected send (bad key, unverified sender, …) in the
     // result rather than by throwing, so it has to be checked explicitly —
@@ -129,24 +168,15 @@ export async function POST(req: Request) {
     const { error } = await resend.emails.send({
       // The parish's own verified address once its domain is set up in Resend;
       // until then Resend's shared test sender, which only delivers to the
-      // Resend account owner. Never the visitor's address — that goes in
-      // Reply-To, so the office simply presses Reply.
-      from: process.env.RESEND_FROM || "Kontakt forma <onboarding@resend.dev>",
+      // Resend account owner (the parish Gmail). Never the visitor's address —
+      // that goes in Reply-To, so the office simply presses Reply.
+      from: process.env.RESEND_FROM || "Web stranica župe <onboarding@resend.dev>",
       to: process.env.RESEND_EMAIL,
-      subject: `[Web] ${apiContact.subjectPrefix} ${subjectName}`,
+      subject: `UPIT S WEB STRANICE — ${subjectName}`,
       replyTo: email,
-      text: [
-        `Ime: ${name}`,
-        `E-mail: ${email}`,
-        // Which language the visitor wrote from — the language to answer in.
-        `Jezik stranice: ${LOCALE_NAMES[locale]}`,
-        ``,
-        `Poruka:`,
-        message,
-        ``,
-        `—`,
-        `Poslano putem kontakt obrasca na mrežnoj stranici župe.`,
-      ].join("\n"),
+      html: office.html,
+      text: office.text,
+      attachments: logo,
     });
 
     if (error) {
@@ -155,11 +185,49 @@ export async function POST(req: Request) {
       return Response.json({ error: apiContact.genericError }, { status: 502 });
     }
 
+    if (process.env.RESEND_NOREPLY_FROM) {
+      const confirmation = confirmationEmail({ name, message, copy: apiContact, parish });
+      const sent = await resend.emails
+        .send({
+          from: process.env.RESEND_NOREPLY_FROM,
+          to: email,
+          subject: `${apiContact.confirmSubject} — ${parish.name}`,
+          html: confirmation.html,
+          text: confirmation.text,
+          attachments: logo,
+          headers: { "Auto-Submitted": "auto-replied", "X-Auto-Response-Suppress": "All" },
+        })
+        .catch((e: unknown) => ({ error: { name: "exception", message: e instanceof Error ? e.message : "unknown" } }));
+      if (sent.error) {
+        console.error("Contact confirmation error (Resend):", sent.error.name, sent.error.message);
+      }
+    }
+
     return Response.json({ success: true });
   } catch (error) {
     console.error("Contact form error:", error instanceof Error ? error.message : "unknown");
     return Response.json({ error: apiContact.genericError }, { status: 500 });
   }
+}
+
+/**
+ * Address and phone for the e-mails, from the CMS contact page so they stay in
+ * step with the site; a CMS outage falls back to the known office details
+ * rather than holding up the send.
+ */
+async function parishDetails(locale: Locale): Promise<ParishDetails> {
+  const page = await getContactPage(locale).catch(() => null);
+  const c = page?.contact;
+  return {
+    name: FALLBACK_SETTINGS.siteName,
+    officeName: c?.parishOfficeName || "Župni ured sv. Marka Evanđelista",
+    street: c?.street || "Hercegovačka 157",
+    postalCode: c?.postalCode || "21000",
+    city: c?.city || "Split",
+    phone: c?.phone ?? "(021) 367-422",
+    mobile: c?.mobile,
+    website: SITE_ORIGIN,
+  };
 }
 
 /**

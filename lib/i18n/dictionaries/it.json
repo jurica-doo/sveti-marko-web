@@ -54,7 +54,14 @@
     "genericError": "Qualcosa è andato storto. Riprova.",
     "subjectPrefix": "Nuovo messaggio da",
     "invalidFields": "Controlla i dati inseriti: l'indirizzo e-mail non è valido o un campo è troppo lungo.",
-    "rateLimited": "Hai inviato troppi messaggi in poco tempo. Riprova tra qualche minuto."
+    "rateLimited": "Hai inviato troppi messaggi in poco tempo. Riprova tra qualche minuto.",
+    "confirmSubject": "Abbiamo ricevuto il tuo messaggio",
+    "confirmGreeting": "Gentile {name},",
+    "confirmBody": "grazie per averci scritto. Il tuo messaggio è arrivato all'ufficio parrocchiale e ti risponderemo il prima possibile.",
+    "confirmCopyLabel": "Il tuo messaggio",
+    "confirmSignoff": "Cordiali saluti e la benedizione di Dio,",
+    "confirmNoReply": "Questo è un messaggio automatico — per favore non rispondere. Per qualsiasi domanda usa il modulo sul sito o chiamaci.",
+    "confirmVisit": "Visita il nostro sito"
   },
   "news": {
     "readMore": "Leggi di più",
@@ -84,7 +91,61 @@
     "parishEyebrow": "Comunità parrocchiale",
     "patronEyebrow": "Santo patrono",
     "feastLabel": "Festa",
-    "breadcrumbTitle": "Chi siamo"
+    "breadcrumbTitle": "Chi siamo",
+    "mapEyebrow": "Territorio parrocchiale",
+    "mapTitle": "Le vie della nostra parrocchia",
+    "mapIntro": "Le vie segnate sulla mappa appartengono alla parrocchia di San Marco. Passa il cursore o tocca una via nell'elenco per evidenziarla.",
+    "mapChurch": "Chiesa di San Marco",
+    "mapAriaLabel": "Mappa della parrocchia di San Marco con le vie evidenziate",
+    "mapAttribution": "Dati mappa © contributori di OpenStreetMap",
+    "mapStreetsLabel": "Elenco delle vie",
+    "mapNote": "Non sei sicuro di appartenere alla parrocchia? Contattaci.",
+    "parishStreets": [
+      {
+        "name": "Hercegovačka",
+        "range": "dispari dal 125 alla fine, pari dal 128 alla fine"
+      },
+      {
+        "name": "Kupreška",
+        "range": "tutta la via"
+      },
+      {
+        "name": "Ljubuška",
+        "range": "tutta la via"
+      },
+      {
+        "name": "Magistrala Solin",
+        "range": "dispari dal 3 al 67"
+      },
+      {
+        "name": "Mostarska",
+        "range": "dispari dal 101 alla fine, pari dal 72 alla fine"
+      },
+      {
+        "name": "Neslanovac",
+        "range": "tutta la via"
+      },
+      {
+        "name": "Put Mostina",
+        "range": "numeri 14, 18 e 20"
+      },
+      {
+        "name": "Put Smokovika",
+        "range": "tutta la via"
+      },
+      {
+        "name": "Sarajevska",
+        "range": "pari fino al 46"
+      },
+      {
+        "name": "Solinska",
+        "range": "solo il numero 76"
+      },
+      {
+        "name": "Zagorski put",
+        "range": "pari e dispari dal 4 al 22"
+      }
+    ]
   },
   "contactPage": {
     "breadcrumbTitle": "Contatti",

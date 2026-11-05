@@ -54,7 +54,14 @@
     "genericError": "Coś poszło nie tak. Spróbuj ponownie.",
     "subjectPrefix": "Nowa wiadomość od",
     "invalidFields": "Sprawdź wpisane dane — adres e-mail jest nieprawidłowy lub któreś pole jest za długie.",
-    "rateLimited": "Wysłano zbyt wiele wiadomości w krótkim czasie. Spróbuj ponownie za kilka minut."
+    "rateLimited": "Wysłano zbyt wiele wiadomości w krótkim czasie. Spróbuj ponownie za kilka minut.",
+    "confirmSubject": "Otrzymaliśmy Twoją wiadomość",
+    "confirmGreeting": "Szanowna Pani / Szanowny Panie {name},",
+    "confirmBody": "dziękujemy za kontakt. Twoja wiadomość dotarła do kancelarii parafialnej i odpowiemy najszybciej, jak to możliwe.",
+    "confirmCopyLabel": "Twoja wiadomość",
+    "confirmSignoff": "Serdecznie pozdrawiamy, z Bożym błogosławieństwem,",
+    "confirmNoReply": "To jest wiadomość automatyczna — prosimy na nią nie odpowiadać. W razie pytań skorzystaj z formularza na stronie lub zadzwoń do nas.",
+    "confirmVisit": "Odwiedź naszą stronę"
   },
   "news": {
     "readMore": "Czytaj więcej",
@@ -84,7 +91,61 @@
     "parishEyebrow": "Wspólnota parafialna",
     "patronEyebrow": "Patron parafii",
     "feastLabel": "Święto patronalne",
-    "breadcrumbTitle": "O nas"
+    "breadcrumbTitle": "O nas",
+    "mapEyebrow": "Teren parafii",
+    "mapTitle": "Ulice naszej parafii",
+    "mapIntro": "Do parafii św. Marka należą ulice zaznaczone na mapie. Najedź kursorem lub dotknij ulicy na liście, aby ją wyróżnić.",
+    "mapChurch": "Kościół św. Marka",
+    "mapAriaLabel": "Mapa parafii św. Marka z zaznaczonymi ulicami",
+    "mapAttribution": "Dane mapy © współtwórcy OpenStreetMap",
+    "mapStreetsLabel": "Lista ulic",
+    "mapNote": "Nie wiesz, czy należysz do parafii? Napisz do nas.",
+    "parishStreets": [
+      {
+        "name": "Hercegovačka",
+        "range": "nieparzyste od 125 do końca, parzyste od 128 do końca"
+      },
+      {
+        "name": "Kupreška",
+        "range": "cała ulica"
+      },
+      {
+        "name": "Ljubuška",
+        "range": "cała ulica"
+      },
+      {
+        "name": "Magistrala Solin",
+        "range": "nieparzyste od 3 do 67"
+      },
+      {
+        "name": "Mostarska",
+        "range": "nieparzyste od 101 do końca, parzyste od 72 do końca"
+      },
+      {
+        "name": "Neslanovac",
+        "range": "cała ulica"
+      },
+      {
+        "name": "Put Mostina",
+        "range": "numery 14, 18 i 20"
+      },
+      {
+        "name": "Put Smokovika",
+        "range": "cała ulica"
+      },
+      {
+        "name": "Sarajevska",
+        "range": "parzyste do 46"
+      },
+      {
+        "name": "Solinska",
+        "range": "tylko numer 76"
+      },
+      {
+        "name": "Zagorski put",
+        "range": "parzyste i nieparzyste od 4 do 22"
+      }
+    ]
   },
   "contactPage": {
     "breadcrumbTitle": "Kontakt",

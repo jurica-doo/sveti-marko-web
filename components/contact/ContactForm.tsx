@@ -200,8 +200,11 @@ export function ContactForm({
         }),
       });
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
+      const body = await res.json().catch(() => null);
+
+      // "Sent" only when the server says Resend accepted the office e-mail —
+      // not merely on a 2xx, which a proxy or captive portal can also return.
+      if (!res.ok || body?.success !== true) {
         setStatus("error");
         // The server's own message is already written for the visitor, in
         // their language; anything else gets the generic one.

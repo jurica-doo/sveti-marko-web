@@ -54,7 +54,14 @@
     "genericError": "Something went wrong. Please try again.",
     "subjectPrefix": "New message from",
     "invalidFields": "Please check your details — the e-mail address isn't valid or a field is too long.",
-    "rateLimited": "You've sent too many messages in a short time. Please try again in a few minutes."
+    "rateLimited": "You've sent too many messages in a short time. Please try again in a few minutes.",
+    "confirmSubject": "We have received your message",
+    "confirmGreeting": "Dear {name},",
+    "confirmBody": "thank you for getting in touch. Your message has reached the parish office and we will reply as soon as we can.",
+    "confirmCopyLabel": "Your message",
+    "confirmSignoff": "Kind regards and God bless,",
+    "confirmNoReply": "This is an automated message — please do not reply to it. For any questions, use the form on our website or give us a call.",
+    "confirmVisit": "Visit our website"
   },
   "news": {
     "readMore": "Read more",
@@ -84,7 +91,61 @@
     "parishEyebrow": "Parish community",
     "patronEyebrow": "Patron saint",
     "feastLabel": "Feast day",
-    "breadcrumbTitle": "About"
+    "breadcrumbTitle": "About",
+    "mapEyebrow": "Parish area",
+    "mapTitle": "The streets of our parish",
+    "mapIntro": "The streets marked on the map belong to St. Mark's parish. Hover or tap a street in the list to highlight it.",
+    "mapChurch": "St. Mark's Church",
+    "mapAriaLabel": "Map of St. Mark's parish with its streets highlighted",
+    "mapAttribution": "Map data © OpenStreetMap contributors",
+    "mapStreetsLabel": "List of streets",
+    "mapNote": "Not sure whether you belong to the parish? Get in touch.",
+    "parishStreets": [
+      {
+        "name": "Hercegovačka",
+        "range": "odd from 125 to the end, even from 128 to the end"
+      },
+      {
+        "name": "Kupreška",
+        "range": "whole street"
+      },
+      {
+        "name": "Ljubuška",
+        "range": "whole street"
+      },
+      {
+        "name": "Magistrala Solin",
+        "range": "odd from 3 to 67"
+      },
+      {
+        "name": "Mostarska",
+        "range": "odd from 101 to the end, even from 72 to the end"
+      },
+      {
+        "name": "Neslanovac",
+        "range": "whole street"
+      },
+      {
+        "name": "Put Mostina",
+        "range": "numbers 14, 18 and 20"
+      },
+      {
+        "name": "Put Smokovika",
+        "range": "whole street"
+      },
+      {
+        "name": "Sarajevska",
+        "range": "even up to 46"
+      },
+      {
+        "name": "Solinska",
+        "range": "number 76 only"
+      },
+      {
+        "name": "Zagorski put",
+        "range": "odd and even from 4 to 22"
+      }
+    ]
   },
   "contactPage": {
     "breadcrumbTitle": "Contact",
